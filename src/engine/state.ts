@@ -224,6 +224,14 @@ export interface Notification {
 
 export interface GameState {
   version: number;
+  /** Carte de la partie (générée à partir de la graine). */
+  map: import('./mapgen').MapData;
+  /** Origine tirée au début de la partie. */
+  origin?: { id: string; titre: string; texte: string };
+  /** Dernière issue tirée au sort (affichée à l'écran). */
+  lastOutcome?: { win: boolean; text: string };
+  /** Biais d'événements propre à la partie (identifiant → multiplicateur de poids). */
+  eventBias?: Record<string, number>;
   seed: number;
   rng: number;
   turn: number;
@@ -287,4 +295,4 @@ export interface LineageScore {
   total: number;
 }
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;

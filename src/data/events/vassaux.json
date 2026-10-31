@@ -2,109 +2,504 @@
   {
     "id": "vassal_banquet_01",
     "titre": "Un banquet qui tourne mal",
-    "texte": "Au banquet d'hiver, {vassal.nom} vous accuse publiquement d'avarice.",
-    "declencheur": { "type": "aleatoire", "saisons": ["hiver"] },
-    "conditions": [{ "opinion_vassal_max": 0 }],
+    "texte": [
+      "Au banquet d'hiver, {vassal.nom} vous accuse publiquement d'avarice.",
+      "Au banquet d'hiver, {vassal.nom} renverse sa coupe et déclare, assez fort pour être entendu, que votre table est bien maigre pour un seigneur.",
+      "Au banquet d'hiver, {vassal.nom} porte un toast… à la santé de votre rival. Les rires se figent."
+    ],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "conditions": [
+      {
+        "opinion_vassal_max": 0
+      }
+    ],
     "poids": 10,
     "delai_retour": 8,
     "choix": [
-      { "libelle": "Offrir un présent (50 or)", "conditions": [{ "or_min": 50 }],
-        "effets": [{ "or": -50 }, { "opinion": { "cible": "vassal", "valeur": 20 } }] },
-      { "libelle": "Le faire taire",
-        "effets": [{ "prestige": 10 }, { "opinion": { "cible": "vassal", "valeur": -25 } }],
-        "suite": "vassal_banquet_02" }
+      {
+        "libelle": "Offrir un présent (50 or)",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 20
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le faire taire",
+        "effets": [
+          {
+            "prestige": 10
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -25
+            }
+          }
+        ],
+        "suite": "vassal_banquet_02"
+      }
     ]
   },
   {
     "id": "vassal_banquet_02",
     "titre": "L'affront n'est pas oublié",
     "texte": "Humilié devant ses pairs, {vassal.nom} a quitté la salle sans saluer. Ses gens parlent déjà de vengeance.",
-    "declencheur": { "type": "suite" },
+    "declencheur": {
+      "type": "suite"
+    },
     "poids": 0,
     "choix": [
-      { "libelle": "Le faire arrêter", "effets": [{ "emprisonner": "vassal" }, { "prestige": 10 }, { "opinion_vassaux": -10 }] },
-      { "libelle": "Lui offrir réparation (40 or)", "conditions": [{ "or_min": 40 }],
-        "effets": [{ "or": -40 }, { "opinion": { "cible": "vassal", "valeur": 15 } }] },
-      { "libelle": "Qu'il rumine sa colère", "effets": [{ "devient_rival": "vassal" }] }
+      {
+        "libelle": "Le faire arrêter",
+        "effets": [
+          {
+            "emprisonner": "vassal"
+          },
+          {
+            "prestige": 10
+          },
+          {
+            "opinion_vassaux": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Lui offrir réparation (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 15
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Qu'il rumine sa colère",
+        "effets": [
+          {
+            "devient_rival": "vassal"
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_fortifications",
     "titre": "Des murs pour la frontière",
     "texte": "{vassal.nom} demande votre aide pour relever les palissades de ses terres, que les pluies ont emportées.",
-    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps", "ete"]
+    },
     "poids": 9,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Accorder 60 or", "conditions": [{ "or_min": 60 }], "effets": [{ "or": -60 }, { "opinion": { "cible": "vassal", "valeur": 25 } }] },
-      { "libelle": "Qu'il paie ses propres murs", "effets": [{ "opinion": { "cible": "vassal", "valeur": -10 } }] }
+      {
+        "libelle": "Accorder 60 or",
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ],
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 25
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Qu'il paie ses propres murs",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -10
+            }
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_bornage",
     "titre": "Une querelle de bornes",
     "texte": "{vassal.nom} accuse un voisin d'avoir déplacé les bornes d'un pré pendant la nuit et réclame votre justice.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 9,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Trancher en sa faveur", "effets": [{ "opinion": { "cible": "vassal", "valeur": 20 } }, { "opinion_vassaux": -5 }] },
-      { "libelle": "Trancher contre lui", "effets": [{ "opinion": { "cible": "vassal", "valeur": -20 } }, { "prestige": 5 }] },
-      { "libelle": "Envoyer un arbitre lettré", "conditions": [{ "competence_min": { "competence": "savoir", "valeur": 10 } }],
-        "effets": [{ "opinion": { "cible": "vassal", "valeur": 5 } }, { "piete": 5 }] }
+      {
+        "libelle": "Trancher en sa faveur",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 20
+            }
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Trancher contre lui",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -20
+            }
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Envoyer un arbitre lettré",
+        "conditions": [
+          {
+            "competence_min": {
+              "competence": "savoir",
+              "valeur": 10
+            }
+          }
+        ],
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 5
+            }
+          },
+          {
+            "piete": 5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_fidele",
     "titre": "Une épée offerte",
     "texte": "{vassal.nom} se présente à votre cour et pose un genou à terre : ses hommes sont à votre disposition, quand vous le voudrez.",
-    "declencheur": { "type": "aleatoire" },
-    "conditions": [{ "opinion_vassal_min": 30 }],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "opinion_vassal_min": 30
+      }
+    ],
     "poids": 7,
     "delai_retour": 20,
     "choix": [
-      { "libelle": "Accepter avec gratitude", "effets": [{ "levees": 200 }, { "opinion": { "cible": "vassal", "valeur": 10 } }] },
-      { "libelle": "Faire de {vassal.nom} un ami (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "ami": "vassal" }] }
+      {
+        "libelle": "Accepter avec gratitude",
+        "effets": [
+          {
+            "levees": 200
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Faire de {vassal.nom} un ami (30 or)",
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "ami": "vassal"
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_ambitieux",
     "titre": "Un vassal qui voit grand",
     "texte": "{vassal.nom} réclame un rôle plus important dans les affaires du duché. Ses regards s'attardent un peu trop longtemps sur votre siège.",
-    "declencheur": { "type": "aleatoire" },
-    "conditions": [{ "vassal_trait": "ambitieux" }],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "vassal_trait": "ambitieux"
+      }
+    ],
     "poids": 9,
     "delai_retour": 16,
     "choix": [
-      { "libelle": "Le flatter et l'enrichir (40 or)", "conditions": [{ "or_min": 40 }],
-        "effets": [{ "or": -40 }, { "opinion": { "cible": "vassal", "valeur": 20 } }] },
-      { "libelle": "Le mettre en garde", "effets": [{ "opinion": { "cible": "vassal", "valeur": -15 } }, { "prestige": 10 }] },
-      { "libelle": "Gagner sa confiance en secret", "effets": [{ "complot": { "type": "amitie", "cible": "vassal" } }] }
+      {
+        "libelle": "Le flatter et l'enrichir (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 20
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le mettre en garde",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -15
+            }
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Gagner sa confiance en secret",
+        "effets": [
+          {
+            "complot": {
+              "type": "amitie",
+              "cible": "vassal"
+            }
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_impot",
     "titre": "L'impôt en retard",
     "texte": "Les receveurs reviennent bredouilles des terres de {vassal.nom}, qui invoque une mauvaise année. Personne n'est dupe.",
-    "declencheur": { "type": "aleatoire", "saisons": ["automne", "hiver"] },
-    "conditions": [{ "opinion_vassal_max": 15 }],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne", "hiver"]
+    },
+    "conditions": [
+      {
+        "opinion_vassal_max": 15
+      }
+    ],
     "poids": 9,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Exiger le paiement", "effets": [{ "or": 30 }, { "opinion": { "cible": "vassal", "valeur": -15 } }] },
-      { "libelle": "Accorder un délai", "effets": [{ "opinion": { "cible": "vassal", "valeur": 10 } }, { "or": -10 }] }
+      {
+        "libelle": "Exiger le paiement",
+        "effets": [
+          {
+            "or": 30
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -15
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Accorder un délai",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 10
+            }
+          },
+          {
+            "or": -10
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vassal_conseil",
     "titre": "Une place à la table",
     "texte": "{vassal.nom} estime que son rang lui vaut un siège au conseil et le fait savoir à qui veut l'entendre.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 8,
     "delai_retour": 20,
     "choix": [
-      { "libelle": "Lui donner un titre honorifique", "effets": [{ "opinion": { "cible": "vassal", "valeur": 20 } }, { "prestige": -5 }] },
-      { "libelle": "Refuser poliment", "effets": [{ "opinion": { "cible": "vassal", "valeur": -10 } }] }
+      {
+        "libelle": "Lui donner un titre honorifique",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 20
+            }
+          },
+          {
+            "prestige": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser poliment",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vassal_duel",
+    "titre": "Un défi d'honneur",
+    "texte": [
+      "{vassal.nom} vous accuse d'avoir favorisé ses voisins et exige réparation par les armes, selon la vieille coutume.",
+      "Échauffé par le vin, {vassal.nom} vous jette son gant aux pieds devant toute la cour."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "opinion_vassal_max": 10
+      }
+    ],
+    "poids": 5,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "Relever le défi",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.55,
+              "succes": [
+                {
+                  "prestige": 50
+                },
+                {
+                  "opinion_vassaux": 5
+                },
+                {
+                  "opinion": {
+                    "cible": "vassal",
+                    "valeur": 20
+                  }
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -30
+                },
+                {
+                  "sante": -25
+                },
+                {
+                  "trait_ajout": "blesse"
+                }
+              ],
+              "texte_succes": "Votre lame désarme {vassal.nom}, qui met genou à terre devant la cour.",
+              "texte_echec": "{vassal.nom} vous blesse au bras. Votre honneur est sauf, votre réputation un peu moins."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Désigner un champion (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 20
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -15
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : un suzerain ne se bat pas avec ses vassaux",
+        "effets": [
+          {
+            "prestige": -10
+          },
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": -15
+            }
+          }
+        ]
+      }
     ]
   }
 ]

@@ -2,6 +2,7 @@
  * Migrations de sauvegarde : chaque fonction fait passer une sauvegarde de la version N à N+1.
  * Une sauvegarde d'une version précédente se charge toujours.
  */
+import MAP from '../data/map.json';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
 type AnySave = Record<string, unknown> & { version?: number };
@@ -18,6 +19,14 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     spied: {},
     ...s,
     version: 1,
+  }),
+  // Version 1 → 2 : la carte est stockée dans la partie (cartes générées) ; les anciennes
+  // parties gardent la carte historique.
+  1: (s) => ({
+    eventBias: {},
+    ...s,
+    map: s.map ?? MAP,
+    version: 2,
   }),
 };
 

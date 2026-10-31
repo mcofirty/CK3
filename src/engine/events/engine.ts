@@ -290,6 +290,13 @@ export function buildScope(
 // Texte
 // ---------------------------------------------------------------------------
 
+/** Texte d'un événement (variante tirée au sort lors de sa mise en file). */
+export function eventText(def: EventDef, scope: Record<string, string>): string {
+  if (typeof def.texte === 'string') return def.texte;
+  const i = Number(scope._v ?? 0);
+  return def.texte[Math.min(def.texte.length - 1, Math.max(0, i))] ?? '';
+}
+
 export function renderText(state: GameState, text: string, scope: Record<string, string>): string {
   return text.replace(
     /\{(\w+)\.(\w+)\}|\{(annee|saison)\}/g,
@@ -330,6 +337,12 @@ export function effectLabels(
   };
   const out: string[] = [];
   for (const e of effects) {
+    if (e.hasard) {
+      const pct = Math.round(e.hasard.chance * 100);
+      const ok = effectLabels(state, e.hasard.succes, scope).join(', ') || 'rien';
+      const ko = effectLabels(state, e.hasard.echec, scope).join(', ') || 'rien';
+      out.push(`🎲 ${pct} % : ${ok} — sinon : ${ko}`);
+    }
     if (e.or) out.push(`${sign(e.or)} or`);
     if (e.prestige) out.push(`${sign(e.prestige)} prestige`);
     if (e.piete) out.push(`${sign(e.piete)} piété`);
@@ -402,6 +415,27 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
   const p = player(state);
   const who = (r: Role | string) => (r === 'souverain' ? p : char(state, scope[r]));
   for (const e of effects) {
+    if (e.hasard) {
+      const win = rng.chance(e.hasard.chance);
+      applyEffects(ctx, win ? e.hasard.succes : e.hasard.echec, scope);
+      const t = win ? e.hasard.texte_succes : e.hasard.texte_echec;
+      notify(
+        state,
+        renderText(
+          state,
+          t ?? (win ? 'La fortune vous sourit.' : 'Le sort en a décidé autrement.'),
+          scope,
+        ),
+      );
+      state.lastOutcome = {
+        win,
+        text: renderText(
+          state,
+          t ?? (win ? 'La fortune vous sourit.' : 'Le sort en a décidé autrement.'),
+          scope,
+        ),
+      };
+    }
     if (e.or) p.gold += e.or;
     if (e.prestige) p.prestige += e.prestige;
     if (e.piete) p.piety += e.piete;
@@ -567,7 +601,7 @@ function eligible(state: GameState, def: EventDef): boolean {
 }
 
 function weightOf(state: GameState, def: EventDef): number {
-  let w = def.poids ?? 10;
+  let w = (def.poids ?? 10) * (state.eventBias?.[def.id] ?? 1);
   const p = player(state);
   for (const t of p.traits) w *= TRAITS[t]?.eventWeights?.[def.categorie ?? ''] ?? 1;
   return w;

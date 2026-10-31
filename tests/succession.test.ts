@@ -7,7 +7,7 @@ import { applyAction } from '../src/engine/actions';
 import { newGame } from '../src/engine/world';
 
 function setup(seed = 3) {
-  const state = newGame({ seed });
+  const state = newGame({ seed, originId: 'tresor' });
   const ctx: Ctx = { state, rng: new Rng(seed) };
   const p = state.characters[state.playerId];
   // Deux enfants adultes connus.

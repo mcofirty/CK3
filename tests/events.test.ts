@@ -7,6 +7,7 @@ import {
   buildScope,
   chooseEvent,
   effectLabels,
+  eventText,
   renderText,
   rolesOf,
 } from '../src/engine/events/engine';
@@ -15,9 +16,9 @@ import { Rng } from '../src/engine/rng';
 import { newGame } from '../src/engine/world';
 
 describe('Événements (section 6)', () => {
-  it('contient 40 événements valides aux identifiants uniques', () => {
-    expect(ALL_EVENTS.length).toBe(40);
-    expect(new Set(ALL_EVENTS.map((e) => e.id)).size).toBe(40);
+  it('contient au moins 40 événements valides aux identifiants uniques', () => {
+    expect(ALL_EVENTS.length).toBeGreaterThanOrEqual(40);
+    expect(new Set(ALL_EVENTS.map((e) => e.id)).size).toBe(ALL_EVENTS.length);
     for (const e of ALL_EVENTS) {
       expect(e.choix.length, e.id).toBeGreaterThanOrEqual(2);
       expect(e.choix.length, e.id).toBeLessThanOrEqual(4);
@@ -33,14 +34,16 @@ describe('Événements (section 6)', () => {
 
   it('répartit les événements selon les catégories du cahier', () => {
     const count = (c: string) => ALL_EVENTS.filter((e) => e.categorie === c).length;
-    expect([
+    const counts = [
       count('cour'),
       count('famille'),
       count('vassaux'),
       count('religion'),
       count('guerre'),
       count('intrigue'),
-    ]).toEqual([10, 8, 8, 5, 5, 4]);
+    ];
+    // Au moins le contenu initial du cahier dans chaque catégorie.
+    [10, 8, 8, 5, 5, 4].forEach((min, i) => expect(counts[i]).toBeGreaterThanOrEqual(min));
   });
 
   it('remplit les variables du texte avec les rôles tirés', () => {
@@ -49,7 +52,7 @@ describe('Événements (section 6)', () => {
     const def = EVENTS.vassal_banquet_01;
     expect(rolesOf(def)).toContain('vassal');
     const scope = buildScope(ctx, { ...def, conditions: [] })!;
-    const text = renderText(state, def.texte, scope);
+    const text = renderText(state, eventText(def, scope), scope);
     expect(text).toContain(state.characters[scope.vassal].name);
     expect(text).not.toContain('{');
   });
@@ -80,5 +83,28 @@ describe('Événements (section 6)', () => {
     const scope = buildScope(ctx, { ...EVENTS.vassal_banquet_01, conditions: [] })!;
     state.pendingEvents.push({ uid: 'u1', eventId: 'vassal_banquet_01', scope });
     expect(chooseEvent(ctx, 'u1', 0)).toBe(false);
+  });
+
+  it('l’effet hasard tire une issue et affiche sa probabilité', () => {
+    const outcomes = new Set<number>();
+    for (let seed = 1; seed < 40; seed++) {
+      const state = newGame({ seed: 2 });
+      const ctx: Ctx = { state, rng: new Rng(seed) };
+      const p = state.characters[state.playerId];
+      const gold = p.gold;
+      applyEffects(ctx, [{ hasard: { chance: 0.5, succes: [{ or: 100 }], echec: [{ or: -100 }] } }], { souverain: p.id });
+      outcomes.add(p.gold - gold);
+    }
+    expect([...outcomes].sort()).toEqual([-100, 100]);
+    const state = newGame({ seed: 2 });
+    const label = effectLabels(state, [{ hasard: { chance: 0.6, succes: [{ prestige: 10 }], echec: [] } }], {});
+    expect(label[0]).toContain('60 %');
+  });
+
+  it('chaque partie a ses propres fréquences d’événements', () => {
+    const a = newGame({ seed: 3 }).eventBias!;
+    const b = newGame({ seed: 4 }).eventBias!;
+    expect(Object.keys(a).length).toBeGreaterThan(30);
+    expect(a).not.toEqual(b);
   });
 });

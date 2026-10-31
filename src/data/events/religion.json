@@ -3,66 +3,338 @@
     "id": "religion_reliques",
     "titre": "Des reliques à vendre",
     "texte": "Un moine itinérant présente un coffret d'os jaunis : les restes d'un saint ermite, jure-t-il, capables de guérir les fièvres.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 8,
     "delai_retour": 20,
     "choix": [
-      { "libelle": "Les acquérir pour la chapelle (60 or)", "conditions": [{ "or_min": 60 }], "effets": [{ "or": -60 }, { "piete": 35 }] },
-      { "libelle": "Démasquer l'imposteur", "conditions": [{ "competence_min": { "competence": "ruse", "valeur": 10 } }], "effets": [{ "prestige": 10 }] },
-      { "libelle": "Le renvoyer", "effets": [{ "piete": -5 }] }
+      {
+        "libelle": "Les acquérir pour la chapelle (60 or)",
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ],
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "piete": 50
+                },
+                {
+                  "opinion_vassaux": 5
+                }
+              ],
+              "echec": [
+                {
+                  "piete": 10
+                },
+                {
+                  "prestige": -15
+                }
+              ],
+              "texte_succes": "Les pèlerins affluent : un enfant aveugle aurait recouvré la vue devant le coffret.",
+              "texte_echec": "Un évêque reconnaît des os de porc. Toute la région en rit."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Démasquer l'imposteur",
+        "conditions": [
+          {
+            "competence_min": {
+              "competence": "ruse",
+              "valeur": 10
+            }
+          }
+        ],
+        "effets": [
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer",
+        "effets": [
+          {
+            "piete": -5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "religion_dime",
     "titre": "La dîme réclamée",
     "texte": "L'évêque vous rappelle, avec toute la douceur de sa charge, que l'Église n'a rien reçu de vos terres depuis deux saisons.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 9,
     "delai_retour": 16,
     "choix": [
-      { "libelle": "Verser la dîme (50 or)", "conditions": [{ "or_min": 50 }], "effets": [{ "or": -50 }, { "piete": 25 }] },
-      { "libelle": "Refuser : le clergé est assez riche", "effets": [{ "piete": -20 }, { "prestige": 5 }] }
+      {
+        "libelle": "Verser la dîme (50 or)",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "piete": 25
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : le clergé est assez riche",
+        "effets": [
+          {
+            "piete": -20
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "religion_pelerinage",
     "titre": "Les routes du pèlerinage",
     "texte": "Des pèlerins traversent vos terres en chantant. On dit qu'au bout de la route, le sanctuaire lave toutes les fautes.",
-    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
-    "conditions": [{ "en_guerre": false }],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps", "ete"]
+    },
+    "conditions": [
+      {
+        "en_guerre": false
+      }
+    ],
     "poids": 7,
     "delai_retour": 24,
     "choix": [
-      { "libelle": "Prendre la route vous-même (80 or)", "conditions": [{ "or_min": 80 }],
-        "effets": [{ "or": -80 }, { "piete": 50 }, { "prestige": 10 }, { "sante": -5 }] },
-      { "libelle": "Faire un don aux pèlerins (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "piete": 15 }] },
-      { "libelle": "Rester au château", "effets": [] }
+      {
+        "libelle": "Prendre la route vous-même (80 or)",
+        "conditions": [
+          {
+            "or_min": 80
+          }
+        ],
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "piete": 40
+          },
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                {
+                  "prestige": 20
+                },
+                {
+                  "sante": 10
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -20
+                },
+                {
+                  "trait_ajout": "malade"
+                }
+              ],
+              "texte_succes": "Vous revenez du sanctuaire l'âme en paix et le teint hâlé.",
+              "texte_echec": "Vous rapportez du pèlerinage une fièvre tenace."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Faire un don aux pèlerins (30 or)",
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "piete": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Rester au château",
+        "effets": []
+      }
     ]
   },
   {
     "id": "religion_ermite",
     "titre": "La prophétie de l'ermite",
     "texte": "Un ermite descendu de la montagne prétend avoir vu en songe la grandeur de votre maison… et sa chute, si vous n'y prenez garde.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 6,
     "delai_retour": 30,
     "choix": [
-      { "libelle": "L'écouter jusqu'au bout", "effets": [{ "competence": { "competence": "savoir", "valeur": 1 } }, { "piete": 10 }] },
-      { "libelle": "Le chasser comme un fou", "effets": [{ "piete": -10 }, { "prestige": 5 }] }
+      {
+        "libelle": "L'écouter jusqu'au bout",
+        "effets": [
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 1
+            }
+          },
+          {
+            "piete": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Le chasser comme un fou",
+        "effets": [
+          {
+            "piete": -10
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "religion_abbaye",
     "titre": "Fonder une abbaye",
     "texte": "Une communauté de moines cherche une terre où s'établir. Les vallées de {comte.nom} leur conviendraient, si vous leur accordez votre protection.",
-    "declencheur": { "type": "aleatoire" },
-    "conditions": [{ "piete_min": 80 }],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "piete_min": 80
+      }
+    ],
     "poids": 6,
     "unique": "personnage",
     "choix": [
-      { "libelle": "Fonder l'abbaye (120 or)", "conditions": [{ "or_min": 120 }],
-        "effets": [{ "or": -120 }, { "piete": 60 }, { "developpement": 1 }, { "renommee": 10 }] },
-      { "libelle": "Plus tard, peut-être", "effets": [] }
+      {
+        "libelle": "Fonder l'abbaye (120 or)",
+        "conditions": [
+          {
+            "or_min": 120
+          }
+        ],
+        "effets": [
+          {
+            "or": -120
+          },
+          {
+            "piete": 60
+          },
+          {
+            "developpement": 1
+          },
+          {
+            "renommee": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Plus tard, peut-être",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "religion_miracle",
+    "titre": "Un miracle à {comte.nom}",
+    "texte": [
+      "On raconte qu'une source s'est mise à couler sous l'autel de {comte.nom}, et que son eau guérit les fièvres.",
+      "Une paysanne de {comte.nom} affirme avoir vu un saint lui apparaître dans les blés."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "Faire bâtir un sanctuaire (70 or)",
+        "conditions": [
+          {
+            "or_min": 70
+          }
+        ],
+        "effets": [
+          {
+            "or": -70
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "piete": 60
+                },
+                {
+                  "developpement": 1
+                },
+                {
+                  "renommee": 10
+                }
+              ],
+              "echec": [
+                {
+                  "piete": 15
+                }
+              ],
+              "texte_succes": "Les pèlerins accourent et enrichissent {comte.nom}.",
+              "texte_echec": "La source tarit au bout d'un an ; le sanctuaire reste, presque vide."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Faire enquêter l'évêque",
+        "effets": [
+          {
+            "piete": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Dénoncer une superstition",
+        "effets": [
+          {
+            "piete": -20
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
     ]
   }
 ]

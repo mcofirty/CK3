@@ -1390,3 +1390,111 @@ strong {
   pointer-events: none;
   animation: fade-up var(--t-med) var(--ease) backwards;
 }
+
+/* =========================================================================
+   Plein écran, bouton de saison, glissements
+   ========================================================================= */
+html {
+  background: var(--bg);
+  height: 100%;
+}
+body {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  height: 100dvh;
+}
+.screen {
+  touch-action: pan-y;
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 28px);
+}
+.topbar {
+  padding-right: 5px;
+}
+.res {
+  padding: 6px 5px;
+  font-size: 14px;
+}
+.season-btn {
+  margin-left: auto;
+  min-height: 46px;
+  padding: 4px 12px 4px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 18px -10px rgba(138, 47, 36, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 1.1;
+  white-space: nowrap;
+  transition:
+    transform var(--t-fast) var(--ease),
+    opacity var(--t-med) var(--ease);
+}
+.season-btn:active {
+  transform: scale(0.95);
+}
+.season-btn:disabled {
+  opacity: 0.6;
+}
+.season-btn .s1 {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+.season-btn .s2 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.segmented.sliding,
+.tabbar {
+  touch-action: pan-y;
+}
+.segmented.dragging .seg-indicator,
+.tabbar.dragging .indicator {
+  transition: none;
+}
+.segmented.dragging .seg-indicator {
+  transform: translateX(calc(var(--i) * (100% + 4px))) scale(1.04);
+}
+.tabbar.dragging .indicator {
+  background: var(--glass-strong);
+  box-shadow:
+    var(--glass-hi),
+    0 6px 16px -6px rgba(60, 30, 15, 0.35);
+  transform: translateX(calc(var(--i) * 100%)) scale(1.06);
+}
+.view.enter-right {
+  animation: in-right var(--t-med) var(--ease) backwards;
+}
+.view.enter-left {
+  animation: in-left var(--t-med) var(--ease) backwards;
+}
+.view.enter-none {
+  animation: fade-up var(--t-med) var(--ease) backwards;
+}
+.event-text {
+  white-space: pre-line;
+}
+.toast.outcome {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-weight: 500;
+  border-left: 4px solid var(--good);
+}
+.toast.outcome.lose {
+  border-left-color: var(--bad);
+}
+.toast.outcome .die {
+  font-size: 18px;
+}
+.install-hint {
+  border-left: 4px solid var(--accent);
+}

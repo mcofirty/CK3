@@ -19,6 +19,7 @@ export default defineConfig({
         description: 'Jeu de dynastie médiévale et de bataille stratégique',
         lang: 'fr',
         display: 'standalone',
+        display_override: ['fullscreen', 'standalone'],
         orientation: 'portrait',
         background_color: '#1c1813',
         theme_color: '#8a2f24',

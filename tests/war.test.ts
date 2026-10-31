@@ -14,7 +14,7 @@ function claimTarget(s: GameState) {
 
 describe('Guerre de campagne (section 8)', () => {
   it('une revendication est nécessaire pour déclarer une guerre de revendication', () => {
-    const s = newGame({ seed: 4 });
+    const s = newGame({ seed: 4, originId: 'tresor' });
     const { county, defender } = claimTarget(s);
     expect(canDeclareWar(s, s.playerId, defender, 'revendication', county.id).ok).toBe(true);
     const other = realmCounties(s, defender).find((c) => c.id !== county.id)!;
@@ -25,7 +25,7 @@ describe('Guerre de campagne (section 8)', () => {
   });
 
   it('une guerre complète : déclaration, siège, occupation, paix et cession du comté', () => {
-    let s = newGame({ seed: 4 });
+    let s = newGame({ seed: 4, originId: 'tresor' });
     const { county, defender } = claimTarget(s);
     s.characters[s.playerId].gold = 5000;
     s = applyAction(s, {
@@ -34,7 +34,7 @@ describe('Guerre de campagne (section 8)', () => {
       cb: 'revendication',
       countyId: county.id,
     });
-    const war = Object.values(s.wars)[0];
+    const war = Object.values(s.wars).find((w) => w.attackerId === s.playerId)!;
     expect(war).toBeDefined();
     s = applyAction(s, { type: 'raiseArmy' });
     const army = Object.values(s.armies).find((a) => a.ownerId === s.playerId)!;
@@ -62,7 +62,7 @@ describe('Guerre de campagne (section 8)', () => {
   });
 
   it('un siège dure 1 saison + 1 par niveau de fortification', () => {
-    const s = newGame({ seed: 4 });
+    const s = newGame({ seed: 4, originId: 'tresor' });
     const c = Object.values(s.counties)[0];
     c.baseFort = 2;
     expect(fortLevel(c)).toBe(2);
@@ -71,7 +71,7 @@ describe('Guerre de campagne (section 8)', () => {
   });
 
   it('les armées ne traversent pas un royaume neutre', () => {
-    const s = newGame({ seed: 4 });
+    const s = newGame({ seed: 4, originId: 'tresor' });
     const own = realmCounties(s, s.playerId);
     const foreign = Object.values(s.counties).find((c) => countyRuler(s, c) !== s.playerId)!;
     expect(findPath(s, s.playerId, own[0].id, foreign.id)).toEqual([]);

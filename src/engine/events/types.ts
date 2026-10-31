@@ -77,7 +77,19 @@ export interface Condition {
 
 export type OpinionTarget = Exclude<Role, 'souverain'>;
 
+export interface Hasard {
+  /** Probabilité de réussite (0 à 1). */
+  chance: number;
+  succes: Effect[];
+  echec: Effect[];
+  /** Texte d'issue facultatif (variables autorisées). */
+  texte_succes?: string;
+  texte_echec?: string;
+}
+
 export interface Effect {
+  /** Issue incertaine : tirée au moment du choix, probabilité affichée avant validation. */
+  hasard?: Hasard;
   or?: number;
   prestige?: number;
   piete?: number;
@@ -125,7 +137,8 @@ export interface Choice {
 export interface EventDef {
   id: string;
   titre: string;
-  texte: string;
+  /** Un texte, ou plusieurs variantes dont une est tirée au sort. */
+  texte: string | string[];
   categorie?: 'cour' | 'famille' | 'vassaux' | 'religion' | 'guerre' | 'intrigue' | 'systeme';
   declencheur: Trigger;
   conditions?: Condition[];

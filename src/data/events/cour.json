@@ -2,137 +2,671 @@
   {
     "id": "cour_tournoi",
     "titre": "Le temps des joutes",
-    "texte": "Les beaux jours reviennent et vos chevaliers s'impatientent. On murmure qu'un tournoi ferait parler de votre cour jusqu'aux marches lointaines.",
-    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "texte": [
+      "Les beaux jours reviennent et vos chevaliers s'impatientent. On murmure qu'un tournoi ferait parler de votre cour jusqu'aux marches lointaines.",
+      "Des chevaliers venus de trois duchés campent sous vos murailles. Ils attendent une lice, des juges et des prix dignes de votre maison.",
+      "Le héraut annonce que la saison des joutes est ouverte. On parie déjà, dans les tavernes, sur le nom du vainqueur."
+    ],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps", "ete"]
+    },
     "poids": 8,
     "delai_retour": 16,
     "choix": [
-      { "libelle": "Organiser un grand tournoi (80 or)", "conditions": [{ "or_min": 80 }],
-        "effets": [{ "or": -80 }, { "prestige": 35 }, { "opinion_vassaux": 5 }] },
-      { "libelle": "Descendre soi-même en lice", "conditions": [{ "competence_min": { "competence": "guerre", "valeur": 10 } }],
-        "effets": [{ "or": -30 }, { "prestige": 25 }, { "sante": -8 }] },
-      { "libelle": "Les joutes attendront", "effets": [{ "prestige": -5 }] }
+      {
+        "libelle": "Organiser un grand tournoi (80 or)",
+        "conditions": [
+          {
+            "or_min": 80
+          }
+        ],
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "prestige": 35
+          },
+          {
+            "opinion_vassaux": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Descendre soi-même en lice",
+        "conditions": [
+          {
+            "competence_min": {
+              "competence": "guerre",
+              "valeur": 8
+            }
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "hasard": {
+              "chance": 0.55,
+              "succes": [
+                {
+                  "prestige": 45
+                },
+                {
+                  "trait_ajout": "inspirant"
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -10
+                },
+                {
+                  "sante": -20
+                }
+              ],
+              "texte_succes": "Vous désarçonnez trois champions sous les vivats : la foule scande votre nom.",
+              "texte_echec": "Une lance vous jette à terre. Vous vous relevez, mais l'épaule ne guérira pas de sitôt."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Les joutes attendront",
+        "effets": [
+          {
+            "prestige": -5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_marchand",
     "titre": "Un marchand venu de loin",
     "texte": "Un marchand aux manières polies demande audience. Ses coffres débordent de soieries et d'épices, et il propose aussi d'ouvrir un comptoir à {comte.nom}.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 10,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Acheter quelques merveilles (40 or)", "conditions": [{ "or_min": 40 }],
-        "effets": [{ "or": -40 }, { "prestige": 15 }] },
-      { "libelle": "Négocier un comptoir", "conditions": [{ "competence_min": { "competence": "gestion", "valeur": 10 } }],
-        "effets": [{ "developpement": 1 }] },
-      { "libelle": "Le congédier", "effets": [] }
+      {
+        "libelle": "Acheter quelques merveilles (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "prestige": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Investir dans un comptoir (50 or)",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "hasard": {
+              "chance": 0.65,
+              "succes": [
+                {
+                  "developpement": 1
+                },
+                {
+                  "or": 120
+                }
+              ],
+              "echec": [],
+              "texte_succes": "Le comptoir prospère : les épices de {comte.nom} se vendent jusqu'aux ports lointains.",
+              "texte_echec": "Le marchand disparaît avec votre or. On ne le revit jamais."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le congédier",
+        "effets": []
+      }
     ]
   },
   {
     "id": "cour_ivresse",
     "titre": "Le vin de la veille",
     "texte": "Les banquets se succèdent et votre coupe ne désemplit guère. Ce matin, {courtisan.nom} vous a trouvé endormi sur les marches de la grande salle.",
-    "declencheur": { "type": "aleatoire", "saisons": ["automne", "hiver"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne", "hiver"]
+    },
     "poids": 7,
     "delai_retour": 16,
     "choix": [
-      { "libelle": "Faire pénitence et modérer ses excès", "effets": [{ "piete": 10 }, { "sante": 5 }] },
-      { "libelle": "Rire de l'incident avec {courtisan.nom}", "effets": [{ "opinion": { "cible": "courtisan", "valeur": 15 } }, { "sante": -5 }] }
+      {
+        "libelle": "Faire pénitence et modérer ses excès",
+        "effets": [
+          {
+            "piete": 10
+          },
+          {
+            "sante": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Rire de l'incident avec {courtisan.nom}",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "courtisan",
+              "valeur": 15
+            }
+          },
+          {
+            "sante": -5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_poete",
     "titre": "Une chanson à votre sujet",
     "texte": "Un jongleur chante dans les tavernes une chanson qui raconte vos exploits… ou s'en moque, selon les couplets. La cour attend de voir comment vous prendrez la chose.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 8,
     "delai_retour": 20,
     "choix": [
-      { "libelle": "L'inviter et le récompenser (30 or)", "conditions": [{ "or_min": 30 }],
-        "effets": [{ "or": -30 }, { "prestige": 15 }] },
-      { "libelle": "Le chasser de vos terres", "effets": [{ "prestige": -5 }] },
-      { "libelle": "Le faire bâtonner en place publique", "effets": [{ "prestige": 5 }, { "opinion_vassaux": -5 }, { "trait_ajout": "cruel" }] }
+      {
+        "libelle": "L'inviter et le récompenser (30 or)",
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "prestige": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Le chasser de vos terres",
+        "effets": [
+          {
+            "prestige": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Le faire bâtonner en place publique",
+        "effets": [
+          {
+            "prestige": 5
+          },
+          {
+            "opinion_vassaux": -5
+          },
+          {
+            "trait_ajout": "cruel"
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_chasse",
     "titre": "Le sanglier de la forêt",
     "texte": "Lors d'une chasse, un sanglier énorme jaillit des fourrés. Les chiens hésitent, les rabatteurs reculent. {courtisan.nom} vous tend un épieu.",
-    "declencheur": { "type": "aleatoire", "saisons": ["automne"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne"]
+    },
     "poids": 8,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Affronter la bête", "effets": [{ "prestige": 20 }, { "sante": -12 }] },
-      { "libelle": "Laisser l'honneur à {courtisan.nom}", "effets": [{ "opinion": { "cible": "courtisan", "valeur": 20 } }] },
-      { "libelle": "Rentrer au château", "effets": [{ "prestige": -5 }] }
+      {
+        "libelle": "Affronter la bête",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 30
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -25
+                },
+                {
+                  "trait_ajout": "blesse"
+                }
+              ],
+              "texte_succes": "L'épieu trouve le cœur du sanglier. Sa hure ornera la grande salle.",
+              "texte_echec": "La bête vous charge et vous ouvre la cuisse avant de s'enfuir dans les fourrés."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser l'honneur à {courtisan.nom}",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "courtisan",
+              "valeur": 20
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Rentrer au château",
+        "effets": [
+          {
+            "prestige": -5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_melancolie",
     "titre": "Une humeur sombre",
     "texte": "Depuis des semaines, une lassitude vous accable. Les affaires du domaine vous paraissent vaines et le sommeil vous fuit.",
-    "declencheur": { "type": "aleatoire", "saisons": ["hiver"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
     "poids": 6,
     "delai_retour": 24,
     "choix": [
-      { "libelle": "Consulter un médecin (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "sante": 10 }] },
-      { "libelle": "Se réfugier dans la prière", "effets": [{ "piete": 15 }] },
-      { "libelle": "Se jeter dans le travail", "effets": [{ "competence": { "competence": "gestion", "valeur": 1 } }, { "sante": -5 }] }
+      {
+        "libelle": "Consulter un médecin (30 or)",
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                {
+                  "sante": 15
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -10
+                }
+              ],
+              "texte_succes": "Les tisanes du médecin vous rendent le sommeil.",
+              "texte_echec": "Le médecin vous saigne trois fois ; vous en sortez plus faible encore."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Se réfugier dans la prière",
+        "effets": [
+          {
+            "piete": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Se jeter dans le travail",
+        "effets": [
+          {
+            "competence": {
+              "competence": "gestion",
+              "valeur": 1
+            }
+          },
+          {
+            "sante": -5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_courtisan_ambitieux",
     "titre": "Un courtisan trop pressé",
     "texte": "{courtisan.nom} sollicite une pension et laisse entendre qu'un refus serait mal reçu par ses nombreux amis.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 8,
     "delai_retour": 16,
     "choix": [
-      { "libelle": "Lui accorder une pension (50 or)", "conditions": [{ "or_min": 50 }],
-        "effets": [{ "or": -50 }, { "opinion": { "cible": "courtisan", "valeur": 30 } }] },
-      { "libelle": "Refuser sèchement", "effets": [{ "opinion": { "cible": "courtisan", "valeur": -20 } }] },
-      { "libelle": "Le bannir de la cour", "effets": [{ "exiler": "courtisan" }, { "prestige": 5 }] }
+      {
+        "libelle": "Lui accorder une pension (50 or)",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "opinion": {
+              "cible": "courtisan",
+              "valeur": 30
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser sèchement",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "courtisan",
+              "valeur": -20
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le bannir de la cour",
+        "effets": [
+          {
+            "exiler": "courtisan"
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_architecte",
     "titre": "Le maître d'œuvre",
     "texte": "Un maître d'œuvre réputé propose d'agrandir votre résidence de {comte.nom} : une grande salle, des tours neuves, une cour pavée.",
-    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps", "ete"]
+    },
     "poids": 6,
     "delai_retour": 24,
     "choix": [
-      { "libelle": "Financer les travaux (100 or)", "conditions": [{ "or_min": 100 }],
-        "effets": [{ "or": -100 }, { "prestige": 25 }, { "developpement": 1 }] },
-      { "libelle": "Décliner", "effets": [] }
+      {
+        "libelle": "Financer les travaux (100 or)",
+        "conditions": [
+          {
+            "or_min": 100
+          }
+        ],
+        "effets": [
+          {
+            "or": -100
+          },
+          {
+            "prestige": 25
+          },
+          {
+            "developpement": 1
+          }
+        ]
+      },
+      {
+        "libelle": "Décliner",
+        "effets": []
+      }
     ]
   },
   {
     "id": "cour_chroniqueur",
     "titre": "La mémoire de la lignée",
     "texte": "Un clerc lettré offre de consigner l'histoire de votre maison, depuis ses humbles origines jusqu'à vos propres hauts faits.",
-    "declencheur": { "type": "aleatoire" },
+    "declencheur": {
+      "type": "aleatoire"
+    },
     "poids": 5,
     "unique": "personnage",
     "choix": [
-      { "libelle": "Financer la chronique (40 or)", "conditions": [{ "or_min": 40 }],
-        "effets": [{ "or": -40 }, { "renommee": 20 }, { "prestige": 10 }] },
-      { "libelle": "L'histoire s'écrit avec l'épée", "effets": [{ "prestige": 5 }] }
+      {
+        "libelle": "Financer la chronique (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "renommee": 20
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "L'histoire s'écrit avec l'épée",
+        "effets": [
+          {
+            "prestige": 5
+          }
+        ]
+      }
     ]
   },
   {
     "id": "cour_mauvaise_recolte",
     "titre": "Les greniers vides",
     "texte": "La pluie a pourri les blés à {comte.nom}. Les paysans craignent l'hiver et vos receveurs attendent vos ordres.",
-    "declencheur": { "type": "aleatoire", "saisons": ["automne"] },
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne"]
+    },
     "poids": 9,
     "delai_retour": 12,
     "choix": [
-      { "libelle": "Ouvrir les greniers seigneuriaux (60 or)", "conditions": [{ "or_min": 60 }],
-        "effets": [{ "or": -60 }, { "opinion_vassaux": 5 }, { "piete": 10 }] },
-      { "libelle": "Laisser faire la Providence", "effets": [{ "developpement": -1 }, { "prestige": -10 }] },
-      { "libelle": "Prélever l'impôt malgré tout", "effets": [{ "or": 40 }, { "developpement": -1 }, { "opinion_vassaux": -10 }] }
+      {
+        "libelle": "Ouvrir les greniers seigneuriaux (60 or)",
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ],
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "opinion_vassaux": 5
+          },
+          {
+            "piete": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser faire la Providence",
+        "effets": [
+          {
+            "developpement": -1
+          },
+          {
+            "prestige": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Prélever l'impôt malgré tout",
+        "effets": [
+          {
+            "or": 40
+          },
+          {
+            "developpement": -1
+          },
+          {
+            "opinion_vassaux": -10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cour_comete",
+    "titre": "Une étoile chevelue",
+    "texte": [
+      "Une comète traverse le ciel d'hiver. Les astrologues se disputent : présage de gloire, ou de malheur ?",
+      "Chaque nuit, une étoile à longue chevelure monte au-dessus des toits. Le peuple prie et murmure."
+    ],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "poids": 4,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "Proclamer un présage de victoire",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "prestige": 40
+                },
+                {
+                  "opinion_vassaux": 10
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -20
+                },
+                {
+                  "opinion_vassaux": -10
+                }
+              ],
+              "texte_succes": "Le printemps suivant apporte de bonnes nouvelles : on dit partout que le ciel vous protège.",
+              "texte_echec": "Une épidémie de fièvres suit la comète. On murmure que vous avez défié le ciel."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Ordonner des prières dans tout le domaine (30 or)",
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ],
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "piete": 30
+          }
+        ]
+      },
+      {
+        "libelle": "Ne rien dire",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "cour_brigands",
+    "titre": "Des brigands sur la route",
+    "texte": [
+      "Une bande de brigands rançonne les marchands sur la route de {comte.nom}. Les plaintes s'accumulent.",
+      "Des hommes en armes détroussent les voyageurs près de {comte.nom}. On dit qu'ils sont d'anciens soldats."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 8,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Envoyer vos gens d'armes",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                {
+                  "prestige": 20
+                },
+                {
+                  "or": 40
+                }
+              ],
+              "echec": [
+                {
+                  "levees": -150
+                },
+                {
+                  "prestige": -10
+                }
+              ],
+              "texte_succes": "Les brigands sont pendus au carrefour ; leur butin rejoint vos coffres.",
+              "texte_echec": "Vos hommes tombent dans une embuscade. Les brigands courent toujours."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Leur offrir de servir sous votre bannière (40 or)",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "levees": 200
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser les marchands se débrouiller",
+        "effets": [
+          {
+            "developpement": -1
+          }
+        ]
+      }
     ]
   }
 ]

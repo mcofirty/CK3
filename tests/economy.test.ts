@@ -17,7 +17,7 @@ const goldLine = (s: ReturnType<typeof newGame>, label: string) =>
 
 describe('Économie (section 5)', () => {
   it('un Marché augmente les revenus du comté', () => {
-    const s = newGame({ seed: 5 });
+    const s = newGame({ seed: 5, originId: 'tresor' });
     const c = Object.values(s.counties).find(
       (k) => k.holderId === s.playerId && !k.buildings.some((b) => b.type === 'marche'),
     )!;
@@ -27,7 +27,7 @@ describe('Économie (section 5)', () => {
   });
 
   it('une construction coûte de l’or et se termine après le nombre de saisons prévu', () => {
-    let s = newGame({ seed: 5 });
+    let s = newGame({ seed: 5, originId: 'tresor' });
     const c = Object.values(s.counties).find(
       (k) => k.holderId === s.playerId && k.buildings.length < k.slots,
     )!;
@@ -47,7 +47,7 @@ describe('Économie (section 5)', () => {
   it('la contribution d’un vassal baisse avec son opinion', () => {
     expect(vassalContribution(-50)).toBeLessThan(vassalContribution(0));
     expect(vassalContribution(50)).toBeGreaterThan(vassalContribution(0));
-    const s = newGame({ seed: 5 });
+    const s = newGame({ seed: 5, originId: 'tresor' });
     const v = vassalsOf(s, s.playerId)[0];
     const before = goldLine(s, 'Impôts des vassaux');
     addOpinion(s, v, s.playerId, 'Test', -80, 10);
@@ -56,7 +56,7 @@ describe('Économie (section 5)', () => {
   });
 
   it('le domaine propre est limité par la Gestion (base 3, +1 tous les 5 points)', () => {
-    const s = newGame({ seed: 5 });
+    const s = newGame({ seed: 5, originId: 'tresor' });
     const p = s.characters[s.playerId];
     p.traits = [];
     p.skills.gestion = 10;
@@ -66,7 +66,7 @@ describe('Économie (section 5)', () => {
   });
 
   it('au-delà de la limite, les revenus baissent et les vassaux s’agacent', () => {
-    const s = newGame({ seed: 5 });
+    const s = newGame({ seed: 5, originId: 'tresor' });
     const p = s.characters[s.playerId];
     const v = vassalsOf(s, p.id)[0];
     p.traits = [];

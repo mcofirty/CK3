@@ -26,12 +26,16 @@ import {
   Skills,
   Tip,
   Segmented,
+  usePager,
   TraitChips,
 } from '../components/common';
 import { useStore } from '../store';
 
+const COURT_VIEWS = ['souverain', 'famille', 'conseil', 'arbre'] as const;
+
 export function CourtScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<'souverain' | 'famille' | 'conseil' | 'arbre'>('souverain');
+  const dir = usePager(COURT_VIEWS, view, setView);
   return (
     <>
       <Segmented
@@ -45,7 +49,7 @@ export function CourtScreen({ game }: { game: GameState }) {
         value={view}
         onChange={setView}
       />
-      <div className="view" key={view}>
+      <div className={`view enter-${dir}`} key={view}>
         {view === 'souverain' && <RulerView game={game} />}
         {view === 'famille' && <FamilyView game={game} />}
         {view === 'conseil' && <CouncilView game={game} />}

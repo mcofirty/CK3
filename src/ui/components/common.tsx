@@ -158,7 +158,59 @@ export function Sheet({
   );
 }
 
-/** Sélecteur segmenté avec indicateur coulissant. */
+/**
+ * Indicateur qui suit le doigt : renvoie l'index (fractionnaire pendant le glissement) et les
+ * gestionnaires de pointeur. Au relâchement, sélectionne la colonne la plus proche.
+ */
+export function useSlideSelect(count: number, onPick: (i: number) => void, padding = 4, gap = 4) {
+  const [drag, setDrag] = useState<number | null>(null);
+  const start = useRef<{ x: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
+  const indexAt = (el: HTMLElement, clientX: number) => {
+    const r = el.getBoundingClientRect();
+    const col = (r.width - 2 * padding - (count - 1) * gap) / count;
+    const x = clientX - r.left - padding - col / 2;
+    return Math.max(0, Math.min(count - 1, x / (col + gap)));
+  };
+  return {
+    drag,
+    handlers: {
+      onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+        start.current = { x: e.clientX, moved: false };
+        suppressClick.current = false;
+      },
+      onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
+        if (!start.current) return;
+        if (!start.current.moved && Math.abs(e.clientX - start.current.x) > 8) {
+          start.current.moved = true;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+        }
+        if (start.current.moved) setDrag(indexAt(e.currentTarget, e.clientX));
+      },
+      onPointerUp: (e: React.PointerEvent<HTMLElement>) => {
+        if (start.current?.moved) {
+          suppressClick.current = true;
+          onPick(Math.round(indexAt(e.currentTarget, e.clientX)));
+        }
+        start.current = null;
+        setDrag(null);
+      },
+      onPointerCancel: () => {
+        start.current = null;
+        setDrag(null);
+      },
+      onClickCapture: (e: React.MouseEvent) => {
+        if (suppressClick.current) {
+          e.stopPropagation();
+          e.preventDefault();
+          suppressClick.current = false;
+        }
+      },
+    },
+  };
+}
+
+/** Sélecteur segmenté avec indicateur coulissant (toucher ou glisser le doigt). */
 export function Segmented<T extends string>({
   options,
   value,
@@ -171,13 +223,20 @@ export function Segmented<T extends string>({
   style?: React.CSSProperties;
 }) {
   const i = options.findIndex((o) => o.value === value);
+  const { drag, handlers } = useSlideSelect(options.length, (k) => onChange(options[k].value));
   return (
     <div
-      className="segmented sliding"
-      style={{ ...style, ['--n' as string]: options.length, ['--i' as string]: Math.max(0, i) }}
+      className={`segmented sliding${drag !== null ? ' dragging' : ''}`}
+      style={{
+        ...style,
+        ['--n' as string]: options.length,
+        ['--i' as string]: drag ?? Math.max(0, i),
+      }}
       role="tablist"
+      data-noswipe
+      {...handlers}
     >
-      {i >= 0 && <span className="seg-indicator" aria-hidden />}
+      {(i >= 0 || drag !== null) && <span className="seg-indicator" aria-hidden />}
       {options.map((o) => (
         <button
           key={o.value}
@@ -191,6 +250,26 @@ export function Segmented<T extends string>({
       ))}
     </div>
   );
+}
+
+/**
+ * Déclare les sous-vues d'un écran : on peut alors glisser d'une sous-vue à l'autre sur la page.
+ * Renvoie le sens de la dernière navigation (pour l'animation d'entrée).
+ */
+export function usePager<T extends string>(views: readonly T[], view: T, setView: (v: T) => void) {
+  const setPager = useStore((st) => st.setPager);
+  const prev = useRef(view);
+  const dir = useRef<'left' | 'right' | 'none'>('none');
+  if (prev.current !== view) {
+    dir.current = views.indexOf(view) > views.indexOf(prev.current) ? 'right' : 'left';
+    prev.current = view;
+  }
+  const index = views.indexOf(view);
+  useEffect(() => {
+    setPager({ index, count: views.length, go: (k: number) => setView(views[k]) });
+  }, [index, views, setView, setPager]);
+  useEffect(() => () => setPager(undefined), [setPager]);
+  return dir.current;
 }
 
 /** Symbole Highborn (arbre-couronne), à la couleur du texte courant. */

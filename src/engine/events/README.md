@@ -37,6 +37,25 @@ Champs de texte : `.nom`, `.nom_complet`, `.age`, `.il`/`.Il`, `.le`, `.fils` (f
 Souverain : `or_min`, `or_max`, `prestige_min`, `piete_min`, `piete_max`, `sante_max`, `age_min`, `age_max`, `trait`, `pas_trait`, `en_guerre`, `a_conjoint`, `comtes_min`, `competence_min`/`competence_max` (`{ "competence": "guerre", "valeur": 12 }`), `armee_levee`, `annee_min`.
 Rôles : `opinion_vassal_max`/`min`, `vassal_trait`, `enfant_age_min`/`max`, `heritier_age_min`/`max`, `conjoint_trait`, `courtisan_trait`, `rival_opinion_max`, `comte_developpement_min`/`max`.
 
+## Hasard et variantes
+
+- `"texte"` peut être une liste : une variante est tirée au sort quand l'événement survient.
+- L'effet `hasard` donne une issue incertaine, dont la probabilité est affichée avant le choix :
+
+```json
+{
+  "hasard": {
+    "chance": 0.6,
+    "succes": [{ "prestige": 30 }],
+    "echec": [{ "sante": -20 }],
+    "texte_succes": "Vous l'emportez.",
+    "texte_echec": "Vous mordez la poussière."
+  }
+}
+```
+
+- Chaque partie tire aussi un biais par événement aléatoire (×0,4 à ×1,8, ou absent dans 12 % des cas) : d'une partie à l'autre, les mêmes événements ne reviennent pas au même rythme.
+
 ## Effets
 
 `or`, `prestige`, `piete`, `renommee`, `opinion` (`{ "cible": "vassal", "valeur": 20 }`), `opinion_vassaux`, `trait_ajout` / `trait_retrait` (id ou `{ "cible", "trait" }`), `sante` (nombre ou `{ "cible", "valeur" }`), `competence` (`{ "competence", "valeur", "cible"? }`), `revendication` (`"comte_rival"`), `guerre` (`{ "cible": "rival", "attaquant": "souverain" | "rival" }`), `complot` (`{ "type", "cible" }`), `naissance`, `deces`, `developpement`, `ravitaillement`, `levees`, `ami`, `devient_rival`, `emprisonner`, `liberer`, `exiler`.

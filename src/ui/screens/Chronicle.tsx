@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { yearOf } from '../../engine/context';
 import type { GameState } from '../../engine/state';
 import { downloadExport } from '../../save/storage';
-import { Segmented } from '../components/common';
+import { Segmented, usePager } from '../components/common';
 import { useStore } from '../store';
 
 const KIND_ICON: Record<string, string> = {
@@ -18,8 +18,11 @@ const KIND_ICON: Record<string, string> = {
   divers: '•',
 };
 
+const CHRONICLE_VIEWS = ['chronique', 'nouvelles'] as const;
+
 export function ChronicleScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<'chronique' | 'nouvelles'>('chronique');
+  const dir = usePager(CHRONICLE_VIEWS, view, setView);
   const quit = useStore((s) => s.quit);
   const entries = [...game.chronicle].reverse();
   const byYear = new Map<number, typeof entries>();
@@ -38,7 +41,7 @@ export function ChronicleScreen({ game }: { game: GameState }) {
         value={view}
         onChange={setView}
       />
-      <div className="view" key={view}>
+      <div className={`view enter-${dir}`} key={view}>
         {view === 'chronique' &&
           [...byYear.entries()].map(([y, list]) => (
             <div key={y} className="card">

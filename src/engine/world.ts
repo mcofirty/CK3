@@ -1,10 +1,13 @@
-/** Création d'une nouvelle partie à partir de la carte et des données. */
+/** Création d'une nouvelle partie : carte générée, origine et aléas propres à chaque graine. */
 import { BALANCE } from '../data/balance';
 import MAP from '../data/map.json';
-import { addTrait, createCharacter, dynastyName, marry } from './characters';
+import { ORIGINS, type Origin } from '../data/origins';
+import { addOpinion, addTrait, allyKey, createCharacter, dynastyName, marry } from './characters';
 import type { Ctx } from './context';
+import { ALL_EVENTS } from '../data/events';
 import { autoFillCouncil } from './diplomacy';
-import { economyOf, countyMaxLevies } from './realm';
+import { generateMap, type MapData } from './mapgen';
+import { economyOf, countyMaxLevies, countyRuler } from './realm';
 import { Rng } from './rng';
 import {
   SAVE_VERSION,
@@ -16,40 +19,24 @@ import {
   type Terrain,
 } from './state';
 import { emptyUnits } from './units';
+import { declareWar } from './war';
 
-export interface MapData {
-  width: number;
-  height: number;
-  counties: {
-    id: string;
-    name: string;
-    terrain: string;
-    duchy: string;
-    x: number;
-    y: number;
-    polygon: [number, number][];
-    adjacent: string[];
-    rivers: string[];
-    coastal: boolean;
-  }[];
-  duchies: { id: string; name: string; kingdom: string; counties: string[] }[];
-  kingdoms: { id: string; name: string; duchies: string[] }[];
-  realms: string[][];
-  rivers: { a: string; b: string; path: [number, number][] }[];
-  sea: [number, number][][];
-}
-
-export const MAP_DATA = MAP as unknown as MapData;
+export type { MapData };
+/** Carte historique (fichier) : utilisée pour les sauvegardes antérieures aux cartes générées. */
+export const LEGACY_MAP = MAP as unknown as MapData;
 
 export interface NewGameOptions {
   seed?: number;
   difficulty?: Difficulty;
   female?: boolean;
+  /** Force une origine (tests). */
+  originId?: string;
 }
 
 export function emptyState(seed: number, difficulty: Difficulty): GameState {
   return {
     version: SAVE_VERSION,
+    map: LEGACY_MAP,
     seed,
     rng: seed,
     turn: 0,
@@ -95,6 +82,18 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   const state = emptyState(seed, opts.difficulty ?? 'normal');
   const rng = new Rng(seed);
   const ctx: Ctx = { state, rng };
+  const MAP_DATA = generateMap(rng);
+  state.map = MAP_DATA;
+  state.startYear = rng.int(1040, 1095);
+  const origin: Origin = ORIGINS.find((o) => o.id === opts.originId) ?? rng.pick(ORIGINS);
+  state.origin = { id: origin.id, titre: origin.titre, texte: origin.texte };
+  // Biais d'événements propre à la partie : certains reviennent souvent, d'autres jamais.
+  state.eventBias = {};
+  for (const e of ALL_EVENTS) {
+    if (e.declencheur.type !== 'aleatoire') continue;
+    state.eventBias[e.id] = rng.chance(0.12) ? 0 : Math.round(rng.range(0.4, 1.8) * 100) / 100;
+  }
+  const playerRealm = rng.int(0, MAP_DATA.realms.length - 1);
 
   // Comtés, duchés, royaumes.
   for (const k of MAP_DATA.kingdoms)
@@ -128,11 +127,12 @@ export function newGame(opts: NewGameOptions = {}): GameState {
 
   const usedDyn = new Set<string>();
   MAP_DATA.realms.forEach((realm, idx) => {
-    const isPlayer = idx === 0;
+    const isPlayer = idx === playerRealm;
     // Dynastie et souverain.
     const dynId = `y${++state.nextId}`;
+    const ageRange = isPlayer ? (origin.age ?? [22, 34]) : [20, 50];
     const ruler = createCharacter(ctx, {
-      age: isPlayer ? rng.int(24, 30) : rng.int(22, 45),
+      age: rng.int(ageRange[0], ageRange[1]),
       female: isPlayer ? (opts.female ?? false) : rng.chance(0.2),
       dynastyId: dynId,
       skillBase: isPlayer ? 9 : 8,
@@ -144,11 +144,16 @@ export function newGame(opts: NewGameOptions = {}): GameState {
       seed: rng.seed(),
       founderId: ruler.id,
     };
-    ruler.gold = isPlayer ? 150 : 120;
-    ruler.prestige = isPlayer ? 150 : 120;
-    ruler.piety = 50;
+    ruler.gold = isPlayer ? 150 + (origin.or ?? 0) : rng.int(60, 260);
+    ruler.prestige = isPlayer ? 150 + (origin.prestige ?? 0) : rng.int(60, 220);
+    ruler.piety = isPlayer ? 50 + (origin.piete ?? 0) : rng.int(20, 120);
+    if (isPlayer) {
+      ruler.health += origin.sante ?? 0;
+      for (const t of origin.traits ?? []) addTrait(ruler, t);
+    }
     // Conjoint et enfants.
-    if (rng.chance(isPlayer ? 1 : 0.85)) {
+    const married = isPlayer ? !origin.celibataire : rng.chance(0.85);
+    if (married) {
       const spouse = createCharacter(ctx, {
         age: Math.max(18, rng.int(18, 30)),
         female: !ruler.female,
@@ -157,17 +162,21 @@ export function newGame(opts: NewGameOptions = {}): GameState {
         skillBase: 7,
       });
       marry(state, ruler, spouse);
-      const kids = rng.int(isPlayer ? 1 : 0, 3);
+      const range = isPlayer ? (origin.enfants ?? [1, 3]) : [0, 3];
+      const kids = rng.int(range[0], range[1]);
+      const rulerAge = Math.floor(-ruler.birthTurn / 4);
+      const maxKidAge = Math.max(0, Math.min(rulerAge - 18, 30));
       for (let k = 0; k < kids; k++) {
         const [mother, father] = ruler.female ? [ruler, spouse] : [spouse, ruler];
+        const adult = isPlayer && origin.heritierAdulte && k === 0;
         createCharacter(ctx, {
-          age: rng.int(0, 10),
+          age: adult ? rng.int(18, Math.max(18, maxKidAge)) : rng.int(0, Math.min(10, maxKidAge)),
+          education: adult ? true : undefined,
           dynastyId: dynId,
           courtId: ruler.id,
           fatherId: father.id,
           motherId: mother.id,
           skillBase: 6,
-          education: false,
         });
       }
     }
@@ -188,7 +197,9 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     counties.sort((a, b) => centrality(b) - centrality(a));
     const capital = counties[0];
     capital.development += 1;
-    const rest = counties.slice(1).sort((a, b) => dist(a, capital) - dist(b, capital));
+    const rest = counties
+      .slice(1)
+      .sort((a, b) => dist(a, capital, MAP_DATA) - dist(b, capital, MAP_DATA));
     const demesne = [capital, ...rest.slice(0, 3)];
     for (const c of demesne) c.holderId = ruler.id;
     for (const c of rest.slice(3)) {
@@ -212,11 +223,21 @@ export function newGame(opts: NewGameOptions = {}): GameState {
       (i === 0 ? capital : demesne[1]).buildings.push({ type: t, level: 1 }),
     );
     if (isPlayer) demesne[2].buildings.push({ type: 'archerie', level: 1 });
+    if (isPlayer && origin.citadelle) {
+      capital.buildings = capital.buildings.filter((b) => b.type !== 'caserne');
+      capital.buildings.push({ type: 'muraille', level: 2 }, { type: 'caserne', level: 2 });
+      capital.slots = Math.max(capital.slots, capital.buildings.length + 1);
+    }
     const st = emptyUnits();
-    st.piquiers = 200;
-    st.archers = 200;
-    st.infanterie = isPlayer ? 100 : rng.pick([0, 100]);
-    st.cavalerie = rng.pick([0, 100]);
+    st.piquiers = rng.pick([100, 200, 300]);
+    st.archers = rng.pick([100, 200, 300]);
+    st.infanterie = isPlayer ? 100 : rng.pick([0, 100, 200]);
+    st.cavalerie = rng.pick([0, 100, 200]);
+    if (isPlayer && origin.troupes) {
+      st.infanterie += Math.round(origin.troupes / 200) * 100;
+      st.cavalerie += Math.round(origin.troupes / 300) * 100;
+      st.piquiers += Math.round(origin.troupes / 300) * 100;
+    }
     state.standing[ruler.id] = st;
     if (isPlayer) {
       state.playerId = ruler.id;
@@ -226,15 +247,18 @@ export function newGame(opts: NewGameOptions = {}): GameState {
 
   for (const c of Object.values(state.counties)) c.levyPool = countyMaxLevies(c);
 
-  // Une revendication de départ pour le joueur sur un comté voisin.
+  // Revendications de départ du joueur sur des comtés voisins.
   const pl = state.characters[state.playerId];
-  const mine = new Set(MAP_DATA.realms[0]);
-  const border = Object.values(state.counties).filter(
-    (c) => !mine.has(c.id) && c.adjacent.some((n) => mine.has(n)),
+  const mine = new Set(MAP_DATA.realms[playerRealm]);
+  const border = rng.shuffle(
+    Object.values(state.counties).filter(
+      (c) => !mine.has(c.id) && c.adjacent.some((n) => mine.has(n)),
+    ),
   );
-  if (border.length) pl.claims.push(rng.pick(border).id);
+  for (const c of border.slice(0, 1 + (origin.revendications ?? 0))) pl.claims.push(c.id);
   // Quelques revendications pour les rivaux.
-  MAP_DATA.realms.slice(1).forEach((realm) => {
+  MAP_DATA.realms.forEach((realm, idx) => {
+    if (idx === playerRealm) return;
     const holder = state.counties[realm[0]].holderId;
     const ruler = state.characters[holder]?.liegeId ?? holder;
     const own = new Set(realm);
@@ -243,6 +267,9 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     );
     if (b.length && rng.chance(0.6)) state.characters[ruler].claims.push(rng.pick(b).id);
   });
+
+  applyOriginWorld(ctx, origin, border);
+  worldTwists(ctx);
 
   autoFillCouncil(state);
   // Le chancelier cultive d'emblée un voisin.
@@ -253,12 +280,118 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   const eco = economyOf(state, state.playerId);
   state.ledger = { gold: eco.gold, prestige: eco.prestige, piety: eco.piety };
   state.rng = rng.s;
-  state.chronicle.push({
+  state.chronicle.unshift({
     turn: 0,
-    text: `Au printemps ${state.startYear}, ${pl.name} ${state.dynasties[state.playerDynastyId].name} tient ses terres dans les Marches d’Aveline.`,
+    text: `Au printemps ${state.startYear}, ${pl.name} ${state.dynasties[state.playerDynastyId].name} tient ses terres dans les Marches d’Aveline. ${origin.titre}.`,
     kind: 'divers',
   });
+  // Carte d'introduction : l'origine de cette partie.
+  state.pendingEvents.push({
+    uid: `e${++state.nextId}`,
+    eventId: 'intro_origine',
+    scope: { souverain: state.playerId },
+    inline: {
+      id: 'intro_origine',
+      titre: origin.titre,
+      texte: `${origin.texte}\n\nNous sommes au printemps ${state.startYear}.`,
+      categorie: 'systeme',
+      declencheur: { type: 'suite' },
+      poids: 0,
+      choix: [{ libelle: 'Ainsi commence la chronique', effets: [] }],
+    },
+  });
+  state.rng = rng.s;
   return state;
+}
+
+/** Effets de l'origine qui touchent le reste du monde. */
+function applyOriginWorld(ctx: Ctx, origin: Origin, border: County[]): void {
+  const { state, rng } = ctx;
+  const pl = state.characters[state.playerId];
+  if (origin.vassalAmbitieux) {
+    const v = Object.values(state.characters).find((c) => c.alive && c.liegeId === pl.id);
+    if (v) {
+      v.traits = v.traits.filter((t) => t !== 'satisfait');
+      addTrait(v, 'ambitieux');
+      v.skills.guerre += 3;
+      addOpinion(state, v.id, pl.id, 'Méprise votre jeunesse ou votre faiblesse', -50, 40);
+    }
+  }
+  const neighborRuler = border.length ? countyRuler(state, border[0]) : undefined;
+  if (origin.allianceVoisin && neighborRuler && neighborRuler !== pl.id) {
+    const nr = state.characters[neighborRuler];
+    const spouse = pl.spouseId ? state.characters[pl.spouseId] : undefined;
+    if (spouse) {
+      spouse.dynastyId = nr.dynastyId;
+      spouse.fatherId = nr.id;
+      nr.childrenIds.push(spouse.id);
+      spouse.birthTurn = Math.max(spouse.birthTurn, nr.birthTurn + 4 * 18);
+    }
+    const k = allyKey(pl.id, nr.id);
+    if (!state.alliances.includes(k)) state.alliances.push(k);
+    addOpinion(state, nr.id, pl.id, 'Liens du mariage', 25, 0);
+    addOpinion(state, pl.id, nr.id, 'Liens du mariage', 25, 0);
+  }
+  if (origin.guerreVoisin && neighborRuler && neighborRuler !== pl.id) {
+    const nr = state.characters[neighborRuler];
+    const target = Object.values(state.counties).find(
+      (c) =>
+        countyRuler(state, c) === pl.id &&
+        c.adjacent.some((n) => countyRuler(state, state.counties[n]) === nr.id),
+    );
+    if (target) {
+      nr.claims.push(target.id);
+      declareWar(ctx, nr.id, pl.id, 'revendication', target.id, true);
+    }
+  }
+  void rng;
+}
+
+/** Aléas du monde : guerre entre rivaux, souverains riches ou ruinés, alliances. */
+function worldTwists(ctx: Ctx): void {
+  const { state, rng } = ctx;
+  const rivals = Object.values(state.characters)
+    .filter(
+      (c) =>
+        c.alive &&
+        !c.liegeId &&
+        c.id !== state.playerId &&
+        Object.values(state.counties).some((k) => k.holderId === c.id),
+    )
+    .map((c) => c.id);
+  // Une guerre entre deux rivaux voisins.
+  if (rivals.length >= 2 && rng.chance(0.45)) {
+    const a = rng.pick(rivals);
+    const target = rng.shuffle(Object.values(state.counties)).find((c) => {
+      const r = countyRuler(state, c);
+      return (
+        r !== a &&
+        r !== state.playerId &&
+        c.adjacent.some((n) => countyRuler(state, state.counties[n]) === a)
+      );
+    });
+    if (target) {
+      state.characters[a].claims.push(target.id);
+      declareWar(ctx, a, countyRuler(state, target), 'revendication', target.id, true);
+    }
+  }
+  // Une alliance entre deux rivaux.
+  if (rivals.length >= 2 && rng.chance(0.4)) {
+    const [a, b] = rng.shuffle([...rivals]);
+    const k = allyKey(a, b);
+    if (
+      !state.alliances.includes(k) &&
+      !Object.values(state.wars).some(
+        (w) => [w.attackerId, w.defenderId].includes(a) && [w.attackerId, w.defenderId].includes(b),
+      )
+    )
+      state.alliances.push(k);
+  }
+  // Un rival au tempérament marqué.
+  if (rivals.length && rng.chance(0.5)) {
+    const r = state.characters[rng.pick(rivals)];
+    addTrait(r, rng.pick(['ambitieux', 'cruel', 'impetueux', 'genereux', 'prudent']));
+  }
 }
 
 function createVassal(ctx: Ctx, liege: Character, used: Set<string>): Character {
@@ -300,8 +433,8 @@ function createVassal(ctx: Ctx, liege: Character, used: Set<string>): Character 
   return v;
 }
 
-function dist(a: County, b: County): number {
-  const pa = MAP_DATA.counties.find((c) => c.id === a.id)!;
-  const pb = MAP_DATA.counties.find((c) => c.id === b.id)!;
+function dist(a: County, b: County, map: MapData): number {
+  const pa = map.counties.find((c) => c.id === a.id)!;
+  const pb = map.counties.find((c) => c.id === b.id)!;
   return Math.hypot(pa.x - pb.x, pa.y - pb.y);
 }

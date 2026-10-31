@@ -12,7 +12,7 @@ import {
 } from '../../engine/realm';
 import type { GameState, Terrain } from '../../engine/state';
 import { totalMen } from '../../engine/units';
-import { MAP_DATA } from '../../engine/world';
+import type { MapData } from '../../engine/mapgen';
 
 // ---------------------------------------------------------------------------
 // Couleurs des royaumes : une couleur distincte par souverain indépendant
@@ -79,26 +79,35 @@ export function visibleMen(game: GameState, armyId: string): { men: number; exac
 
 type Pt = [number, number];
 const near = (a: Pt, b: Pt) => Math.abs(a[0] - b[0]) <= 2.5 && Math.abs(a[1] - b[1]) <= 2.5;
-const COUNTY = new Map(MAP_DATA.counties.map((c) => [c.id, c]));
 
-/** Arêtes communes à deux comtés voisins. */
-const SHARED: { a: string; b: string; p: Pt; q: Pt }[] = (() => {
-  const res: { a: string; b: string; p: Pt; q: Pt }[] = [];
-  for (const c of MAP_DATA.counties) {
+interface Geometry {
+  COUNTY: Map<string, MapData['counties'][number]>;
+  /** Arêtes communes à deux comtés voisins. */
+  SHARED: { a: string; b: string; p: Pt; q: Pt }[];
+  /** Segments de côte. */
+  COAST: [Pt, Pt][];
+  /** Cadre des terres, avec une marge. */
+  LAND: { x: number; y: number; w: number; h: number };
+}
+
+const geoCache = new WeakMap<MapData, Geometry>();
+
+/** Géométrie dérivée de la carte, calculée une fois par carte. */
+export function geometry(map: MapData): Geometry {
+  const cached = geoCache.get(map);
+  if (cached) return cached;
+  const COUNTY = new Map(map.counties.map((c) => [c.id, c]));
+  const SHARED: Geometry['SHARED'] = [];
+  for (const c of map.counties) {
     for (const nId of c.adjacent) {
       if (nId < c.id) continue;
       const n = COUNTY.get(nId)!;
-      const common = c.polygon.filter((v) => n.polygon.some((w) => near(v, w)));
-      if (common.length >= 2) res.push({ a: c.id, b: nId, p: common[0], q: common[1] });
+      const common = (c.polygon as Pt[]).filter((v) => (n.polygon as Pt[]).some((w) => near(v, w)));
+      if (common.length >= 2) SHARED.push({ a: c.id, b: nId, p: common[0], q: common[1] });
     }
   }
-  return res;
-})();
-
-/** Segments de côte (arêtes qui ne sont partagées avec aucun comté). */
-const COAST: [Pt, Pt][] = (() => {
-  const res: [Pt, Pt][] = [];
-  for (const c of MAP_DATA.counties) {
+  const COAST: [Pt, Pt][] = [];
+  for (const c of map.counties) {
     const poly = c.polygon as Pt[];
     for (let i = 0; i < poly.length; i++) {
       const p = poly[i];
@@ -108,24 +117,22 @@ const COAST: [Pt, Pt][] = (() => {
           (e.a === c.id || e.b === c.id) &&
           ((near(e.p, p) && near(e.q, q)) || (near(e.p, q) && near(e.q, p))),
       );
-      if (!shared) res.push([p, q]);
+      if (!shared) COAST.push([p, q]);
     }
   }
-  return res;
-})();
-
-/** Cadre des terres (hors mer), avec une marge. */
-const LAND = (() => {
-  const xs = MAP_DATA.counties.flatMap((c) => c.polygon.map((p) => p[0]));
-  const ys = MAP_DATA.counties.flatMap((c) => c.polygon.map((p) => p[1]));
+  const xs = map.counties.flatMap((c) => c.polygon.map((p) => p[0]));
+  const ys = map.counties.flatMap((c) => c.polygon.map((p) => p[1]));
   const m = 24;
-  return {
+  const LAND = {
     x: Math.min(...xs) - m,
     y: Math.min(...ys) - m,
     w: Math.max(...xs) - Math.min(...xs) + 2 * m,
     h: Math.max(...ys) - Math.min(...ys) + 2 * m,
   };
-})();
+  const g = { COUNTY, SHARED, COAST, LAND };
+  geoCache.set(map, g);
+  return g;
+}
 
 const pts = (poly: number[][]) => poly.map((p) => p.join(',')).join(' ');
 const seg = (p: Pt, q: Pt) => `M${p[0]} ${p[1]}L${q[0]} ${q[1]}`;
@@ -152,6 +159,8 @@ export function MapView({
   onSelect: (id: string) => void;
   onArmy?: (armyId: string) => void;
 }) {
+  const MAP_DATA = game.map;
+  const { COUNTY, SHARED, COAST, LAND } = geometry(MAP_DATA);
   const [mode, setMode] = useState<'royaumes' | 'terrain'>('royaumes');
   const [legend, setLegend] = useState(false);
   const [vb, setVb] = useState(LAND);
@@ -184,6 +193,8 @@ export function MapView({
     };
   };
   const onDown = (e: React.PointerEvent) => {
+    // Le bord de l'écran est réservé au glissement entre pages.
+    if (e.pointerType !== 'mouse' && (e.clientX < 24 || e.clientX > window.innerWidth - 24)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 1) moved.current = 0;
   };

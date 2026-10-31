@@ -19,7 +19,15 @@ import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
 import { independentRulers, realmCounties, realmName, vassalsOf } from '../../engine/realm';
 import type { Character, GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
-import { CharLine, Opinion, Portrait, Segmented, Sheet, signed } from '../components/common';
+import {
+  CharLine,
+  Opinion,
+  Portrait,
+  Segmented,
+  Sheet,
+  signed,
+  usePager,
+} from '../components/common';
 import { useStore } from '../store';
 
 function AcceptanceView({ acc }: { acc: Acceptance }) {
@@ -43,8 +51,11 @@ function AcceptanceView({ acc }: { acc: Acceptance }) {
   );
 }
 
+const INTRIGUE_VIEWS = ['diplomatie', 'complots'] as const;
+
 export function IntrigueScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<'diplomatie' | 'complots'>('diplomatie');
+  const dir = usePager(INTRIGUE_VIEWS, view, setView);
   return (
     <>
       <Segmented
@@ -56,7 +67,7 @@ export function IntrigueScreen({ game }: { game: GameState }) {
         value={view}
         onChange={setView}
       />
-      <div className="view" key={view}>
+      <div className={`view enter-${dir}`} key={view}>
         {view === 'diplomatie' ? <Diplomacy game={game} /> : <Plots game={game} />}
       </div>
     </>

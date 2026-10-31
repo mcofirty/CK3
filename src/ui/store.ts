@@ -26,6 +26,9 @@ interface Store {
   selectCounty: (id?: string) => void;
   /** Pile de fiches ouvertes : la dernière est affichée, « Retour » revient à la précédente. */
   inspectStack: Inspected[];
+  /** Sous-vues de l'écran courant (glisser d'une sous-vue à l'autre). */
+  pager?: { index: number; count: number; go: (i: number) => void };
+  setPager: (p?: { index: number; count: number; go: (i: number) => void }) => void;
   inspect: (i: Inspected) => void;
   inspectBack: () => void;
   inspectClose: () => void;
@@ -70,6 +73,8 @@ export const useStore = create<Store>((set, get) => ({
   },
   selectCounty: (selectedCounty) => set({ selectedCounty }),
   inspectStack: [],
+  pager: undefined,
+  setPager: (pager) => set({ pager }),
   inspect: (i) => {
     const st = get().inspectStack;
     const top = st[st.length - 1];
