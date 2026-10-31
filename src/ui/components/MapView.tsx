@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import { TERRAINS } from '../../data/terrain';
 import { atWar } from '../../engine/characters';
 import { Rng } from '../../engine/rng';
 import {
@@ -10,9 +9,10 @@ import {
   realmCounties,
   realmName,
 } from '../../engine/realm';
-import type { GameState, Terrain } from '../../engine/state';
+import type { GameState } from '../../engine/state';
 import { totalMen } from '../../engine/units';
 import type { MapData } from '../../engine/mapgen';
+import { MapSymbols, decorFor } from './MapArt';
 
 // ---------------------------------------------------------------------------
 // Couleurs des royaumes : une couleur distincte par souverain indépendant
@@ -137,13 +137,6 @@ export function geometry(map: MapData): Geometry {
 const pts = (poly: number[][]) => poly.map((p) => p.join(',')).join(' ');
 const seg = (p: Pt, q: Pt) => `M${p[0]} ${p[1]}L${q[0]} ${q[1]}`;
 
-const TERRAIN_PATTERN: Partial<Record<Terrain, string>> = {
-  foret: 'url(#pat-foret)',
-  colline: 'url(#pat-colline)',
-  montagne: 'url(#pat-montagne)',
-  marais: 'url(#pat-marais)',
-};
-
 // ---------------------------------------------------------------------------
 // Composant
 // ---------------------------------------------------------------------------
@@ -163,12 +156,12 @@ export function MapView({
   const { COUNTY, SHARED, COAST, LAND } = geometry(MAP_DATA);
   const [mode, setMode] = useState<'royaumes' | 'terrain'>('royaumes');
   const [legend, setLegend] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
+  const decor = decorFor(MAP_DATA);
   const [vb, setVb] = useState(LAND);
   const svgRef = useRef<SVGSVGElement>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const moved = useRef(0);
-  const dark =
-    typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches;
 
   const colors = useMemo(() => realmColors(game), [game]);
   const rulerOf = useMemo(() => {
@@ -182,14 +175,15 @@ export function MapView({
     const r = svgRef.current!.getBoundingClientRect();
     return Math.max(vb.w / r.width, vb.h / r.height);
   };
+  const WORLD = { x: -220, y: -220, w: MAP_DATA.width + 440, h: MAP_DATA.height + 440 };
   const clampVb = (v: typeof vb) => {
-    const w = Math.max(200, Math.min(LAND.w * 1.25, v.w));
+    const w = Math.max(200, Math.min(WORLD.w * 1.1, v.w));
     const h = (w * v.h) / v.w;
     return {
       w,
       h,
-      x: Math.max(LAND.x - w * 0.5, Math.min(LAND.x + LAND.w - w * 0.5, v.x)),
-      y: Math.max(LAND.y - h * 0.5, Math.min(LAND.y + LAND.h - h * 0.5, v.y)),
+      x: Math.max(WORLD.x - w * 0.3, Math.min(WORLD.x + WORLD.w - w * 0.7, v.x)),
+      y: Math.max(WORLD.y - h * 0.3, Math.min(WORLD.y + WORLD.h - h * 0.7, v.y)),
     };
   };
   const onDown = (e: React.PointerEvent) => {
@@ -282,13 +276,31 @@ export function MapView({
   for (const a of Object.values(game.armies))
     armiesByCounty.set(a.location, [...(armiesByCounty.get(a.location) ?? []), a.id]);
   const playerArmy = Object.values(game.armies).find((a) => a.ownerId === game.playerId);
-  const k = vb.w / LAND.w; // facteur de zoom (1 = carte entière)
-  const labelScale = Math.max(0.55, Math.min(1, k));
-  // Zoom sémantique : vue d'ensemble = noms des royaumes, zoom avant = noms des comtés.
+  const k = vb.w / LAND.w;
+  const labelScale = Math.max(0.6, Math.min(1.05, k));
   const showRealms = mode === 'royaumes' && k > 0.72;
+  const coastD = COAST.map(([p, q]) => seg(p, q)).join('');
+  const foreignCoastD = decor.foreign.flatMap((f) => f.coast.map(([p, q]) => seg(p, q))).join('');
+  const allCoast = coastD + foreignCoastD;
+  const realmEdges = (r: string) =>
+    [...SHARED.filter((e) => (rulerOf.get(e.a) === r) !== (rulerOf.get(e.b) === r))]
+      .map((e) => seg(e.p, e.q))
+      .join('') +
+    COAST.filter(([p]) => {
+      const owner = MAP_DATA.counties.find((c) =>
+        c.polygon.some((v) => Math.abs(v[0] - p[0]) < 1 && Math.abs(v[1] - p[1]) < 1),
+      );
+      return owner && rulerOf.get(owner.id) === r;
+    })
+      .map(([p, q]) => seg(p, q))
+      .join('');
+  const flash = (t: string) => {
+    setHint(t);
+    setTimeout(() => setHint(null), 2200);
+  };
 
   return (
-    <div className="map-wrap">
+    <div className="map-wrap illustrated">
       <svg
         ref={svgRef}
         viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
@@ -300,43 +312,32 @@ export function MapView({
         onWheel={(e) => zoom(e.deltaY > 0 ? 1.1 : 0.9)}
       >
         <defs>
-          <radialGradient id="sea-grad" cx="50%" cy="45%" r="70%">
-            <stop offset="0%" stopColor={dark ? '#1f3644' : '#d3e1e6'} />
-            <stop offset="100%" stopColor={dark ? '#0f1b22' : '#a9c0ca'} />
+          <MapSymbols />
+          <radialGradient id="sea-grad" cx="50%" cy="48%" r="75%">
+            <stop offset="0%" stopColor="#a8c6d4" />
+            <stop offset="100%" stopColor="#6f97ae" />
           </radialGradient>
-          <pattern id="pat-vagues" width="60" height="26" patternUnits="userSpaceOnUse">
-            <path
-              d="M0 13 Q15 5 30 13 T60 13"
-              fill="none"
-              stroke={dark ? 'rgba(170,210,230,0.12)' : 'rgba(255,255,255,0.45)'}
-              strokeWidth="2"
-            />
-          </pattern>
-          <pattern id="pat-foret" width="44" height="40" patternUnits="userSpaceOnUse">
-            <g fill="rgba(30,60,30,0.38)">
-              <path d="M11 6 L18 20 H4 Z" />
-              <rect x="10" y="20" width="2" height="5" />
-              <path d="M33 22 L40 36 H26 Z" />
-              <rect x="32" y="36" width="2" height="4" />
+          <pattern id="pat-herbe" width="60" height="44" patternUnits="userSpaceOnUse">
+            <g stroke="rgba(70,95,35,0.32)" strokeWidth="1.1" strokeLinecap="round">
+              <path d="M8 12 l2 -5 M11 12 l1 -6 M14 12 l-1 -5" />
+              <path d="M40 34 l2 -5 M43 34 l1 -6 M46 34 l-1 -5" />
             </g>
+            <circle cx="30" cy="8" r="1.2" fill="rgba(255,250,220,0.35)" />
+            <circle cx="50" cy="20" r="9" fill="rgba(255,250,220,0.07)" />
           </pattern>
-          <pattern id="pat-colline" width="56" height="34" patternUnits="userSpaceOnUse">
-            <g fill="none" stroke="rgba(90,60,25,0.35)" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M4 16 Q14 4 24 16" />
-              <path d="M32 32 Q42 20 52 32" />
-            </g>
+          <pattern id="pat-papier" width="120" height="120" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="30" r="22" fill="rgba(255,255,230,0.06)" />
+            <circle cx="90" cy="80" r="30" fill="rgba(90,70,30,0.05)" />
           </pattern>
-          <pattern id="pat-montagne" width="60" height="48" patternUnits="userSpaceOnUse">
-            <g stroke="rgba(60,45,35,0.45)" strokeWidth="2.2" strokeLinejoin="round">
-              <path d="M4 26 L16 8 L28 26" fill="rgba(255,255,255,0.25)" />
-              <path d="M32 46 L44 28 L56 46" fill="rgba(255,255,255,0.25)" />
-            </g>
-          </pattern>
-          <pattern id="pat-marais" width="40" height="30" patternUnits="userSpaceOnUse">
-            <g stroke="rgba(40,80,70,0.4)" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 18 V8 M10 18 V11 M14 18 V9" />
-              <path d="M24 28 h12" />
-            </g>
+          <pattern
+            id="pat-brume"
+            width="14"
+            height="14"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(35)"
+          >
+            <rect width="14" height="14" fill="rgba(240,232,210,0.38)" />
+            <path d="M0 0 V14" stroke="rgba(70,50,30,0.32)" strokeWidth="1.4" />
           </pattern>
           <pattern
             id="hatch"
@@ -345,93 +346,150 @@ export function MapView({
             patternUnits="userSpaceOnUse"
             patternTransform="rotate(45)"
           >
-            <rect width="6" height="16" fill="rgba(150,20,20,0.5)" />
+            <rect width="6" height="16" fill="rgba(150,20,20,0.45)" />
           </pattern>
-          <filter id="relief" x="-5%" y="-5%" width="110%" height="110%">
-            <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#000" floodOpacity="0.25" />
-          </filter>
+          {rulers.map((r) => (
+            <clipPath id={`clip-${r}`} key={r}>
+              {realmCounties(game, r).map((c) => (
+                <polygon key={c.id} points={pts(COUNTY.get(c.id)!.polygon)} />
+              ))}
+            </clipPath>
+          ))}
         </defs>
 
         {/* Mer */}
         <rect
-          x={LAND.x - 2000}
-          y={LAND.y - 2000}
-          width={LAND.w + 4000}
-          height={LAND.h + 4000}
+          x={-3000}
+          y={-3000}
+          width={MAP_DATA.width + 6000}
+          height={MAP_DATA.height + 6000}
           fill="url(#sea-grad)"
         />
-        <rect
-          x={LAND.x - 2000}
-          y={LAND.y - 2000}
-          width={LAND.w + 4000}
-          height={LAND.h + 4000}
-          fill="url(#pat-vagues)"
-        />
-        {/* Halo de côte */}
-        <path
-          d={COAST.map(([p, q]) => seg(p, q)).join('')}
-          stroke={dark ? 'rgba(160,200,220,0.18)' : 'rgba(255,255,255,0.7)'}
-          strokeWidth={22}
-          strokeLinecap="round"
-          fill="none"
-        />
+        {decor.waves.map((w, i) => (
+          <path
+            key={i}
+            d={`M${w[0] - 12} ${w[1]} q6 -4 12 0 t12 0`}
+            stroke="rgba(235,245,248,0.55)"
+            strokeWidth={1.6}
+            fill="none"
+            pointerEvents="none"
+          />
+        ))}
+        {/* Lignes de rivage (contours dans l'eau) */}
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none">
+          <path d={allCoast} stroke="rgba(200,224,232,0.55)" strokeWidth={64} />
+          <path d={allCoast} stroke="#93b8c9" strokeWidth={56} opacity={0.9} />
+          <path d={allCoast} stroke="rgba(214,234,240,0.7)" strokeWidth={38} />
+          <path d={allCoast} stroke="#9fc2d1" strokeWidth={31} />
+          <path d={allCoast} stroke="#e7d7a6" strokeWidth={14} />
+        </g>
 
-        {/* Comtés */}
-        <g filter="url(#relief)">
-          {MAP_DATA.counties.map((m) => {
+        {/* Terres lointaines */}
+        {decor.foreign.map((f, i) => (
+          <g
+            key={i}
+            onClick={tap(() => flash(`${f.name} : contrées lointaines, hors de votre portée.`))}
+          >
+            {f.cells.map((cell, j) => (
+              <polygon key={j} points={pts(cell)} fill="#b9b98a" stroke="#b9b98a" strokeWidth={1} />
+            ))}
+          </g>
+        ))}
+
+        {/* Comtés : couleur de terrain */}
+        {MAP_DATA.counties.map((m) => (
+          <polygon
+            key={m.id}
+            points={pts(m.polygon)}
+            fill={TERRAIN_FILL[game.counties[m.id].terrain]}
+            stroke={TERRAIN_FILL[game.counties[m.id].terrain]}
+            strokeWidth={1}
+            pointerEvents="none"
+          />
+        ))}
+        {[...MAP_DATA.counties.map((m) => m.polygon), ...decor.foreign.flatMap((f) => f.cells)].map(
+          (poly, i) => (
+            <polygon key={i} points={pts(poly)} fill="url(#pat-herbe)" pointerEvents="none" />
+          ),
+        )}
+
+        {/* Teinte et liseré des royaumes */}
+        {mode === 'royaumes' &&
+          MAP_DATA.counties.map((m) => {
             const c = game.counties[m.id];
-            const ruler = rulerOf.get(m.id)!;
-            const fill =
-              mode === 'terrain'
-                ? dark
-                  ? TERRAINS[c.terrain].colorDark
-                  : TERRAINS[c.terrain].color
-                : (colors.get(ruler) ?? '#8c8c8c');
+            const r = rulerOf.get(m.id)!;
             return (
               <polygon
                 key={m.id}
                 points={pts(m.polygon)}
-                fill={fill}
-                fillOpacity={mode === 'royaumes' ? (c.holderId === ruler ? 0.92 : 0.7) : 1}
-                stroke="none"
+                fill={colors.get(r) ?? '#888'}
+                opacity={c.holderId === r ? 0.3 : 0.18}
+                pointerEvents="none"
               />
             );
           })}
-        </g>
-        {/* Textures de relief */}
-        {MAP_DATA.counties.map((m) => {
-          const pat = TERRAIN_PATTERN[game.counties[m.id].terrain];
-          return pat ? (
-            <polygon
-              key={m.id}
-              points={pts(m.polygon)}
-              fill={pat}
-              opacity={mode === 'terrain' ? 1 : 0.75}
-              pointerEvents="none"
-            />
-          ) : null;
-        })}
-        {/* Occupations */}
+        {rulers.map((r) => (
+          <path
+            key={r}
+            d={realmEdges(r)}
+            clipPath={`url(#clip-${r})`}
+            stroke={colors.get(r)}
+            strokeWidth={mode === 'royaumes' ? 22 : 10}
+            strokeLinejoin="round"
+            fill="none"
+            opacity={mode === 'royaumes' ? 0.55 : 0.35}
+            pointerEvents="none"
+          />
+        ))}
         {MAP_DATA.counties.map((m) =>
           game.counties[m.id].occupation ? (
             <polygon key={m.id} points={pts(m.polygon)} fill="url(#hatch)" pointerEvents="none" />
           ) : null,
         )}
 
-        {/* Limites : comtés (fines), vassaux et duchés (pointillés), royaumes (épaisses) */}
-        <path
-          d={SHARED.filter(
-            (e) =>
-              rulerOf.get(e.a) === rulerOf.get(e.b) &&
-              game.counties[e.a].holderId === game.counties[e.b].holderId,
-          )
-            .map((e) => seg(e.p, e.q))
-            .join('')}
-          stroke="rgba(30,20,10,0.28)"
-          strokeWidth={1.5}
-          fill="none"
-          pointerEvents="none"
-        />
+        {/* Chemins */}
+        <g fill="none" strokeLinecap="round" pointerEvents="none">
+          {decor.roads.map((r, i) => (
+            <path
+              key={`o${i}`}
+              d={`M${r.a[0]} ${r.a[1]} Q${r.c[0]} ${r.c[1]} ${r.b[0]} ${r.b[1]}`}
+              stroke="#8d7650"
+              strokeWidth={6.5}
+              opacity={0.55}
+            />
+          ))}
+          {decor.roads.map((r, i) => (
+            <path
+              key={`i${i}`}
+              d={`M${r.a[0]} ${r.a[1]} Q${r.c[0]} ${r.c[1]} ${r.b[0]} ${r.b[1]}`}
+              stroke="#e1d0a4"
+              strokeWidth={4}
+              strokeDasharray="9 4"
+            />
+          ))}
+        </g>
+
+        {/* Rivières */}
+        {MAP_DATA.rivers.map((r, i) => (
+          <g key={i} pointerEvents="none">
+            <polyline
+              points={pts(r.path)}
+              stroke="#3f6f93"
+              strokeWidth={9}
+              strokeLinecap="round"
+              fill="none"
+            />
+            <polyline
+              points={pts(r.path)}
+              stroke="#7fb1cf"
+              strokeWidth={5}
+              strokeLinecap="round"
+              fill="none"
+            />
+          </g>
+        ))}
+
+        {/* Limites : vassaux (pointillés), royaumes (encre) */}
         <path
           d={SHARED.filter(
             (e) =>
@@ -440,9 +498,22 @@ export function MapView({
           )
             .map((e) => seg(e.p, e.q))
             .join('')}
-          stroke="rgba(30,20,10,0.55)"
-          strokeWidth={2.5}
-          strokeDasharray="6 6"
+          stroke="rgba(59,42,26,0.6)"
+          strokeWidth={2}
+          strokeDasharray="4 5"
+          fill="none"
+          pointerEvents="none"
+        />
+        <path
+          d={SHARED.filter(
+            (e) =>
+              rulerOf.get(e.a) === rulerOf.get(e.b) &&
+              game.counties[e.a].holderId === game.counties[e.b].holderId,
+          )
+            .map((e) => seg(e.p, e.q))
+            .join('')}
+          stroke="rgba(59,42,26,0.22)"
+          strokeWidth={1.4}
           fill="none"
           pointerEvents="none"
         />
@@ -450,149 +521,188 @@ export function MapView({
           d={SHARED.filter((e) => rulerOf.get(e.a) !== rulerOf.get(e.b))
             .map((e) => seg(e.p, e.q))
             .join('')}
-          stroke={dark ? 'rgba(10,6,4,0.9)' : 'rgba(35,22,14,0.85)'}
-          strokeWidth={6}
+          stroke="#3b2a1a"
+          strokeWidth={4}
+          strokeDasharray="14 5 3 5"
           strokeLinecap="round"
           fill="none"
           pointerEvents="none"
         />
-        {/* Côte du royaume du joueur, liseré or */}
+        {/* Côtes à l'encre */}
         <path
-          d={[
-            ...SHARED.filter(
-              (e) => (rulerOf.get(e.a) === game.playerId) !== (rulerOf.get(e.b) === game.playerId),
-            ).map((e) => seg(e.p, e.q)),
-          ].join('')}
-          stroke="#e0b443"
-          strokeWidth={2.5}
+          d={allCoast}
+          stroke="#3b2a1a"
+          strokeWidth={3.2}
           strokeLinecap="round"
-          fill="none"
-          pointerEvents="none"
-        />
-        <path
-          d={COAST.map(([p, q]) => seg(p, q)).join('')}
-          stroke="rgba(35,22,14,0.55)"
-          strokeWidth={2.5}
+          strokeLinejoin="round"
           fill="none"
           pointerEvents="none"
         />
 
-        {/* Rivières */}
-        {MAP_DATA.rivers.map((r, i) => (
-          <polyline
+        {/* Décor : reliefs, forêts, champs */}
+        {[...decor.icons, ...decor.foreignIcons].map((ic, i) => (
+          <use
             key={i}
-            points={pts(r.path)}
-            stroke={dark ? '#4f8fc4' : '#3f7fbe'}
-            strokeWidth={8}
-            strokeLinecap="round"
-            fill="none"
+            href={`#${ic.sym}`}
+            transform={`translate(${ic.x} ${ic.y}) scale(${ic.s})`}
             pointerEvents="none"
           />
         ))}
 
-        {/* Zones de toucher */}
-        {MAP_DATA.counties.map((m) => (
-          <polygon
-            key={m.id}
-            points={pts(m.polygon)}
-            fill="transparent"
-            stroke={selected === m.id ? 'var(--accent)' : 'none'}
-            strokeWidth={selected === m.id ? 7 : 0}
-            strokeLinejoin="round"
-            onClick={tap(() => onSelect(m.id))}
-          />
+        {/* Brume sur les terres lointaines */}
+        {decor.foreign.map((f, i) => (
+          <g key={i} pointerEvents="none">
+            {f.cells.map((cell, j) => (
+              <polygon key={j} points={pts(cell)} fill="url(#pat-brume)" />
+            ))}
+          </g>
         ))}
 
-        {/* Noms des royaumes */}
-        {showRealms &&
-          realmLabels.map((l) => (
-            <g key={l.r} pointerEvents="none" opacity={0.92}>
-              <text
-                x={l.x}
-                y={l.y - 8}
-                className="realm-label kind"
-                style={{ fontSize: 17 }}
-                fill={l.r === game.playerId ? '#7a2018' : '#1e1611'}
-              >
-                {l.kind.toUpperCase()}
-              </text>
-              <text
-                x={l.x}
-                y={l.y + 22}
-                className="realm-label"
-                style={{ fontSize: l.size > 6 ? 38 : 32 }}
-                fill={l.r === game.playerId ? '#7a2018' : '#1e1611'}
-              >
-                {l.name.toUpperCase()}
-              </text>
-            </g>
-          ))}
-
-        {/* Capitales et forts */}
+        {/* Villages et châteaux */}
         {MAP_DATA.counties.map((m) => {
           const c = game.counties[m.id];
-          const f = fortLevel(c);
+          const t = decor.towns[m.id];
           const cap = capitals.has(m.id);
+          const f = fortLevel(c);
           return (
             <g key={m.id} pointerEvents="none">
-              {cap && (
-                <g transform={`translate(${m.x} ${m.y - 22})`}>
-                  <path
-                    d="M-11 8 V-4 H-7 V-8 H-3 V-4 H3 V-8 H7 V-4 H11 V8 Z"
-                    fill={rulerOf.get(m.id) === game.playerId ? '#e0b443' : '#f3ecdc'}
-                    stroke="#1e1611"
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                  />
-                </g>
-              )}
+              <use
+                href={cap ? '#s-castle' : '#s-town'}
+                transform={`translate(${t[0]} ${t[1]}) scale(${cap ? 0.95 : 0.9})`}
+                style={{ color: colors.get(rulerOf.get(m.id)!) }}
+              />
               {f > 0 &&
                 Array.from({ length: f }).map((_, i) => (
                   <rect
                     key={i}
-                    x={m.x - (f * 9) / 2 + i * 9 + 1}
-                    y={m.y + 10}
-                    width={6}
-                    height={6}
-                    rx={1}
-                    fill="#1e1611"
-                    opacity={0.7}
+                    x={t[0] - (f * 8) / 2 + i * 8 + 1}
+                    y={t[1] + 5}
+                    width={5}
+                    height={5}
+                    fill="#3b2a1a"
+                    opacity={0.75}
                   />
                 ))}
             </g>
           );
         })}
 
-        {/* Noms des comtés */}
+        {/* Zones de toucher et sélection */}
+        {MAP_DATA.counties.map((m) => (
+          <polygon
+            key={m.id}
+            points={pts(m.polygon)}
+            fill={selected === m.id ? 'rgba(255,245,210,0.18)' : 'transparent'}
+            stroke={selected === m.id ? '#8a2f24' : 'none'}
+            strokeWidth={selected === m.id ? 6 : 0}
+            strokeLinejoin="round"
+            onClick={tap(() => onSelect(m.id))}
+          />
+        ))}
+
+        {/* Noms */}
+        {decor.foreign.map((f, i) => (
+          <text
+            key={i}
+            x={f.label[0]}
+            y={f.label[1]}
+            className="map-font foreign-label"
+            fontSize={30}
+            pointerEvents="none"
+          >
+            {f.name}
+            <tspan x={f.label[0]} dy={26} fontSize={18}>
+              {f.kind === 'royaume' ? '— royaume étranger —' : '— terres inexplorées —'}
+            </tspan>
+          </text>
+        ))}
+        {showRealms &&
+          realmLabels.map((l) => (
+            <g key={l.r} pointerEvents="none">
+              <text x={l.x} y={l.y - 6} className="map-font-sc realm-label-ill kind" fontSize={18}>
+                {l.kind}
+              </text>
+              <text
+                x={l.x}
+                y={l.y + 26}
+                className="map-font-sc realm-label-ill"
+                fontSize={l.size > 6 ? 42 : 36}
+                fill={l.r === game.playerId ? '#6e1e15' : '#2f2114'}
+              >
+                {l.name}
+              </text>
+            </g>
+          ))}
         {!showRealms &&
           MAP_DATA.counties.map((m) => (
             <text
               key={m.id}
               x={m.x}
-              y={m.y + 4}
-              className="county-label"
-              style={{ fontSize: 22 * labelScale + 4 }}
+              y={m.y + 8}
+              className="map-font county-label-ill"
+              fontSize={24 * labelScale + 3}
+              pointerEvents="none"
             >
               {game.counties[m.id].name}
             </text>
           ))}
 
+        {/* Rose des vents, cartouche, navires */}
+        {decor.ships.map((p, i) => (
+          <use
+            key={i}
+            href="#s-ship"
+            transform={`translate(${p[0]} ${p[1]}) scale(${i ? -1.1 : 1.2} 1.2)`}
+            pointerEvents="none"
+          />
+        ))}
+        {decor.compass && (
+          <use
+            href="#s-compass"
+            transform={`translate(${decor.compass[0]} ${decor.compass[1]}) scale(1.1)`}
+            pointerEvents="none"
+          />
+        )}
+        {decor.cartouche && (
+          <g
+            transform={`translate(${decor.cartouche[0]} ${decor.cartouche[1]})`}
+            pointerEvents="none"
+          >
+            <path
+              d="M-150 -26 H150 L165 -8 L150 12 H-150 L-165 -8 Z"
+              fill="#e9d9b0"
+              stroke="#3b2a1a"
+              strokeWidth={2.4}
+            />
+            <path
+              d="M-150 -26 L-176 -34 L-166 -8 L-176 18 L-150 12 Z M150 -26 L176 -34 L166 -8 L176 18 L150 12 Z"
+              fill="#d2bd8c"
+              stroke="#3b2a1a"
+              strokeWidth={2.2}
+              strokeLinejoin="round"
+            />
+            <text x={0} y={2} className="map-font" fontSize={30} textAnchor="middle" fill="#3b2a1a">
+              Marches d’Aveline
+            </text>
+          </g>
+        )}
+
         {/* Trajet de l'armée du joueur */}
         {playerArmy && playerArmy.path.length > 0 && (
           <polyline
             points={[playerArmy.location, ...playerArmy.path]
-              .map((id) => `${COUNTY.get(id)!.x},${COUNTY.get(id)!.y + 40}`)
+              .map((id) => `${COUNTY.get(id)!.x},${COUNTY.get(id)!.y + 44}`)
               .join(' ')}
-            stroke="var(--accent)"
-            strokeWidth={6}
-            strokeDasharray="14 10"
+            stroke="#8a2f24"
+            strokeWidth={5}
+            strokeDasharray="2 10"
             strokeLinecap="round"
             fill="none"
             pointerEvents="none"
           />
         )}
 
-        {/* Armées : écussons cliquables */}
+        {/* Armées : jetons cliquables */}
         {[...armiesByCounty.entries()].map(([cid, ids]) => {
           const m = COUNTY.get(cid)!;
           return ids.map((id, i) => {
@@ -600,8 +710,8 @@ export function MapView({
             const mine = a.ownerId === game.playerId;
             const hostile = atWar(game, a.ownerId, game.playerId);
             const vis = visibleMen(game, id);
-            const x = m.x + (i - (ids.length - 1) / 2) * 74;
-            const y = m.y + 42;
+            const x = m.x + (i - (ids.length - 1) / 2) * 76;
+            const y = m.y + 44;
             const col = mine ? PLAYER_COLOR : (colors.get(a.ownerId) ?? '#666');
             const label = vis.exact
               ? vis.men >= 1000
@@ -616,28 +726,28 @@ export function MapView({
                 style={{ cursor: 'pointer' }}
               >
                 <rect
-                  x={-36}
-                  y={-17}
-                  width={72}
-                  height={34}
-                  rx={17}
-                  fill={col}
-                  stroke={hostile ? '#ff5a45' : '#1e1611'}
-                  strokeWidth={hostile ? 4 : 2.5}
+                  x={-34}
+                  y={-15}
+                  width={70}
+                  height={30}
+                  rx={8}
+                  fill="#f1e4c3"
+                  stroke={hostile ? '#a3261c' : '#3b2a1a'}
+                  strokeWidth={hostile ? 3.5 : 2}
                 />
                 <path
-                  d="M-26 -9 h12 v8 c0 5 -6 8 -6 8 c0 0 -6 -3 -6 -8 z"
-                  fill="#f3ecdc"
-                  stroke="#1e1611"
+                  d="M-28 -10 h16 v9 c0 6 -8 9 -8 9 c0 0 -8 -3 -8 -9 z"
+                  fill={col}
+                  stroke="#3b2a1a"
                   strokeWidth={1.5}
                 />
                 <text
-                  x={8}
-                  y={7}
-                  fontSize="18"
+                  x={12}
+                  y={6}
+                  fontSize="17"
                   fontWeight="700"
                   textAnchor="middle"
-                  fill="#fff"
+                  fill="#3b2a1a"
                   style={{ fontFamily: 'var(--font)' }}
                 >
                   {label}
@@ -670,7 +780,10 @@ export function MapView({
           －
         </button>
       </div>
-      {showRealms && !legend && <div className="map-hint glass">Pincez pour voir les comtés</div>}
+      {hint && <div className="map-hint glass">{hint}</div>}
+      {!hint && showRealms && !legend && (
+        <div className="map-hint glass">Pincez pour voir les comtés</div>
+      )}
       {legend && (
         <div className="map-legend-card glass">
           {rulers
@@ -693,7 +806,10 @@ export function MapView({
               <i className="k-vassal" /> Terre de vassal
             </span>
             <span>
-              <i className="k-cap" /> Capitale · ■ fortification
+              <i className="k-cap" /> Château : capitale · ■ fortification
+            </span>
+            <span>
+              <i className="k-fog" /> Terres lointaines (hors de portée)
             </span>
           </div>
         </div>
@@ -701,3 +817,12 @@ export function MapView({
     </div>
   );
 }
+
+/** Couleurs de terrain façon carte peinte. */
+const TERRAIN_FILL: Record<string, string> = {
+  plaine: '#b9c77f',
+  colline: '#aebc72',
+  foret: '#97b066',
+  marais: '#a3b38b',
+  montagne: '#bdb48f',
+};

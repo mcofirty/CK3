@@ -351,3 +351,146 @@ export function generateMap(rng: Rng): MapData {
   }
   throw new Error('Génération de carte impossible');
 }
+
+// ---------------------------------------------------------------------------
+// Terres lointaines : continents et royaumes hors de portée, au bord du monde
+// ---------------------------------------------------------------------------
+
+export interface ForeignLand {
+  name: string;
+  kind: 'royaume' | 'inexplore';
+  cells: [number, number][][];
+  /** Cellules d'origine (dans le cadre de la carte). */
+  source: [number, number][][];
+  /** Arêtes de côte (non partagées entre cellules du même ensemble). */
+  coast: [[number, number], [number, number]][];
+  label: [number, number];
+}
+
+const closeTo = (a: number[], b: number[]) =>
+  Math.abs(a[0] - b[0]) <= 2.5 && Math.abs(a[1] - b[1]) <= 2.5;
+
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Déduit les terres lointaines de la carte (déterministe) : cellules de mer au bord du monde,
+ * éloignées de la côte jouable, regroupées en 2 ou 3 masses par secteurs angulaires.
+ */
+export function foreignLands(map: MapData, RngCtor: new (s: number) => Rng): ForeignLand[] {
+  const rng = new RngCtor(hashStr(map.counties.map((c) => c.name).join('|')));
+  const W0 = map.width;
+  const H0 = map.height;
+  const centroid = (poly: [number, number][]) => [
+    poly.reduce((s, p) => s + p[0], 0) / poly.length,
+    poly.reduce((s, p) => s + p[1], 0) / poly.length,
+  ];
+  const landPts = map.counties.flatMap((c) => c.polygon);
+  const info = map.sea.map((poly, i) => {
+    const c = centroid(poly);
+    const border = poly.some((p) => p[0] <= 1 || p[0] >= W0 - 1 || p[1] <= 1 || p[1] >= H0 - 1);
+    const coastal = poly.filter((p) => landPts.some((q) => closeTo(p, q))).length >= 2;
+    const dLand = Math.min(...map.counties.map((k) => Math.hypot(k.x - c[0], k.y - c[1])));
+    const angle = Math.atan2(c[1] - H0 / 2, c[0] - W0 / 2);
+    return { i, poly, c, border, coastal, dLand, angle };
+  });
+  const sectors = [...Array(rng.int(2, 3))].map(() => ({
+    a: rng.range(-Math.PI, Math.PI),
+    w: rng.range(0.9, 1.5),
+  }));
+  const angDist = (a: number, b: number) => {
+    const d = Math.abs(a - b) % (2 * Math.PI);
+    return d > Math.PI ? 2 * Math.PI - d : d;
+  };
+  const shares = (a: [number, number][], b: [number, number][]) =>
+    a.filter((p) => b.some((q) => closeTo(p, q))).length >= 2;
+  // Graines au bord du monde, puis croissance vers l'intérieur (en gardant un détroit de mer).
+  const allowed = (x: (typeof info)[number]) => !x.coastal && x.dLand > 125;
+  const chosenSet = new Set(
+    info
+      .filter((x) => x.border && allowed(x) && sectors.some((z) => angDist(x.angle, z.a) < z.w))
+      .map((x) => x.i),
+  );
+  for (let round = 0; round < 2; round++) {
+    for (const x of info) {
+      if (chosenSet.has(x.i) || !allowed(x) || x.dLand < 170) continue;
+      if ([...chosenSet].some((j) => shares(info[j].poly, x.poly))) chosenSet.add(x.i);
+    }
+  }
+  const chosen = info.filter((x) => chosenSet.has(x.i));
+  const groups: (typeof chosen)[] = [];
+  const seen = new Set<number>();
+  for (const s of chosen) {
+    if (seen.has(s.i)) continue;
+    const g = [s];
+    seen.add(s.i);
+    for (let k = 0; k < g.length; k++)
+      for (const t of chosen) {
+        if (!seen.has(t.i) && shares(g[k].poly, t.poly)) {
+          seen.add(t.i);
+          g.push(t);
+        }
+      }
+    groups.push(g);
+  }
+  // Les terres touchant le bord du monde se prolongent au-delà : ce sont des continents.
+  const FAR = 900;
+  const ext = (p: [number, number]): [number, number] => [
+    p[0] <= 1 ? p[0] - FAR : p[0] >= W0 - 1 ? p[0] + FAR : p[0],
+    p[1] <= 1 ? p[1] - FAR : p[1] >= H0 - 1 ? p[1] + FAR : p[1],
+  ];
+  const syl = [
+    'Mor',
+    'Val',
+    'Kar',
+    'Ost',
+    'Thul',
+    'Ard',
+    'Sel',
+    'Brun',
+    'Hel',
+    'Dor',
+    'Vyr',
+    'Gal',
+  ];
+  const end = ['vaine', 'dor', 'heim', 'ance', 'rie', 'mark', 'ande', 'gard', 'esse', 'ombre'];
+  return groups.map((g, gi) => {
+    const coast: ForeignLand['coast'] = [];
+    for (const s of g) {
+      for (let k = 0; k < s.poly.length; k++) {
+        const p = s.poly[k];
+        const q = s.poly[(k + 1) % s.poly.length];
+        const onBorder =
+          (p[0] <= 1 && q[0] <= 1) ||
+          (p[0] >= W0 - 1 && q[0] >= W0 - 1) ||
+          (p[1] <= 1 && q[1] <= 1) ||
+          (p[1] >= H0 - 1 && q[1] >= H0 - 1);
+        const inner = g.some(
+          (t) => t !== s && t.poly.some((a) => closeTo(a, p)) && t.poly.some((a) => closeTo(a, q)),
+        );
+        if (!inner && !onBorder) coast.push([ext(p), ext(q)]);
+      }
+    }
+    // Étiquette : la cellule la plus proche du centre du monde.
+    const best = [...g].sort(
+      (a, b) =>
+        Math.hypot(a.c[0] - W0 / 2, a.c[1] - H0 / 2) - Math.hypot(b.c[0] - W0 / 2, b.c[1] - H0 / 2),
+    )[0];
+    const kind: ForeignLand['kind'] = gi === 0 || rng.chance(0.5) ? 'royaume' : 'inexplore';
+    const n = rng.pick(syl) + rng.pick(end);
+    return {
+      name: kind === 'royaume' ? `Royaume de ${n}` : `Terres de ${n}`,
+      kind,
+      cells: g.map((s) => s.poly.map(ext)),
+      source: g.map((s) => s.poly),
+      coast,
+      label: [Math.round(best.c[0]), Math.round(best.c[1])],
+    };
+  });
+}
