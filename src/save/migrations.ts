@@ -45,6 +45,14 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     battle: s.battle ? upgradeBattle(s.battle as AnySave) : s.battle,
     version: 3,
   }),
+  // Version 3 → 4 : économie locale (impôts, contentement, édits, emprunts).
+  3: (s) => ({
+    edicts: {},
+    edictCooldown: {},
+    loans: [],
+    ...s,
+    version: 4,
+  }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

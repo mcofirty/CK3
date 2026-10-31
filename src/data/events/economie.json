@@ -1,0 +1,732 @@
+[
+  {
+    "id": "eco_jacquerie",
+    "titre": "La jacquerie",
+    "texte": [
+      "Les paysans de {comte.nom} ont pris les fourches. Le collecteur d'impôts a été pendu à un chêne et les greniers seigneuriaux brûlent.",
+      "Le tocsin sonne à {comte.nom} : écrasés d'impôts, les villageois se soulèvent et marchent sur le manoir."
+    ],
+    "declencheur": {
+      "type": "revolte_paysanne"
+    },
+    "choix": [
+      {
+        "libelle": "Céder : baisser les impôts et pardonner.",
+        "effets": [
+          {
+            "impots": "faible"
+          },
+          {
+            "contentement": 25
+          },
+          {
+            "prestige": -30
+          },
+          {
+            "stress": {
+              "cruel": 10,
+              "genereux": -10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Écraser la révolte par les armes.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Paysans révoltés de {comte.nom}",
+              "force": 0.45,
+              "composition": {
+                "levees": 0.85,
+                "archers": 0.1,
+                "infanterie": 0.05
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "contentement": 10
+                },
+                {
+                  "prestige": 30
+                },
+                {
+                  "stress": {
+                    "juste": 15,
+                    "genereux": 10
+                  }
+                }
+              ],
+              "defaite": [
+                {
+                  "developpement": -1
+                },
+                {
+                  "contentement": -10
+                },
+                {
+                  "prestige": -60
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Négocier avec leurs meneurs (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "contentement": 20
+          },
+          {
+            "xp": {
+              "competence": "diplomatie",
+              "valeur": 30
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_doleances",
+    "titre": "Les doléances de {comte.nom}",
+    "texte": "Une délégation de villageois de {comte.nom} attend à la porte, chapeau bas. Ils disent ne plus pouvoir payer.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "comte_contentement_max": 40
+      }
+    ],
+    "poids": 9,
+    "delai_retour": 8,
+    "choix": [
+      {
+        "libelle": "Les écouter et alléger les impôts.",
+        "effets": [
+          {
+            "impots": "faible"
+          },
+          {
+            "contentement": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Leur offrir une aumône (30 or).",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "contentement": 12
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ]
+      },
+      {
+        "libelle": "Les renvoyer : l'impôt est l'impôt.",
+        "effets": [
+          {
+            "contentement": -8
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_percepteur",
+    "titre": "Un percepteur trop zélé",
+    "texte": "Le percepteur de {comte.nom} a saisi les bêtes de plusieurs familles pour arrondir les recettes. Les coffres sont pleins, les villages grondent.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Garder l'argent et féliciter le percepteur.",
+        "effets": [
+          {
+            "or": 70
+          },
+          {
+            "contentement": -12
+          }
+        ]
+      },
+      {
+        "libelle": "Le punir et rendre les bêtes.",
+        "effets": [
+          {
+            "contentement": 10
+          },
+          {
+            "prestige": 15
+          },
+          {
+            "stress": {
+              "avare": 10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le muter discrètement.",
+        "effets": [
+          {
+            "or": 30
+          },
+          {
+            "contentement": -3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_contrebande",
+    "titre": "Les contrebandiers",
+    "texte": "Des contrebandiers font passer du sel et du vin sans payer de taxes à travers {comte.nom}. Ils prospèrent, et le peuple les aime.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "comte_impots": "eleve"
+      }
+    ],
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Les traquer sans pitié.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "or": 80
+                },
+                {
+                  "contentement": -5
+                }
+              ],
+              "echec": [
+                {
+                  "or": -20
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "Les caches sont saisies et vendues.",
+              "texte_echec": "Ils filent entre les doigts de vos gardes."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Leur vendre votre protection.",
+        "effets": [
+          {
+            "or": 50
+          },
+          {
+            "stress": {
+              "juste": 15
+            }
+          },
+          {
+            "contentement": 3
+          }
+        ]
+      },
+      {
+        "libelle": "Fermer les yeux.",
+        "effets": [
+          {
+            "contentement": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_contrebande2",
+    "titre": "Le sel interdit",
+    "texte": "Les impôts écrasants de {comte.nom} ont fait naître un véritable marché noir. Les marchands honnêtes ferment boutique.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "comte_impots": "ecrasant"
+      }
+    ],
+    "poids": 8,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Baisser les impôts.",
+        "effets": [
+          {
+            "impots": "normal"
+          },
+          {
+            "contentement": 8
+          }
+        ]
+      },
+      {
+        "libelle": "Envoyer la garde.",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "contentement": -6
+          },
+          {
+            "or": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser faire.",
+        "effets": [
+          {
+            "developpement": -1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_marchand",
+    "titre": "Un marchand prospère",
+    "texte": "Un riche marchand de {comte.nom} propose de prêter de l'or au domaine, en échange d'une charte pour sa guilde.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "comte_developpement_min": 4
+      }
+    ],
+    "poids": 5,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Accorder la charte (+150 or, contentement).",
+        "effets": [
+          {
+            "or": 150
+          },
+          {
+            "contentement": 5
+          },
+          {
+            "opinion_vassaux": -3
+          }
+        ]
+      },
+      {
+        "libelle": "Lui vendre un titre de bourgeois.",
+        "effets": [
+          {
+            "or": 80
+          },
+          {
+            "prestige": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : les marchands ne gouvernent pas.",
+        "effets": [
+          {
+            "prestige": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_guilde",
+    "titre": "La guilde des artisans",
+    "texte": "Les artisans de {comte.nom} veulent s'organiser en guilde : prix fixés, apprentis encadrés, et une taxe pour vous.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Autoriser la guilde.",
+        "effets": [
+          {
+            "developpement": 1
+          },
+          {
+            "or": 20
+          },
+          {
+            "contentement": 3
+          }
+        ]
+      },
+      {
+        "libelle": "Exiger une part plus grande.",
+        "effets": [
+          {
+            "or": 60
+          },
+          {
+            "contentement": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Interdire les guildes.",
+        "effets": [
+          {
+            "contentement": -3
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_mine",
+    "titre": "Un filon d'argent",
+    "texte": "Des mineurs ont découvert un filon d'argent dans les collines de {comte.nom}.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 3,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "Exploiter la mine pour le trésor (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "hasard": {
+              "chance": 0.65,
+              "succes": [
+                {
+                  "or": 250
+                }
+              ],
+              "echec": [
+                {
+                  "or": 30
+                }
+              ],
+              "texte_succes": "Le filon est riche : les lingots s'empilent.",
+              "texte_echec": "Le filon s'épuise vite."
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "En confier l'exploitation aux villageois.",
+        "effets": [
+          {
+            "contentement": 12
+          },
+          {
+            "developpement": 1
+          }
+        ]
+      },
+      {
+        "libelle": "Vendre la concession à un marchand.",
+        "effets": [
+          {
+            "or": 120
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_famine",
+    "titre": "La disette",
+    "texte": "La récolte a pourri sur pied à {comte.nom}. Le pain manque, les prix flambent.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver", "printemps"]
+    },
+    "conditions": [
+      {
+        "pas_edit": "greniers"
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Ouvrir les greniers seigneuriaux (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "contentement": 10
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "Acheter du grain à l'étranger (80 or).",
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "contentement": 15
+          },
+          {
+            "piete": 20
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 80
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser faire.",
+        "effets": [
+          {
+            "contentement": -15
+          },
+          {
+            "levees": -150
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_famine_evitee",
+    "titre": "Les greniers tiennent",
+    "texte": "Le grain manque dans les Marches, mais vos greniers publics nourrissent {comte.nom}. On bénit votre nom sur les marchés.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver", "printemps"]
+    },
+    "conditions": [
+      {
+        "edit": "greniers"
+      }
+    ],
+    "poids": 5,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Distribuer le grain.",
+        "effets": [
+          {
+            "contentement": 10
+          },
+          {
+            "prestige": 20
+          }
+        ]
+      },
+      {
+        "libelle": "Vendre l'excédent aux voisins.",
+        "effets": [
+          {
+            "or": 90
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_banquier",
+    "titre": "Le banquier lombard",
+    "texte": "Un banquier aux bagues lourdes s'invite à votre table. Il connaît vos dettes au denier près, et propose de les racheter.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "dette": true
+      }
+    ],
+    "poids": 8,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Renégocier les intérêts.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "or": 60
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -10
+                }
+              ],
+              "competence": "diplomatie",
+              "texte_succes": "Il consent un rabais, contre votre amitié.",
+              "texte_echec": "Il sourit poliment et ne cède rien."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le menacer de saisir ses biens.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.4,
+              "succes": [
+                {
+                  "or": 150
+                },
+                {
+                  "prestige": 10
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -40
+                },
+                {
+                  "or": -50
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "Il paie pour qu'on l'oublie.",
+              "texte_echec": "Il s'en va et prévient tous les banquiers du pays."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le congédier.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "eco_fete_moisson",
+    "titre": "Le peuple vous acclame",
+    "texte": "Le contentement règne dans vos terres : à {comte.nom}, les villageois organisent une fête en votre honneur.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "comte_contentement_min": 75
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Y paraître et trinquer avec eux.",
+        "effets": [
+          {
+            "stress": -20
+          },
+          {
+            "prestige": 30
+          }
+        ]
+      },
+      {
+        "libelle": "Profiter de l'humeur pour lever des hommes.",
+        "effets": [
+          {
+            "levees": 300
+          },
+          {
+            "contentement": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eco_peages_plaintes",
+    "titre": "Les marchands se plaignent",
+    "texte": "Les marchands boudent vos routes : avec les péages, ils font un détour par les terres voisines.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "edit": "peages"
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Maintenir les péages.",
+        "effets": [
+          {
+            "or": 30
+          },
+          {
+            "contentement": -3
+          }
+        ]
+      },
+      {
+        "libelle": "Exempter les petits colporteurs.",
+        "effets": [
+          {
+            "contentement": 4
+          },
+          {
+            "or": -10
+          }
+        ]
+      }
+    ]
+  }
+]

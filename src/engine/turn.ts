@@ -8,6 +8,7 @@ import { autoFillCouncil, seasonCouncil } from './diplomacy';
 import { drawSeasonEvents } from './events/engine';
 import { seasonPlots } from './intrigue';
 import { seasonCourt } from './court';
+import { seasonLocalEconomy } from './economy';
 import { checkAchievements, computeEnding } from './endings';
 import { realmCounties } from './realm';
 import { seasonPlague } from './plague';
@@ -68,6 +69,7 @@ export function continueSeason(ctx: Ctx): void {
   const { state } = ctx;
   seasonCampaign(ctx);
   seasonPlague(ctx);
+  seasonLocalEconomy(ctx);
   seasonLife(ctx);
   checkLandless(state);
   if (state.stats && state.characters[state.playerId])

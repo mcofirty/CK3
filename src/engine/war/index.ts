@@ -729,6 +729,10 @@ export function loot(ctx: Ctx, armyId: string): boolean {
   a.supply = Math.min(100, a.supply + W.lootSupply);
   c.lootedTurn = state.turn;
   c.development = Math.max(1, c.development - W.lootDevelopment);
+  c.contentment = Math.max(
+    0,
+    (c.contentment ?? BALANCE.local.contentmentStart) + BALANCE.local.lootContentment,
+  );
   state.characters[a.ownerId].gold += W.lootGold;
   addOpinion(state, c.holderId, a.ownerId, 'A pillé mes terres', W.lootOpinion, 20);
   return true;

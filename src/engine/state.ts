@@ -20,6 +20,8 @@ export type CouncilPost = 'chancelier' | 'marechal' | 'intendant' | 'espion' | '
 export type BuildingType =
   'marche' | 'ferme' | 'caserne' | 'ecuries' | 'archerie' | 'muraille' | 'chapelle' | 'route';
 export type SuccessionLaw = 'partage' | 'primogeniture';
+export type TaxLevel = 'faible' | 'normal' | 'eleve' | 'ecrasant';
+export type ConscriptionLevel = 'legere' | 'normale' | 'lourde';
 
 export interface OpinionModifier {
   reason: string;
@@ -163,6 +165,13 @@ export interface County {
   plagueEnded?: number;
   /** Quarantaine décrétée. */
   quarantine?: boolean;
+  // --- Économie locale ---
+  /** Taux d'imposition fixé par le seigneur du comté. */
+  tax?: TaxLevel;
+  /** Conscription : part des hommes appelés aux levées. */
+  conscription?: ConscriptionLevel;
+  /** Contentement du peuple, 0 à 100. */
+  contentment?: number;
 }
 
 export interface Duchy {
@@ -345,6 +354,21 @@ export interface GameState {
   achievements?: string[];
   /** Statistiques de la partie (succès, fin). */
   stats?: GameStats;
+  /** Édits en vigueur : souverain → identifiants. */
+  edicts?: Record<string, string[]>;
+  /** Édit abrogé : identifiant → tour où il peut être proclamé à nouveau. */
+  edictCooldown?: Record<string, number>;
+  /** Emprunts en cours. */
+  loans?: Loan[];
+}
+
+export interface Loan {
+  id: string;
+  ownerId: string;
+  principal: number;
+  /** Intérêt par saison (part du principal). */
+  rate: number;
+  turn: number;
 }
 
 export interface MercContract {
@@ -394,4 +418,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;

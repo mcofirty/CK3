@@ -22,6 +22,7 @@ import {
   skill,
 } from './index';
 import { legacyEducation } from '../progression';
+import { transferLoans } from '../economy';
 
 const C = BALANCE.characters;
 
@@ -342,6 +343,7 @@ export function succession(ctx: Ctx, id: string): void {
     state.standing[heir.id] = state.standing[id];
     delete state.standing[id];
   }
+  transferLoans(state, id, heir.id);
   for (const a of Object.values(state.armies)) if (a.ownerId === id) a.ownerId = heir.id;
   for (const w of Object.values(state.wars)) {
     if (w.attackerId === id) w.attackerId = heir.id;

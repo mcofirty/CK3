@@ -23,6 +23,7 @@ import { createCharacter } from '../characters';
 import { giveBirth, heirsOf, killCharacter } from '../characters/lifecycle';
 import { ambitionStatus, startAmbition } from '../ambitions';
 import { coastalCounties, foreignKingdoms } from '../geo';
+import { contentmentOf, TAX_LABELS } from '../economy/local';
 import { playerRealmPlagued, startPlague } from '../plague';
 import { gainXp } from '../progression';
 import {
@@ -298,6 +299,38 @@ export function checkCondition(
       case 'epidemie':
         if (playerRealmPlagued(state) !== v) return false;
         break;
+      case 'comte_contentement_max': {
+        const c = scope.comte ? state.counties[scope.comte] : undefined;
+        if (!c || contentmentOf(c) > (v as number)) return false;
+        break;
+      }
+      case 'comte_contentement_min': {
+        const c = scope.comte ? state.counties[scope.comte] : undefined;
+        if (!c || contentmentOf(c) < (v as number)) return false;
+        break;
+      }
+      case 'comte_impots': {
+        const c = scope.comte ? state.counties[scope.comte] : undefined;
+        if (!c || (c.tax ?? 'normal') !== v) return false;
+        break;
+      }
+      case 'contentement_moyen_max':
+      case 'contentement_moyen_min': {
+        const own = Object.values(state.counties).filter((c) => c.holderId === p.id);
+        const avg = own.length ? own.reduce((s2, c) => s2 + contentmentOf(c), 0) / own.length : 50;
+        if (k === 'contentement_moyen_max' ? avg > (v as number) : avg < (v as number))
+          return false;
+        break;
+      }
+      case 'edit':
+        if (!(state.edicts?.[p.id] ?? []).includes(v as string)) return false;
+        break;
+      case 'pas_edit':
+        if ((state.edicts?.[p.id] ?? []).includes(v as string)) return false;
+        break;
+      case 'dette':
+        if ((state.loans ?? []).some((l) => l.ownerId === p.id) !== v) return false;
+        break;
       case 'cotier':
         if (
           Object.values(state.counties).some(
@@ -485,6 +518,11 @@ export function effectLabels(
         `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${e.bataille.force.toFixed(1)})`,
       );
     if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
+    if (e.contentement)
+      out.push(
+        `Contentement${scope.comte ? ` de ${name('comte')}` : ' du domaine'} : ${sign(e.contentement)}`,
+      );
+    if (e.impots) out.push(`Impôts ${TAX_LABELS[e.impots].toLowerCase()} à ${name('comte')}`);
     if (e.rendre_otage)
       out.push(
         `${state.characters[e.rendre_otage.otage]?.name} rentre chez les siens (+${e.rendre_otage.montant} or)`,
@@ -690,6 +728,14 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       const c = state.counties[scope.comte];
       c.quarantine = true;
     }
+    if (e.contentement) {
+      const targets = scope.comte
+        ? [state.counties[scope.comte]].filter(Boolean)
+        : Object.values(state.counties).filter((c) => c.holderId === p.id);
+      for (const c of targets) c.contentment = clamp(contentmentOf(c) + e.contentement, 0, 100);
+    }
+    if (e.impots && scope.comte && state.counties[scope.comte])
+      state.counties[scope.comte].tax = e.impots;
     if (e.nouveau_courtisan) {
       const n = e.nouveau_courtisan;
       const c = createCharacter(ctx, {

@@ -4,6 +4,7 @@ import { BUILDINGS } from '../../data/buildings';
 import { TRAITS } from '../../data/traits';
 import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } from '../characters';
 import { gainXp, record } from '../progression';
+import { countyDevMult, countyIncomeMult, countyLevyMult, edictSum } from '../economy/local';
 import { chronicle, clamp, notify, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
 import { armyUpkeep, emptyUnits, totalMen } from '../units';
@@ -196,6 +197,7 @@ export function incomeMultiplier(state: GameState, rulerId: string): number {
   let m = 1 + E.gestionIncomeBonus * (skill(r, 'gestion') - 10);
   for (const t of r.traits) m *= TRAITS[t]?.income ?? 1;
   m *= 1 + perkBonus(state, r, 'income');
+  m *= 1 + edictSum(state, rulerId, 'income');
   if (rulerId !== state.playerId) m *= E.aiIncomeMultiplier[state.difficulty];
   return m;
 }
@@ -214,7 +216,10 @@ export function economyOf(state: GameState, id: string): Economy {
   const prestige: LedgerLine[] = [];
   const piety: LedgerLine[] = [];
   const own = Object.values(state.counties).filter((c) => c.holderId === id && !c.occupation);
-  const demesne = own.reduce((s, c) => s + countyIncome(c), 0) * incomeMultiplier(state, id);
+  // Revenus de chaque comté : base (développement, bâtiments) × impôts × contentement.
+  const demesne =
+    own.reduce((s, c) => s + countyIncome(c) * countyIncomeMult(c), 0) *
+    incomeMultiplier(state, id);
   if (heldCounties(state, id).length > demesneLimit(state, id)) {
     gold.push({ label: 'Domaine propre trop étendu', value: -demesne * (1 - E.overDemesneIncome) });
   }
@@ -226,7 +231,7 @@ export function economyOf(state: GameState, id: string): Economy {
   let tax = 0;
   for (const v of vassalsOf(state, id)) {
     const vc = Object.values(state.counties).filter((c) => c.holderId === v && !c.occupation);
-    const base = vc.reduce((s, c) => s + countyIncome(c), 0);
+    const base = vc.reduce((s, c) => s + countyIncome(c) * countyIncomeMult(c), 0);
     tax += base * E.vassalTaxRate * vassalContribution(opinion(state, v, id));
   }
   if (tax) gold.push({ label: 'Impôts des vassaux', value: tax });
@@ -242,6 +247,13 @@ export function economyOf(state: GameState, id: string): Economy {
   const armies = Object.values(state.armies).filter((a) => a.ownerId === id);
   const up = armies.reduce((s, a) => s + armyUpkeep(a.men), 0);
   if (up) gold.push({ label: 'Armées en campagne', value: -up });
+  // Édits et emprunts.
+  const edictUpkeep = edictSum(state, id, 'upkeep');
+  if (edictUpkeep) gold.push({ label: 'Édits : entretien', value: -edictUpkeep });
+  const interest = (state.loans ?? [])
+    .filter((l) => l.ownerId === id)
+    .reduce((s, l) => s + l.principal * l.rate, 0);
+  if (interest) gold.push({ label: 'Intérêts des emprunts', value: -interest });
   // Prestige.
   const P = E.prestige;
   prestige.push({
@@ -252,11 +264,15 @@ export function economyOf(state: GameState, id: string): Economy {
   const kingdoms = Object.values(state.kingdoms).filter((k) => k.holderId === id).length;
   if (duchies) prestige.push({ label: 'Titres ducaux', value: duchies * P.perDuchy });
   if (kingdoms) prestige.push({ label: 'Couronne royale', value: kingdoms * P.perKingdom });
+  const edictPrestige = edictSum(state, id, 'prestige');
+  if (edictPrestige) prestige.push({ label: 'Édits', value: edictPrestige });
   // Piété.
   piety.push({
     label: 'Dévotion personnelle',
     value: E.piety.base + skill(ruler, 'savoir') * E.piety.perSavoir,
   });
+  const edictPiety = edictSum(state, id, 'piety');
+  if (edictPiety) piety.push({ label: 'Édits', value: edictPiety });
   const chap = own.reduce((s, c) => s + countyPiety(c), 0);
   if (chap) piety.push({ label: 'Chapelles', value: chap });
   if (id === state.playerId) {
@@ -363,6 +379,7 @@ export function seasonRealm(ctx: Ctx): void {
           p += BALANCE.council.developChance + skill(st, 'gestion') * 0.003;
       }
       p *= 1 + perkBonus(state, holder, 'development');
+      p *= countyDevMult(state, c);
       p /= 1 + c.development * 0.15;
       if (rng.chance(p)) {
         c.development += 1;
@@ -371,7 +388,7 @@ export function seasonRealm(ctx: Ctx): void {
       }
     }
     // Levées.
-    const max = countyMaxLevies(c) * levyCouncilBonus(state, c);
+    const max = countyMaxLevies(c) * levyCouncilBonus(state, c) * countyLevyMult(state, c);
     c.levyPool = Math.min(max, c.levyPool + max * E.levyRegen);
   }
 }

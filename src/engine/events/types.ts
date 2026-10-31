@@ -1,4 +1,4 @@
-import type { PlotType, SkillKey } from '../state';
+import type { PlotType, SkillKey, TaxLevel } from '../state';
 
 export type SeasonKey = 'printemps' | 'ete' | 'automne' | 'hiver';
 
@@ -51,7 +51,8 @@ export interface Trigger {
     | 'relation_ami'
     | 'relation_rival'
     | 'relation_amant'
-    | 'peste';
+    | 'peste'
+    | 'revolte_paysanne';
   saisons?: SeasonKey[];
 }
 
@@ -97,6 +98,19 @@ export interface Condition {
   epidemie?: boolean;
   /** Le joueur a au moins un comté côtier. */
   cotier?: boolean;
+  /** Contentement du comté du rôle « comte ». */
+  comte_contentement_max?: number;
+  comte_contentement_min?: number;
+  /** Taux d'imposition du comté du rôle « comte ». */
+  comte_impots?: TaxLevel;
+  /** Contentement moyen du domaine. */
+  contentement_moyen_max?: number;
+  contentement_moyen_min?: number;
+  /** Édit en vigueur (ou non). */
+  edit?: string;
+  pas_edit?: string;
+  /** Le souverain a des dettes. */
+  dette?: boolean;
 }
 
 export type OpinionTarget = Exclude<Role, 'souverain'>;
@@ -161,6 +175,10 @@ export interface Effect {
   quarantaine?: boolean;
   /** Bataille livrée sur-le-champ contre une troupe ennemie. */
   bataille?: EventBattle;
+  /** Contentement du comté du rôle « comte », ou de tout le domaine. */
+  contentement?: number;
+  /** Fixe les impôts du comté du rôle « comte ». */
+  impots?: TaxLevel;
   /** Un enfant illégitime, ou un prétendant, rejoint la cour. */
   nouveau_courtisan?: { age_min: number; age_max: number; guerre?: number; trait?: string };
   // --- Effets internes (propositions générées par le moteur) ---
@@ -216,7 +234,8 @@ export interface EventDef {
     | 'relations'
     | 'saisons'
     | 'decisions'
-    | 'chroniques';
+    | 'chroniques'
+    | 'economie';
   declencheur: Trigger;
   conditions?: Condition[];
   poids?: number;

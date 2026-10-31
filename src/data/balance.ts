@@ -277,6 +277,44 @@ export const BALANCE = {
     titleBaseSlots: { min: 2, max: 3 },
   },
 
+  /** Économie locale : impôts, contentement, conscription, emprunts. */
+  local: {
+    /** Contentement de départ et point d'équilibre vers lequel il revient. */
+    contentmentStart: 60,
+    contentmentRest: 55,
+    contentmentReturn: 0.06,
+    taxes: {
+      faible: { income: 0.7, contentment: 3, levies: 1.05 },
+      normal: { income: 1, contentment: 0, levies: 1 },
+      eleve: { income: 1.3, contentment: -3, levies: 0.95 },
+      ecrasant: { income: 1.65, contentment: -7, levies: 0.85 },
+    },
+    conscription: {
+      legere: { levies: 0.7, contentment: 1, development: 1.1 },
+      normale: { levies: 1, contentment: 0, development: 1 },
+      lourde: { levies: 1.4, contentment: -3, development: 0.75 },
+    },
+    /** Effet du contentement (0 à 100) : multiplicateur min + (max-min) × contentement/100. */
+    contentIncome: { min: 0.8, max: 1.15 },
+    contentLevies: { min: 0.7, max: 1.15 },
+    contentDevelopment: { min: 0.4, max: 1.4 },
+    /** Révolte paysanne possible sous ce seuil (chance par point manquant). */
+    revoltThreshold: 22,
+    revoltPerPoint: 0.012,
+    lootContentment: -15,
+    occupiedContentment: -2,
+    plagueContentment: -3,
+    chapelContentment: 1,
+    /** Emprunts : intérêt par saison, plafond en saisons de revenus du domaine. */
+    loanRate: 0.05,
+    loanCapSeasons: 8,
+    loanMin: 50,
+    loanDefaultPrestige: -60,
+    /** IA : impôts élevés si le trésor est sous la réserve et le peuple content. */
+    aiRaiseTaxContentment: 55,
+    aiLowerTaxContentment: 35,
+  },
+
   realm: {
     duchyMinShare: 0.5,
     kingdomMinShare: 0.6,

@@ -27,6 +27,7 @@ import {
 import { killCharacter } from './characters/lifecycle';
 import { offerAmbition } from './court';
 import { takeDecision } from './decisions';
+import { repayLoan, setConscription, setTax, setTaxAll, takeLoan, toggleEdict } from './economy';
 import { hireMercenaries } from './war/campaignExtras';
 import { addMemory } from './relations';
 import { addStress, stressFromSpec } from './stress';
@@ -48,11 +49,13 @@ import { Rng } from './rng';
 import type {
   BuildingType,
   CasusBelliType,
+  ConscriptionLevel,
   CouncilPost,
   GameState,
   PlotType,
   SkillKey,
   SuccessionLaw,
+  TaxLevel,
   UnitType,
 } from './state';
 import { closeBattle, continueSeason, endSeason } from './turn';
@@ -90,6 +93,12 @@ export type Action =
   | { type: 'takeDecision'; id: string }
   | { type: 'siegeMode'; armyId: string; mode?: 'blocus' | 'negocier' }
   | { type: 'hireMercenaries'; id: string }
+  | { type: 'setTax'; countyId: string; level: TaxLevel }
+  | { type: 'setTaxAll'; level: TaxLevel }
+  | { type: 'setConscription'; countyId: string; level: ConscriptionLevel }
+  | { type: 'toggleEdict'; id: string }
+  | { type: 'takeLoan'; amount: number }
+  | { type: 'repayLoan'; loanId: string }
   | { type: 'offerAmbition' }
   | { type: 'abandonAmbition' }
   | { type: 'proposeMarriage'; aId: string; bId: string }
@@ -370,6 +379,24 @@ function dispatch(ctx: Ctx, a: Action): void {
         army.siegeMode = a.mode;
       break;
     }
+    case 'setTax':
+      setTax(state, pl, a.countyId, a.level);
+      break;
+    case 'setTaxAll':
+      setTaxAll(state, pl, a.level);
+      break;
+    case 'setConscription':
+      setConscription(state, pl, a.countyId, a.level);
+      break;
+    case 'toggleEdict':
+      toggleEdict(state, pl, a.id);
+      break;
+    case 'takeLoan':
+      takeLoan(state, pl, a.amount);
+      break;
+    case 'repayLoan':
+      repayLoan(state, pl, a.loanId);
+      break;
     case 'hireMercenaries':
       hireMercenaries(ctx, pl, a.id);
       break;
