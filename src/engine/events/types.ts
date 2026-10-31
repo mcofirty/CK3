@@ -14,7 +14,11 @@ export type Role =
   | 'comte'
   | 'comte_rival'
   | 'complotiste'
-  | 'prisonnier';
+  | 'prisonnier'
+  | 'ami'
+  | 'ennemi'
+  | 'amant'
+  | 'proche';
 
 export const ROLES: Role[] = [
   'souverain',
@@ -28,6 +32,10 @@ export const ROLES: Role[] = [
   'comte_rival',
   'complotiste',
   'prisonnier',
+  'ami',
+  'ennemi',
+  'amant',
+  'proche',
 ];
 
 export interface Trigger {
@@ -38,7 +46,12 @@ export interface Trigger {
     | 'naissance'
     | 'bataille_gagnee'
     | 'bataille_perdue'
-    | 'suite';
+    | 'suite'
+    | 'decision'
+    | 'relation_ami'
+    | 'relation_rival'
+    | 'relation_amant'
+    | 'peste';
   saisons?: SeasonKey[];
 }
 
@@ -73,6 +86,17 @@ export interface Condition {
   comte_developpement_min?: number;
   armee_levee?: boolean;
   annee_min?: number;
+  /** Drapeau narratif posé (ou absent). */
+  drapeau?: string;
+  pas_drapeau?: string;
+  stress_min?: number;
+  stress_max?: number;
+  /** Le souverain a (ou n'a pas) d'ambition en cours. */
+  a_ambition?: boolean;
+  /** Une épidémie sévit dans le royaume du joueur. */
+  epidemie?: boolean;
+  /** Le joueur a au moins un comté côtier. */
+  cotier?: boolean;
 }
 
 export type OpinionTarget = Exclude<Role, 'souverain'>;
@@ -80,6 +104,8 @@ export type OpinionTarget = Exclude<Role, 'souverain'>;
 export interface Hasard {
   /** Probabilité de réussite (0 à 1). */
   chance: number;
+  /** La compétence du souverain modifie la chance (±2,5 % par point autour de 10). */
+  competence?: SkillKey;
   succes: Effect[];
   echec: Effect[];
   /** Texte d'issue facultatif (variables autorisées). */
@@ -117,12 +143,50 @@ export interface Effect {
   liberer?: Role;
   /** Exile le personnage hors de la cour. */
   exiler?: Role;
+  /** Stress du souverain : nombre, ou par trait (« * » = toujours). */
+  stress?: number | Record<string, number>;
+  /** Expérience dans une branche (souverain par défaut). */
+  xp?: { competence: SkillKey; valeur: number; cible?: Role };
+  drapeau?: string;
+  retirer_drapeau?: string;
+  /** Événement qui surviendra plus tard, avec les mêmes rôles. */
+  suite_differee?: { id: string; saisons: number };
+  amant?: Role;
+  fin_amant?: Role;
+  /** Met fin à une rivalité. */
+  reconciliation?: Role;
+  /** Une épidémie éclate dans le comté du rôle (ou au hasard dans le domaine). */
+  epidemie?: boolean;
+  /** Quarantaine du comté : l'épidémie y faiblit et ne s'étend plus. */
+  quarantaine?: boolean;
+  /** Bataille livrée sur-le-champ contre une troupe ennemie. */
+  bataille?: EventBattle;
+  /** Un enfant illégitime, ou un prétendant, rejoint la cour. */
+  nouveau_courtisan?: { age_min: number; age_max: number; guerre?: number; trait?: string };
   // --- Effets internes (propositions générées par le moteur) ---
+  ambition?: string;
   mariage?: { a: string; b: string };
   alliance?: string;
   paix?: { warId: string; issue: 'attaquant' | 'defenseur' | 'blanche' };
   rejoindre_guerre?: { warId: string; allie: string; camp: 'attaquant' | 'defenseur' };
   tribut?: { de: string; a: string; montant: number };
+  /** Rend un otage contre de l'or. */
+  rendre_otage?: { otage: string; montant: number };
+}
+
+export interface EventBattle {
+  /** Nom de la troupe ennemie. */
+  ennemi: string;
+  /** Effectif ennemi relatif à vos forces (1 = égal). */
+  force: number;
+  /** Composition : part de chaque unité. */
+  composition?: Partial<
+    Record<'levees' | 'piquiers' | 'archers' | 'infanterie' | 'cavalerie', number>
+  >;
+  /** Vous attaquez (sinon vous défendez). */
+  attaque?: boolean;
+  victoire: Effect[];
+  defaite: Effect[];
 }
 
 export interface Choice {
@@ -139,7 +203,20 @@ export interface EventDef {
   titre: string;
   /** Un texte, ou plusieurs variantes dont une est tirée au sort. */
   texte: string | string[];
-  categorie?: 'cour' | 'famille' | 'vassaux' | 'religion' | 'guerre' | 'intrigue' | 'systeme';
+  categorie?:
+    | 'cour'
+    | 'famille'
+    | 'vassaux'
+    | 'religion'
+    | 'guerre'
+    | 'intrigue'
+    | 'systeme'
+    | 'etranger'
+    | 'education'
+    | 'relations'
+    | 'saisons'
+    | 'decisions'
+    | 'chroniques';
   declencheur: Trigger;
   conditions?: Condition[];
   poids?: number;

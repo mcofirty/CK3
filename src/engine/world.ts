@@ -3,7 +3,8 @@ import { BALANCE } from '../data/balance';
 import MAP from '../data/map.json';
 import { ORIGINS, type Origin } from '../data/origins';
 import { addOpinion, addTrait, allyKey, createCharacter, dynastyName, marry } from './characters';
-import type { Ctx } from './context';
+import { emptyStats, recordRuler, type Ctx } from './context';
+import { offerAmbition } from './court';
 import { ALL_EVENTS } from '../data/events';
 import { autoFillCouncil } from './diplomacy';
 import { generateMap, type MapData } from './mapgen';
@@ -74,6 +75,14 @@ export function emptyState(seed: number, difficulty: Difficulty): GameState {
     nextId: 0,
     ledger: { gold: [], prestige: [], piety: [] },
     tutorialSeen: false,
+    flags: {},
+    scheduled: [],
+    decisionsUsed: {},
+    mercenaries: [],
+    mercCooldown: {},
+    rulers: [],
+    achievements: [],
+    stats: emptyStats(),
   };
 }
 
@@ -300,6 +309,8 @@ export function newGame(opts: NewGameOptions = {}): GameState {
       choix: [{ libelle: 'Ainsi commence la chronique', effets: [] }],
     },
   });
+  recordRuler(state, state.playerId);
+  offerAmbition(ctx);
   state.rng = rng.s;
   return state;
 }

@@ -69,6 +69,45 @@ export interface Character {
   inFaction?: boolean;
   /** Recrutements professionnels effectués cette saison (limite par bâtiments). */
   recruitedThisSeason?: number;
+  // --- Progression (perdue à la mort) ---
+  /** Expérience accumulée par branche. */
+  xp?: Partial<Record<SkillKey, number>>;
+  /** Talents choisis dans l'arbre de compétences. */
+  perks?: string[];
+  /** Stress, 0 à 100 (crise au-delà). */
+  stress?: number;
+  /** Amants et amantes. */
+  lovers?: string[];
+  /** Ambition du règne en cours. */
+  ambition?: AmbitionState;
+  /** Faits d'armes et de cour. */
+  record?: CharacterRecord;
+  /** Otage retenu à la cour de ce souverain. */
+  hostageOf?: string;
+  /** Tour depuis lequel il est otage. */
+  hostageSince?: number;
+  /** Souverain de sa famille, qui ne peut attaquer tant que l'otage est retenu. */
+  hostageHome?: string;
+  /** Une ambition a déjà été proposée à ce souverain. */
+  ambitionOffered?: boolean;
+}
+
+export interface AmbitionState {
+  id: string;
+  startTurn: number;
+  /** Valeur de référence au moment du choix. */
+  base: number;
+  /** Compteur propre à l'ambition (saisons de paix…). */
+  counter: number;
+}
+
+export interface CharacterRecord {
+  battles: number;
+  wins: number;
+  duels: number;
+  plots: number;
+  buildings: number;
+  ambitions: number;
 }
 
 export interface Dynasty {
@@ -77,6 +116,10 @@ export interface Dynasty {
   renown: number;
   seed: number;
   founderId: string;
+  /** Héritages achetés avec la renommée (conservés jusqu'à la fin). */
+  legacies?: string[];
+  /** Renommée déjà dépensée (la renommée totale compte pour le score). */
+  renownSpent?: number;
 }
 
 export interface BuildingSlot {
@@ -114,6 +157,12 @@ export interface County {
   siege?: { armyId: string; progress: number };
   /** Pillé récemment (tour). */
   lootedTurn?: number;
+  /** Épidémie : saisons restantes. */
+  plague?: number;
+  /** Tour de fin de la dernière épidémie (immunité). */
+  plagueEnded?: number;
+  /** Quarantaine décrétée. */
+  quarantine?: boolean;
 }
 
 export interface Duchy {
@@ -149,6 +198,10 @@ export interface Army {
   seasonsRaised: number;
   /** Ordre d'assaut au prochain tour. */
   assault?: boolean;
+  /** Conduite du siège : blocus (moins d'usure) ou négociation (une tentative). */
+  siegeMode?: 'blocus' | 'negocier';
+  /** Négociation déjà tentée sur ce comté. */
+  negotiated?: string;
 }
 
 export type CasusBelliType = 'revendication' | 'conquete' | 'independance' | 'defense';
@@ -267,7 +320,7 @@ export interface GameState {
   /** Batailles du joueur encore à jouer cette saison. */
   pendingBattles: { countyId: string; attackerArmyId: string; defenderArmyId: string }[];
   phase: 'saison' | 'bataille' | 'fin';
-  gameOver?: { reason: string; score: LineageScore };
+  gameOver?: { reason: string; score: LineageScore; ending?: EndingId };
   nextId: number;
   /** Bilan de la saison précédente, pour l'infobulle des ressources. */
   ledger: Ledger;
@@ -276,6 +329,49 @@ export interface GameState {
   autoplay?: boolean;
   /** Dernière bataille terminée (affichage du bilan). */
   lastBattleReport?: import('./battle/types').BattleReport;
+  /** Drapeaux narratifs posés par les événements (identifiant → tour). */
+  flags?: Record<string, number>;
+  /** Suites d'événements différées. */
+  scheduled?: { turn: number; eventId: string; scope: Record<string, string> }[];
+  /** Décisions prises : identifiant → tour. */
+  decisionsUsed?: Record<string, number>;
+  /** Contrats de mercenaires en cours. */
+  mercenaries?: MercContract[];
+  /** Fin de contrat des compagnies : identifiant → tour où elles redeviennent disponibles. */
+  mercCooldown?: Record<string, number>;
+  /** Souverains successifs de la lignée (livre de la dynastie). */
+  rulers?: RulerEntry[];
+  /** Succès débloqués pendant cette partie. */
+  achievements?: string[];
+  /** Statistiques de la partie (succès, fin). */
+  stats?: GameStats;
+}
+
+export interface MercContract {
+  id: string;
+  ownerId: string;
+  men: UnitCounts;
+  until: number;
+}
+
+export interface RulerEntry {
+  id: string;
+  from: number;
+  to?: number;
+  ambitions: string[];
+}
+
+export interface GameStats {
+  battlesWon: number;
+  battlesLost: number;
+  duelsWon: number;
+  plotsDone: number;
+  decisions: number;
+  maxCounties: number;
+  wars: number;
+  crises: number;
+  hostages: number;
+  plaguesSurvived: number;
 }
 
 export interface LedgerLine {
@@ -295,4 +391,7 @@ export interface LineageScore {
   total: number;
 }
 
-export const SAVE_VERSION = 2;
+export type EndingId =
+  'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
+
+export const SAVE_VERSION = 3;

@@ -2,7 +2,14 @@ import type { SkillKey } from '../engine/state';
 
 export type TraitCategory = 'personnalite' | 'education' | 'hereditaire' | 'acquis';
 export type BattleAbility =
-  'stratege' | 'impetueux' | 'prudent' | 'inebranlable' | 'cavalier' | 'inspirant' | 'lache';
+  | 'stratege'
+  | 'impetueux'
+  | 'prudent'
+  | 'inebranlable'
+  | 'cavalier'
+  | 'inspirant'
+  | 'lache'
+  | 'boucher';
 
 export interface TraitDef {
   id: string;
@@ -24,6 +31,8 @@ export interface TraitDef {
   /** Poids d'événements : étiquette → multiplicateur. */
   eventWeights?: Record<string, number>;
   battle?: BattleAbility;
+  /** Baisse supplémentaire du stress par saison. */
+  stressDecay?: number;
   /** Compétence et rang pour les traits d'éducation. */
   education?: { skill: SkillKey; tier: 1 | 2 };
 }
@@ -311,6 +320,100 @@ export const TRAITS: Record<string, TraitDef> = {
     skills: { diplomatie: 1 },
     battle: 'inspirant',
     vassalOpinion: 5,
+  },
+  // --- Acquis : exutoires du stress ---
+  ivrogne: {
+    id: 'ivrogne',
+    name: 'Ivrogne',
+    category: 'acquis',
+    description: 'Noie ses soucis dans le vin. Le stress retombe plus vite, la santé moins.',
+    skills: { gestion: -1, diplomatie: 1 },
+    health: -6,
+    stressDecay: 2,
+  },
+  melancolique: {
+    id: 'melancolique',
+    name: 'Mélancolique',
+    category: 'acquis',
+    description: 'Une ombre plane sur ses jours.',
+    skills: { diplomatie: -2, savoir: 1 },
+    health: -3,
+    fertility: 0.8,
+  },
+  irascible: {
+    id: 'irascible',
+    name: 'Irascible',
+    category: 'acquis',
+    description: 'Ses colères sont redoutées.',
+    skills: { diplomatie: -2, guerre: 1 },
+    vassalOpinion: -5,
+    aggression: 0.15,
+    stressDecay: 1,
+  },
+  pelerin: {
+    id: 'pelerin',
+    name: 'Pèlerin',
+    category: 'acquis',
+    description: 'A marché jusqu’aux lieux saints.',
+    skills: { savoir: 1 },
+    vassalOpinion: 3,
+  },
+  chasseur: {
+    id: 'chasseur',
+    name: 'Chasseur',
+    category: 'acquis',
+    description: 'Passe ses jours en forêt, l’esprit léger.',
+    skills: { guerre: 1 },
+    health: 2,
+    stressDecay: 1,
+  },
+  accompli: {
+    id: 'accompli',
+    name: 'Accompli',
+    category: 'acquis',
+    description: 'A réalisé la grande ambition de son règne.',
+    skills: { diplomatie: 1, gestion: 1 },
+    vassalOpinion: 5,
+  },
+  // --- Acquis : guerre ---
+  veteran: {
+    id: 'veteran',
+    name: 'Vétéran',
+    category: 'acquis',
+    description: 'A survécu à cinq batailles. Ses troupes ont confiance.',
+    skills: { guerre: 2 },
+  },
+  tacticien: {
+    id: 'tacticien',
+    name: 'Tacticien',
+    category: 'acquis',
+    description: 'Une tactique de plus dans sa main à chaque bataille.',
+    skills: { guerre: 1, ruse: 1 },
+  },
+  boucher: {
+    id: 'boucher',
+    name: 'Boucher',
+    category: 'acquis',
+    description: 'Ne fait pas de quartier. L’ennemi commence la bataille avec −5 de moral.',
+    skills: { guerre: 1 },
+    vassalOpinion: -5,
+    battle: 'boucher',
+  },
+  heros: {
+    id: 'heros',
+    name: 'Héros',
+    category: 'acquis',
+    description: 'A vaincu un champion en duel devant les armées.',
+    skills: { guerre: 1, diplomatie: 1 },
+    vassalOpinion: 8,
+  },
+  balafre: {
+    id: 'balafre',
+    name: 'Balafré',
+    category: 'acquis',
+    description: 'Porte les cicatrices d’une vieille blessure.',
+    skills: { guerre: 1 },
+    vassalOpinion: 2,
   },
 };
 

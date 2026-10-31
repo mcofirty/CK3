@@ -13,8 +13,21 @@ import {
   startBattle,
 } from './battle/engine';
 import type { FrontId, Preset, SideOrders } from './battle/types';
-import { ageOf, opinion } from './characters';
-import { type Ctx, newId, notify } from './context';
+import {
+  addOpinion,
+  ageOf,
+  allyKey,
+  displayName,
+  heldCounties,
+  opinion,
+  topLiege,
+} from './characters';
+import { killCharacter } from './characters/lifecycle';
+import { offerAmbition } from './court';
+import { takeDecision } from './decisions';
+import { addMemory } from './relations';
+import { addStress, stressFromSpec } from './stress';
+import { chronicle, type Ctx, newId, notify } from './context';
 import {
   allianceAcceptance,
   callToArms,
@@ -26,6 +39,7 @@ import {
 } from './diplomacy';
 import { chooseEvent } from './events/engine';
 import { addAgent, startPlot } from './intrigue';
+import { takeLegacy, takePerk } from './progression';
 import { createTitle, startBuilding, vassalsOf } from './realm';
 import { Rng } from './rng';
 import type {
@@ -69,7 +83,10 @@ export type Action =
   | { type: 'assault'; armyId: string }
   | { type: 'declareWar'; targetId: string; cb: CasusBelliType; countyId?: string }
   | { type: 'peace'; warId: string; kind: 'exiger' | 'blanche' | 'capituler' }
-  | { type: 'ransom'; characterId: string; kind: 'or' | 'comte' | 'liberer' }
+  | { type: 'ransom'; characterId: string; kind: 'or' | 'comte' | 'liberer' | 'otage' | 'executer' }
+  | { type: 'takeDecision'; id: string }
+  | { type: 'offerAmbition' }
+  | { type: 'abandonAmbition' }
   | { type: 'proposeMarriage'; aId: string; bId: string }
   | { type: 'proposeAlliance'; targetId: string }
   | { type: 'sendGift'; targetId: string }
@@ -89,6 +106,8 @@ export type Action =
   | { type: 'battleAuto' }
   | { type: 'battleClose' }
   | { type: 'dismissTutorial' }
+  | { type: 'takePerk'; characterId: string; perkId: string }
+  | { type: 'takeLegacy'; legacyId: string }
   | { type: 'debugGold'; amount: number }
   | { type: 'debugAdvance'; years: number }
   | { type: 'debugBattle' };
@@ -209,6 +228,34 @@ function dispatch(ctx: Ctx, a: Action): void {
         const pick = theirs.sort((x, y) => x.development - y.development)[0];
         transferCounty(state, pick.id, pl);
         notify(state, `${c.name} vous cède ${pick.name} pour sa liberté.`);
+      } else if (a.kind === 'otage') {
+        if (heldCounties(state, c.id).length) break;
+        c.hostageHome = topLiege(state, c.id);
+        c.hostageOf = pl;
+        c.hostageSince = state.turn;
+        c.courtId = pl;
+        if (c.hostageHome && c.hostageHome !== pl)
+          state.truces[allyKey(pl, c.hostageHome)] = Math.max(
+            state.truces[allyKey(pl, c.hostageHome)] ?? 0,
+            state.turn + BALANCE.hostage.truceSeasons,
+          );
+        if (state.stats) state.stats.hostages += 1;
+        notify(
+          state,
+          `${c.name} reste à votre cour comme otage : sa famille n’osera plus vous attaquer.`,
+        );
+      } else if (a.kind === 'executer') {
+        const H = BALANCE.hostage;
+        addStress(state, me, stressFromSpec(me, H.executeStress).value);
+        me.prestige += H.executePrestige;
+        for (const v of vassalsOf(state, pl))
+          addOpinion(state, v, pl, 'A fait exécuter un prisonnier', H.executeVassalOpinion, 20);
+        addMemory(state, c.id, pl, 'mort');
+        for (const w of Object.values(state.wars))
+          w.captured = w.captured.filter((x) => x !== c.id);
+        chronicle(state, `${me.name} fait exécuter ${displayName(state, c)}.`, 'intrigue');
+        killCharacter(ctx, c.id, 'exécuté');
+        break;
       } else {
         notify(state, `${c.name} est libéré.`);
       }
@@ -303,6 +350,28 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'dismissTutorial':
       state.tutorialSeen = true;
+      break;
+    case 'takeDecision':
+      takeDecision(ctx, a.id);
+      break;
+    case 'offerAmbition':
+      if (state.phase === 'saison') offerAmbition(ctx);
+      break;
+    case 'abandonAmbition':
+      if (me.ambition) {
+        me.ambition = undefined;
+        me.ambitionOffered = false;
+        addStress(state, me, BALANCE.stress.ambitionFail / 2);
+        notify(state, 'Vous renoncez à votre ambition.');
+      }
+      break;
+    case 'takePerk': {
+      const c = state.characters[a.characterId];
+      if (c?.alive && c.dynastyId === state.playerDynastyId) takePerk(state, c, a.perkId);
+      break;
+    }
+    case 'takeLegacy':
+      takeLegacy(state, state.playerDynastyId, a.legacyId);
       break;
     // --- Débogage ---
     case 'debugGold':

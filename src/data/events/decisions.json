@@ -1,0 +1,262 @@
+[
+  {
+    "id": "dec_tournoi",
+    "titre": "Le grand tournoi",
+    "texte": [
+      "Les bannières claquent au vent, les tribunes sont pleines. Les meilleurs chevaliers du royaume attendent votre signal. Descendrez-vous vous-même dans la lice ?",
+      "Le sable de la lice est fraîchement ratissé. Des seigneurs sont venus de toutes les Marches, et le peuple se presse aux barrières. Tous les regards se tournent vers votre loge."
+    ],
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Jouter en personne !",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "competence": "guerre",
+              "succes": [
+                { "prestige": 120 },
+                { "opinion_vassaux": 10 },
+                { "stress": -20 },
+                { "xp": { "competence": "guerre", "valeur": 30 } }
+              ],
+              "echec": [{ "prestige": 20 }, { "sante": -15 }, { "trait_ajout": "blesse" }],
+              "texte_succes": "Vous désarçonnez le champion sous les vivats !",
+              "texte_echec": "Une lance brisée vous jette à terre : vous êtes blessé."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Présider depuis la loge et couronner le vainqueur.",
+        "effets": [{ "prestige": 60 }, { "opinion_vassaux": 8 }, { "stress": -10 }]
+      },
+      {
+        "libelle": "Parier gros sur un inconnu.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.35,
+              "succes": [{ "or": 200 }, { "prestige": 30 }],
+              "echec": [{ "or": -80 }],
+              "texte_succes": "L’inconnu remporte tout : votre bourse déborde.",
+              "texte_echec": "Votre champion mord la poussière au premier assaut."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dec_chasse",
+    "titre": "Partie de chasse",
+    "texte": [
+      "Les chiens aboient, les rabatteurs sont en place. Dans le sous-bois, un grand cerf vous observe.",
+      "La brume se lève sur la forêt. Votre veneur a repéré la trace d’un sanglier énorme près du ruisseau."
+    ],
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Traquer la bête jusqu’au bout.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "competence": "guerre",
+              "succes": [
+                { "prestige": 40 },
+                { "stress": -30 },
+                { "xp": { "competence": "guerre", "valeur": 15 } }
+              ],
+              "echec": [{ "stress": -10 }, { "sante": -10 }],
+              "texte_succes": "La bête tombe : on en parlera longtemps à la cour.",
+              "texte_echec": "La bête vous échappe et votre cheval trébuche."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Profiter du calme de la forêt.",
+        "effets": [{ "stress": -35 }]
+      },
+      {
+        "libelle": "Partager le gibier avec vos vassaux.",
+        "effets": [{ "stress": -20 }, { "opinion_vassaux": 8 }]
+      }
+    ]
+  },
+  {
+    "id": "dec_festin",
+    "titre": "Un festin mémorable",
+    "texte": "Les broches tournent depuis l’aube, le vin coule à flots. Vassaux et courtisans prennent place autour de la grande table.",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Porter un toast à vos vassaux.",
+        "effets": [{ "opinion_vassaux": 15 }, { "stress": -15 }]
+      },
+      {
+        "libelle": "Placer {proche.nom} à votre droite.",
+        "effets": [{ "ami": "proche" }, { "stress": -15 }]
+      },
+      {
+        "libelle": "Boire plus que de raison.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [{ "stress": -40 }, { "prestige": 15 }],
+              "echec": [{ "stress": -30 }, { "prestige": -30 }, { "trait_ajout": "ivrogne" }],
+              "texte_succes": "Vous êtes l’âme de la fête.",
+              "texte_echec": "On murmure que le souverain ne tient pas le vin."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dec_pelerinage",
+    "titre": "Sur la route du sanctuaire",
+    "texte": "Bâton en main, vous quittez le château pour des semaines de marche. La route est longue, et pas toujours sûre.",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Marcher pieds nus, comme les humbles.",
+        "effets": [
+          { "piete": 120 },
+          { "stress": -40 },
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                { "trait_ajout": "pelerin" },
+                { "xp": { "competence": "savoir", "valeur": 30 } }
+              ],
+              "echec": [{ "sante": -20 }, { "trait_ajout": "malade" }],
+              "texte_succes": "Vous revenez transformé, le regard apaisé.",
+              "texte_echec": "La fièvre vous saisit sur le chemin du retour."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Voyager avec une escorte et des présents.",
+        "effets": [
+          { "or": -50 },
+          { "piete": 80 },
+          { "prestige": 30 },
+          { "stress": -25 },
+          { "trait_ajout": "pelerin" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dec_retraite",
+    "titre": "Le silence du cloître",
+    "texte": "Les moines vous accueillent sans un mot. Ici, pas de vassaux ni de complots : seulement la cloche et le vent.",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Méditer sur vos fautes.",
+        "effets": [{ "stress": -45 }, { "piete": 30 }]
+      },
+      {
+        "libelle": "Étudier dans la bibliothèque du monastère.",
+        "effets": [{ "stress": -25 }, { "xp": { "competence": "savoir", "valeur": 40 } }]
+      }
+    ]
+  },
+  {
+    "id": "dec_grand_conseil",
+    "titre": "L’assemblée des grands",
+    "texte": "Vos vassaux ont fait le voyage. Chacun apporte ses doléances, et certains ont la mine sombre. {vassal.nom} prend la parole le premier.",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Écouter chacun et accorder des faveurs.",
+        "effets": [
+          { "or": -60 },
+          { "opinion_vassaux": 20 },
+          { "xp": { "competence": "diplomatie", "valeur": 30 } }
+        ]
+      },
+      {
+        "libelle": "Rappeler fermement qui gouverne.",
+        "effets": [
+          { "prestige": 40 },
+          { "opinion_vassaux": -5 },
+          { "stress": { "juste": -5, "courtois": 10 } }
+        ]
+      },
+      {
+        "libelle": "Désigner {vassal.nom} comme modèle de loyauté.",
+        "effets": [
+          { "opinion": { "cible": "vassal", "valeur": 40, "raison": "Honoré devant l’assemblée" } },
+          { "opinion_vassaux": 5 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dec_chroniqueur",
+    "titre": "La plume et la gloire",
+    "texte": "Le lettré trempe sa plume. « Par où commencerons-nous, monseigneur ? Par vos ancêtres, ou par vos propres hauts faits ? »",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Par les ancêtres : que la maison soit célébrée.",
+        "effets": [{ "renommee": 60 }, { "prestige": 20 }]
+      },
+      {
+        "libelle": "Par mes propres exploits, un peu embellis.",
+        "effets": [{ "prestige": 90 }, { "stress": { "juste": 10 } }]
+      }
+    ]
+  },
+  {
+    "id": "dec_inspection",
+    "titre": "Tournée d’inspection",
+    "texte": "Les intendants de {comte.nom} vous attendent, registres sous le bras. Les paysans, eux, ont beaucoup à dire.",
+    "declencheur": { "type": "decision" },
+    "poids": 0,
+    "choix": [
+      {
+        "libelle": "Investir dans les moulins et les routes.",
+        "effets": [
+          { "or": -50 },
+          { "developpement": 1 },
+          { "xp": { "competence": "gestion", "valeur": 25 } }
+        ]
+      },
+      {
+        "libelle": "Traquer les intendants malhonnêtes.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.55,
+              "competence": "ruse",
+              "succes": [{ "or": 120 }, { "prestige": 20 }],
+              "echec": [{ "stress": 10 }],
+              "texte_succes": "Vous retrouvez une cassette dissimulée sous un plancher.",
+              "texte_echec": "Les registres sont trop bien tenus pour être honnêtes, mais vous ne prouvez rien."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Écouter les doléances du peuple.",
+        "effets": [{ "stress": -10 }, { "piete": 20 }, { "levees": 150 }]
+      }
+    ]
+  }
+]

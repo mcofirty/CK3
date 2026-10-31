@@ -14,9 +14,12 @@ import {
   hasTrait,
   heldCounties,
   isAdult,
+  perkBonus,
+  perkTactics,
   skill,
   warSide,
 } from '../characters';
+import type { TacticId } from '../../data/tactics';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, clamp, newId, notify, seasonOf, type Ctx } from '../context';
 import {
@@ -357,7 +360,7 @@ export function detectBattles(ctx: Ctx, moved: Set<string>): PendingBattle[] {
   return pending;
 }
 
-function toCommander(
+export function toCommander(
   state: GameState,
   id: string | undefined,
   ownerId: string,
@@ -367,10 +370,13 @@ function toCommander(
   return {
     id: c.id,
     name: c.name,
-    guerre: skill(c, 'guerre') + marshalTraining(state, ownerId),
+    guerre: skill(c, 'guerre') + marshalTraining(state, ownerId) + perkBonus(state, c, 'commander'),
     ruse: skill(c, 'ruse'),
     traits: [...c.traits],
     isSovereign: c.id === ownerId,
+    morale: perkBonus(state, c, 'morale'),
+    tactics: perkTactics(state, c) as TacticId[],
+    duel: perkBonus(state, c, 'duel'),
   };
 }
 
@@ -580,7 +586,13 @@ export function seasonCampaign(ctx: Ctx): void {
     a.assault = false;
     // Ravitaillement.
     if (isFriendlyCounty(state, a.ownerId, c))
-      a.supply = Math.min(100, a.supply + W.supplyFriendly + countySupplyBonus(c));
+      a.supply = Math.min(
+        100,
+        a.supply +
+          W.supplyFriendly +
+          countySupplyBonus(c) +
+          perkBonus(state, state.characters[a.ownerId], 'supply'),
+      );
     else a.supply = Math.max(0, a.supply + (winter ? W.supplyEnemyWinter : W.supplyEnemy));
     // Usure.
     let rate = W.attritionBase;
@@ -588,6 +600,7 @@ export function seasonCampaign(ctx: Ctx): void {
     rate *= TERRAINS[c.terrain].attrition;
     if (a.supply <= 0) rate *= W.attritionNoSupply;
     if (marshalTrainingActive(state, a.ownerId)) rate *= 0.75;
+    rate *= Math.max(0.2, 1 + perkBonus(state, state.characters[a.ownerId], 'attrition'));
     const lost = a.baseMen * rate;
     const tot = totalMen(a.men);
     if (tot > 0)
@@ -710,6 +723,12 @@ export function canDeclareWar(
   if (truceWith(state, attackerId, defenderId)) reasons.push('Trêve en cours');
   if (allied(state, attackerId, defenderId)) reasons.push('Vous êtes alliés');
   if (a.imprisonedBy) reasons.push('Vous êtes prisonnier');
+  if (
+    Object.values(state.characters).some(
+      (h) => h.alive && h.hostageOf === defenderId && h.hostageHome === attackerId,
+    )
+  )
+    reasons.push('Un otage de votre maison est retenu à sa cour');
   if (cb === 'independance') {
     if (a.liegeId !== defenderId) reasons.push('Seul un vassal peut réclamer son indépendance');
   } else {

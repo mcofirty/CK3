@@ -93,8 +93,9 @@ export function clearEvents(s: GameState, refuseOffers = false): GameState {
   for (let guard = 0; s.pendingEvents.length && guard < 20; guard++) {
     const uid = s.pendingEvents[0].uid;
     const first = refuseOffers && s.pendingEvents[0].eventId.startsWith('sys_') ? 1 : 0;
-    for (const c of [first, 0, 1, 2, 3]) if (s.pendingEvents[0]?.uid === uid)
-      s = applyAction(s, { type: 'chooseEvent', uid, choice: c });
+    for (const c of [first, 0, 1, 2, 3])
+      if (s.pendingEvents[0]?.uid === uid)
+        s = applyAction(s, { type: 'chooseEvent', uid, choice: c });
   }
   return s;
 }

@@ -1,6 +1,15 @@
 /** Complots du joueur et de l'IA (section 7). */
 import { BALANCE } from '../../data/balance';
-import { addOpinion, displayName, hasTrait, opinion, skill, topLiege } from '../characters';
+import {
+  addOpinion,
+  displayName,
+  hasTrait,
+  opinion,
+  perkBonus,
+  skill,
+  topLiege,
+} from '../characters';
+import { gainXp, record } from '../progression';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, newId, notify, type Ctx } from '../context';
 import { vassalsOf } from '../realm';
@@ -51,14 +60,17 @@ export function plotOdds(
   const owner = state.characters[ownerId];
   const target = state.characters[targetId];
   const ruse = skill(owner, 'ruse');
-  const prog = I.progressBase + ruse * I.progressPerRuse + agents * I.progressPerAgent;
+  const power = 1 + perkBonus(state, owner, 'plotPower');
+  const prog = (I.progressBase + ruse * I.progressPerRuse + agents * I.progressPerAgent) * power;
   const tr = defenseRuse(state, target);
+  const vigilance = perkBonus(state, target, 'plotDefense');
   const disc = Math.max(
     0.01,
     I.discoveryBase +
       agents * I.discoveryPerAgent +
       tr * I.discoveryPerTargetRuse +
-      ruse * I.discoveryPerOwnRuse,
+      ruse * I.discoveryPerOwnRuse +
+      vigilance,
   );
   const seasons = Math.max(1, Math.ceil((100 - progress) / prog));
   const success = Math.pow(1 - disc, seasons);
@@ -81,6 +93,12 @@ export function plotOdds(
         value: `+${Math.round(tr * I.discoveryPerTargetRuse * 100)} % risque`,
       },
       { label: 'Risque de base', value: `${Math.round(I.discoveryBase * 100)} %` },
+      ...(power > 1
+        ? [{ label: 'Talents et héritages', value: `×${power.toFixed(2)} progrès` }]
+        : []),
+      ...(vigilance > 0
+        ? [{ label: 'Espions de la cible', value: `+${Math.round(vigilance * 100)} % risque` }]
+        : []),
     ],
   };
 }
@@ -190,6 +208,9 @@ function completePlot(ctx: Ctx, p: Plot): void {
   delete state.plots[p.id];
   const mine = p.ownerId === state.playerId;
   const againstMe = p.targetId === state.playerId || topLiege(state, p.targetId) === state.playerId;
+  record(owner).plots += 1;
+  gainXp(state, owner, 'ruse', BALANCE.progression.plotXp);
+  if (mine && state.stats) state.stats.plotsDone += 1;
   switch (p.type) {
     case 'assassiner':
       if (rng.chance(I.assassinKillChance)) {
@@ -250,10 +271,14 @@ export function aiPlots(ctx: Ctx, rulerId: string): void {
   if (hasTrait(r, 'juste')) p *= 0.4;
   const op = opinion(state, rulerId, state.playerId);
   if (op > 0) p *= 0.3;
+  // Vengeance : un souvenir sanglant pousse à frapper.
+  const grudge = hasGrudge(state, r, state.playerId);
+  if (grudge) p += BALANCE.relations.vengeanceChance;
   if (!rng.chance(p)) return;
   const pl = state.playerId;
   let type: PlotType = 'discrediter';
-  if (op < -40 && (hasTrait(r, 'cruel') || hasTrait(r, 'ambitieux'))) type = 'assassiner';
+  if (grudge || (op < -40 && (hasTrait(r, 'cruel') || hasTrait(r, 'ambitieux'))))
+    type = 'assassiner';
   else if (rng.chance(0.3)) type = 'amitie';
   const target =
     type === 'amitie' ? rng.pick(vassalsOf(state, pl).length ? vassalsOf(state, pl) : [pl]) : pl;
@@ -269,4 +294,13 @@ export function queueTriggered(
 ): void {
   state.pendingTriggers = state.pendingTriggers ?? [];
   state.pendingTriggers.push({ trigger, scope });
+}
+
+/** Le personnage garde-t-il un souvenir sanglant de l'autre ? */
+export function hasGrudge(state: GameState, c: Character, againstId: string): boolean {
+  return (c.opinions[againstId] ?? []).some(
+    (m) =>
+      m.value <= BALANCE.relations.memoryKill &&
+      (m.expires === undefined || m.expires > state.turn),
+  );
 }

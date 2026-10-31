@@ -1,7 +1,7 @@
 /** Cycle de vie : santé, naissances, éducation, décès, succession. */
 import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
-import { chronicle, notify, seasonOf, type Ctx } from '../context';
+import { chronicle, notify, recordRuler, seasonOf, type Ctx } from '../context';
 import { isIndependent } from '../realm';
 import type { Character, GameState } from '../state';
 import {
@@ -16,10 +16,12 @@ import {
   healthOf,
   heldCounties,
   livingChildren,
+  perkBonus,
   removeTrait,
   siblingsOf,
   skill,
 } from './index';
+import { legacyEducation } from '../progression';
 
 const C = BALANCE.characters;
 
@@ -30,6 +32,7 @@ export function deathChance(state: GameState, c: Character): number {
   if (age > C.deathAgeStart) p += (age - C.deathAgeStart) * C.deathAgePerYear;
   const h = healthOf(c);
   if (h < C.deathHealthThreshold) p += C.deathLowHealth * (1 - h / C.deathHealthThreshold) * 2;
+  p *= Math.max(0.2, 1 + perkBonus(state, c, 'deathChance'));
   return p;
 }
 
@@ -43,6 +46,7 @@ export function birthChance(state: GameState, mother: Character, father: Charact
   let p = C.birthChance - Math.max(0, ma - 25) * C.birthAgeDecline;
   for (const t of [...mother.traits, ...father.traits]) p *= TRAITS[t]?.fertility ?? 1;
   p *= 1 - kids * 0.08;
+  p *= 1 + Math.max(perkBonus(state, mother, 'fertility'), perkBonus(state, father, 'fertility'));
   return Math.max(0, p);
 }
 
@@ -108,6 +112,7 @@ export function educate(ctx: Ctx, child: Character): void {
   const p2 = level >= C.educationTier2Skill ? 0.5 + (level - C.educationTier2Skill) * 0.08 : 0.1;
   addTrait(child, educationTrait(focus, rng.chance(p2) ? 2 : 1));
   addRandomPersonality(rng, child, 2);
+  legacyEducation(state, child);
   child.educatorId = undefined;
   if (child.dynastyId === state.playerDynastyId) {
     const t = child.traits.find((x) => TRAITS[x]?.category === 'education');
@@ -353,6 +358,7 @@ export function succession(ctx: Ctx, id: string): void {
   }
   if (wasPlayer && !state.gameOver) {
     state.playerId = heir.id;
+    recordRuler(state, heir.id);
     state.playerDynastyId = heir.dynastyId ?? state.playerDynastyId;
     chronicle(
       state,

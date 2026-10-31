@@ -80,11 +80,124 @@ export const BALANCE = {
     warScore: { min: 5, max: 25, menForMax: 4000 },
     prestigeWin: 20,
     renownWin: 5,
+    /** Tactiques en main au début d'une bataille (hors talents). */
+    tacticHand: 3,
+    /** Élan : un camp qui inflige ×ratio les pertes subies gagne un niveau (max). */
+    elan: { ratio: 1.25, max: 3, attackPerLevel: 0.06 },
+    weather: {
+      fogChance: 0.15,
+      snowChanceWinter: 0.5,
+      fogArchers: 0.75,
+      snowCavalry: 0.8,
+      snowMorale: -5,
+    },
+    duel: {
+      chance: 0.3,
+      randomMax: 10,
+      winnerMorale: 15,
+      loserMorale: 15,
+      refuseMorale: 10,
+      woundChance: 0.35,
+      deathChance: 0.12,
+      prestige: 60,
+    },
+    incidentChance: 0.12,
+    incidentMorale: 10,
+    boucherMorale: 5,
+  },
+
+  progression: {
+    /** Expérience par point de talent. */
+    xpPerPoint: 100,
+    /** Expérience par saison pour un adulte (dans sa meilleure compétence). */
+    seasonXp: 4,
+    rulerSeasonXp: 3,
+    councilXp: 4,
+    battleXp: 25,
+    battleWinXp: 20,
+    plotXp: 30,
+    buildXp: 12,
+    marriageXp: 15,
+    legacyCost: [120, 280, 520],
+    renownBase: 0.4,
+    renownPerCounty: 0.08,
+    renownCap: 2.5,
+  },
+
+  stress: {
+    decay: 3,
+    tense: 50,
+    overwhelmed: 75,
+    crisis: 100,
+    healthLoss: 1,
+    ambitionFail: 25,
+  },
+
+  ambitions: {
+    rewardXp: 100,
+    failPrestige: -50,
+  },
+
+  relations: {
+    /** Chance par saison qu'une relation naisse à la cour du joueur. */
+    formChance: 0.06,
+    loverOpinion: 40,
+    memoryKill: -50,
+    memoryKillSeasons: 160,
+    memoryPrison: -25,
+    vengeanceChance: 0.08,
+  },
+
+  hostage: {
+    truceSeasons: 16,
+    executeStress: { juste: 25, genereux: 20, courtois: 10, '*': 5, cruel: -10 },
+    executePrestige: -10,
+    executeVassalOpinion: -5,
+    opinionPerSeason: 1,
+    offerAfter: 8,
+    offerGold: 120,
+  },
+
+  siege: {
+    negotiateBase: 0.25,
+    negotiatePerDiplo: 0.03,
+    negotiatePerProgress: 0.1,
+    negotiatePerFort: -0.08,
+    negotiateGold: 50,
+    negotiateFailPrestige: -15,
+    blockadeAttrition: 0.7,
+  },
+
+  mercenaries: {
+    contractSeasons: 8,
+    cooldownSeasons: 8,
+  },
+
+  plague: {
+    worldChance: 0.006,
+    duration: 6,
+    spreadChance: 0.3,
+    immunity: 40,
+    developmentLoss: 0.15,
+    levyLoss: 0.4,
+    sicknessChance: 0.06,
+  },
+
+  events: {
+    /** Effet d'une compétence sur une issue incertaine, par point autour de 10. */
+    skillChancePerPoint: 0.025,
+    chanceMin: 0.05,
+    chanceMax: 0.95,
+    /** Bataille d'événement : part des levées mobilisées d'urgence. */
+    emergencyLevies: 0.7,
+    militia: 300,
   },
 
   characters: {
     adulthood: 16,
     maxSkill: 20,
+    /** Plafond avec traits et talents. */
+    skillCap: 25,
     hereditaryChance: 0.25,
     /** Risque de décès par saison : base + âge et santé. */
     deathBase: 0.001,

@@ -1,6 +1,7 @@
 /** Personnages : compétences, santé, opinion, noms, création. */
 import { BALANCE } from '../../data/balance';
 import { NAMES } from '../../data/names';
+import { LEGACIES, PERKS, type PerkKey } from '../../data/perks';
 import { HEREDITARY_TRAITS, PERSONALITY_TRAITS, TRAITS } from '../../data/traits';
 import { clamp, newId, type Ctx } from '../context';
 import type { Rng } from '../rng';
@@ -21,7 +22,28 @@ export function isAdult(state: GameState, c: Character): boolean {
 export function skill(c: Character, k: SkillKey): number {
   let v = c.skills[k];
   for (const t of c.traits) v += TRAITS[t]?.skills?.[k] ?? 0;
-  return clamp(Math.round(v), 0, C.maxSkill);
+  for (const p of c.perks ?? []) v += PERKS[p]?.skills?.[k] ?? 0;
+  return clamp(Math.round(v), 0, C.skillCap);
+}
+
+/** Somme d'un bonus des talents du personnage et des héritages de sa maison. */
+export function perkBonus(state: GameState, c: Character | undefined, key: PerkKey): number {
+  if (!c) return 0;
+  let v = 0;
+  for (const p of c.perks ?? []) v += PERKS[p]?.[key] ?? 0;
+  const d = c.dynastyId ? state.dynasties[c.dynastyId] : undefined;
+  for (const l of d?.legacies ?? []) v += LEGACIES[l]?.[key] ?? 0;
+  return v;
+}
+
+/** Tactiques garanties par les talents et héritages. */
+export function perkTactics(state: GameState, c: Character | undefined): string[] {
+  if (!c) return [];
+  const out: string[] = [];
+  for (const p of c.perks ?? []) if (PERKS[p]?.tactic) out.push(PERKS[p].tactic!);
+  const d = c.dynastyId ? state.dynasties[c.dynastyId] : undefined;
+  for (const l of d?.legacies ?? []) if (LEGACIES[l]?.tactic) out.push(LEGACIES[l].tactic!);
+  return [...new Set(out)];
 }
 
 export function skillsOf(c: Character): Skills {
@@ -31,6 +53,7 @@ export function skillsOf(c: Character): Skills {
 export function healthOf(c: Character): number {
   let h = c.health;
   for (const t of c.traits) h += TRAITS[t]?.health ?? 0;
+  for (const p of c.perks ?? []) h += PERKS[p]?.health ?? 0;
   return clamp(Math.round(h), 0, 100);
 }
 
@@ -230,8 +253,11 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
     if (def.opposite && to.traits.includes(def.opposite))
       push(`Traits opposés : ${def.name} / ${TRAITS[def.opposite].name}`, O.oppositeTrait);
   }
+  push('Réputation personnelle', perkBonus(state, to, 'opinionAll'));
+  if (from.lovers?.includes(toId)) push('Amant', BALANCE.relations.loverOpinion);
   if (from.liegeId === toId) {
     push('Vassal', O.vassalBase);
+    push('Talents et héritages du suzerain', perkBonus(state, to, 'vassalOpinion'));
     for (const t of to.traits) {
       const v = TRAITS[t]?.vassalOpinion;
       if (v) push(`Réputation : ${TRAITS[t].name}`, v);

@@ -13,10 +13,12 @@ import {
   livingChildren,
   marry,
   opinion,
+  perkBonus,
   player,
   skill,
   topLiege,
 } from '../characters';
+import { gainXp } from '../progression';
 import { chronicle, notify, type Ctx } from '../context';
 import { capitalOf, countyRuler, independentRulers, rankOf, rankValue } from '../realm';
 import type { Character, CouncilPost, GameState } from '../state';
@@ -87,6 +89,8 @@ export function marriageAcceptance(state: GameState, a: Character, b: Character)
   const ageGap = Math.abs(ageOf(state, a) - ageOf(state, b));
   if (ageGap > 15) f.push({ label: 'Grande différence d’âge', value: -ageGap / 2 });
   f.push(...traitFactors(state.characters[theirRuler] ?? b));
+  const pb = perkBonus(state, state.characters[pl], 'acceptance');
+  if (pb) f.push({ label: 'Talents et héritages', value: pb });
   return finish(f, marriageBlock(state, a, b));
 }
 
@@ -116,6 +120,7 @@ export function celebrateMarriage(ctx: Ctx, aId: string, bId: string): void {
       state.characters[state.playerId].prestige += D.prestigeMarriage;
     }
     chronicle(state, `Mariage de ${mine.name} et ${displayName(state, theirs)}.`, 'mariage');
+    gainXp(state, state.characters[state.playerId], 'diplomatie', BALANCE.progression.marriageXp);
   }
 }
 
@@ -133,6 +138,8 @@ export function marriageTie(state: GameState, a: string, b: string): boolean {
 export function allianceAcceptance(state: GameState, fromId: string, toId: string): Acceptance {
   const f: Factor[] = [{ label: 'Base', value: D.alliance.base }];
   f.push({ label: 'Opinion', value: opinion(state, toId, fromId) * D.alliance.perOpinion });
+  const pb = perkBonus(state, state.characters[fromId], 'acceptance');
+  if (pb) f.push({ label: 'Talents et héritages', value: pb });
   const threatened = warsOf(state, toId).length > 0;
   if (threatened) f.push({ label: 'Menacé par une guerre', value: D.alliance.threatInterest });
   const ratio = militaryStrength(state, fromId) / Math.max(1, militaryStrength(state, toId));

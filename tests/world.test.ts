@@ -18,7 +18,8 @@ describe('Variété des parties', () => {
       for (const r of m.realms) expect(r.length).toBeGreaterThanOrEqual(5);
       // Graphe connexe et adjacences symétriques.
       const byId = new Map(m.counties.map((c) => [c.id, c]));
-      for (const c of m.counties) for (const n of c.adjacent) expect(byId.get(n)!.adjacent).toContain(c.id);
+      for (const c of m.counties)
+        for (const n of c.adjacent) expect(byId.get(n)!.adjacent).toContain(c.id);
       names.add(m.counties.map((c) => c.name).join());
     }
     expect(names.size).toBe(25);
@@ -39,7 +40,8 @@ describe('Variété des parties', () => {
       const own = Object.values(s.counties).filter((c) => countyRuler(s, c) === s.playerId);
       expect(own.length).toBeGreaterThanOrEqual(5);
       expect(s.pendingEvents[0].eventId).toBe('intro_origine');
-      if (o.guerreVoisin) expect(Object.values(s.wars).some((w) => w.defenderId === s.playerId)).toBe(true);
+      if (o.guerreVoisin)
+        expect(Object.values(s.wars).some((w) => w.defenderId === s.playerId)).toBe(true);
       if (o.age) {
         const age = Math.floor(-s.characters[s.playerId].birthTurn / 4);
         expect(age).toBeGreaterThanOrEqual(o.age[0]);

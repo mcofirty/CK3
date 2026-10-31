@@ -1,3 +1,4 @@
+import type { TacticId } from '../../data/tactics';
 import type { Difficulty, SeasonIndex, Terrain, UnitCounts, UnitType } from '../state';
 
 export type FrontId = 'left' | 'center' | 'right';
@@ -35,6 +36,12 @@ export interface Commander {
   ruse: number;
   traits: string[];
   isSovereign: boolean;
+  /** Bonus de moral de départ (talents, héritages). */
+  morale?: number;
+  /** Tactiques garanties (talents, héritages). */
+  tactics?: TacticId[];
+  /** Bonus en duel. */
+  duel?: number;
 }
 
 export interface Front {
@@ -125,6 +132,18 @@ export interface BattleState {
   precomputedOrders?: SideOrders;
   /** Commandants tués et blessés au fil des rounds. */
   casualties: { killed: string[]; wounded: string[] };
+  /** Bataille née d'un événement : issue appliquée à la fin. */
+  event?: {
+    victoire: import('../events/types').Effect[];
+    defaite: import('../events/types').Effect[];
+    scope: Record<string, string>;
+    /** Armée du joueur engagée (sinon levée d'urgence). */
+    armyId?: string;
+    /** Levées d'urgence prélevées par comté. */
+    levyFrom?: Record<string, number>;
+    /** Compagnies professionnelles engagées. */
+    standing?: UnitCounts;
+  };
 }
 
 export interface BattleReport {

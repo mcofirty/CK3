@@ -28,3 +28,27 @@ export const yearOf = (state: GameState, turn = state.turn): number =>
 
 export const clamp = (v: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, v));
+
+/** Livre de la dynastie : clôt le règne en cours et ouvre celui du nouveau souverain. */
+export function recordRuler(state: GameState, newRulerId: string): void {
+  const list = (state.rulers ??= []);
+  const cur = list.find((r) => r.to === undefined);
+  if (cur?.id === newRulerId) return;
+  if (cur) cur.to = state.turn;
+  list.push({ id: newRulerId, from: state.turn, ambitions: [] });
+}
+
+export function emptyStats(): import('./state').GameStats {
+  return {
+    battlesWon: 0,
+    battlesLost: 0,
+    duelsWon: 0,
+    plotsDone: 0,
+    decisions: 0,
+    maxCounties: 0,
+    wars: 0,
+    crises: 0,
+    hostages: 0,
+    plaguesSurvived: 0,
+  };
+}

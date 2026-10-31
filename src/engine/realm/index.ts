@@ -2,7 +2,8 @@
 import { BALANCE } from '../../data/balance';
 import { BUILDINGS } from '../../data/buildings';
 import { TRAITS } from '../../data/traits';
-import { addOpinion, demesneLimit, heldCounties, opinion, skill } from '../characters';
+import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } from '../characters';
+import { gainXp, record } from '../progression';
 import { chronicle, clamp, notify, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
 import { armyUpkeep, emptyUnits, totalMen } from '../units';
@@ -154,13 +155,14 @@ export function canBuild(
   if (cur >= 2)
     return { ok: false, reason: 'Niveau maximal atteint', cost: 0, seasons: 0, level: 2 };
   const lv = def.levels[level - 1];
-  const res = { cost: lv.cost, seasons: lv.seasons, level };
+  const cost = Math.round(lv.cost * Math.max(0.3, 1 + perkBonus(state, ruler, 'buildCost')));
+  const res = { cost, seasons: lv.seasons, level };
   if (c.holderId !== rulerId) return { ok: false, reason: 'Comté hors du domaine propre', ...res };
   if (c.construction) return { ok: false, reason: 'Un chantier est déjà en cours', ...res };
   if (cur === 0 && c.buildings.length >= c.slots)
     return { ok: false, reason: 'Plus d’emplacement libre', ...res };
   if (c.occupation) return { ok: false, reason: 'Comté occupé', ...res };
-  if (ruler.gold < lv.cost) return { ok: false, reason: `Il faut ${lv.cost} or`, ...res };
+  if (ruler.gold < cost) return { ok: false, reason: `Il faut ${cost} or`, ...res };
   return { ok: true, ...res };
 }
 
@@ -172,8 +174,11 @@ export function startBuilding(
 ): boolean {
   const chk = canBuild(ctx.state, rulerId, countyId, t);
   if (!chk.ok) return false;
-  ctx.state.characters[rulerId].gold -= chk.cost;
+  const ruler = ctx.state.characters[rulerId];
+  ruler.gold -= chk.cost;
   ctx.state.counties[countyId].construction = { type: t, level: chk.level, remaining: chk.seasons };
+  record(ruler).buildings += 1;
+  gainXp(ctx.state, ruler, 'gestion', BALANCE.progression.buildXp);
   return true;
 }
 
@@ -190,6 +195,7 @@ export function incomeMultiplier(state: GameState, rulerId: string): number {
   const r = state.characters[rulerId];
   let m = 1 + E.gestionIncomeBonus * (skill(r, 'gestion') - 10);
   for (const t of r.traits) m *= TRAITS[t]?.income ?? 1;
+  m *= 1 + perkBonus(state, r, 'income');
   if (rulerId !== state.playerId) m *= E.aiIncomeMultiplier[state.difficulty];
   return m;
 }
@@ -297,6 +303,7 @@ export function availableLevies(
     if (c.holderId !== rulerId) {
       n *= E.vassalLevyRate * vassalContribution(opinion(state, c.holderId, rulerId));
     }
+    n *= 1 + perkBonus(state, r, 'levies');
     n = Math.floor(n / 100) * 100;
     if (n > 0) {
       byCounty[c.id] = n;
@@ -355,6 +362,7 @@ export function seasonRealm(ctx: Ctx): void {
         if (st?.alive && seat.task === 'developper' && seat.targetId === c.id)
           p += BALANCE.council.developChance + skill(st, 'gestion') * 0.003;
       }
+      p *= 1 + perkBonus(state, holder, 'development');
       p /= 1 + c.development * 0.15;
       if (rng.chance(p)) {
         c.development += 1;

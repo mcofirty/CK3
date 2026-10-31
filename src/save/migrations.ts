@@ -3,6 +3,7 @@
  * Une sauvegarde d'une version précédente se charge toujours.
  */
 import MAP from '../data/map.json';
+import { emptyStats } from '../engine/context';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
 type AnySave = Record<string, unknown> & { version?: number };
@@ -27,6 +28,20 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     ...s,
     map: s.map ?? MAP,
     version: 2,
+  }),
+  // Version 2 → 3 : progression, ambitions, stress, décisions, mercenaires, livre, succès.
+  // Le souverain en place ouvre le livre de la dynastie ; une ambition lui sera proposée.
+  2: (s) => ({
+    flags: {},
+    scheduled: [],
+    decisionsUsed: {},
+    mercenaries: [],
+    mercCooldown: {},
+    rulers: [{ id: s.playerId, from: s.turn, ambitions: [] }],
+    achievements: [],
+    stats: emptyStats(),
+    ...s,
+    version: 3,
   }),
 };
 

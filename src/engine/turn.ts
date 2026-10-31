@@ -3,10 +3,14 @@ import { BALANCE } from '../data/balance';
 import { runAi } from './ai';
 import { cleanOpinions } from './characters';
 import { pruneCharacters, seasonLife } from './characters/lifecycle';
-import { chronicle, seasonOf, type Ctx } from './context';
+import { chronicle, recordRuler, seasonOf, type Ctx } from './context';
 import { autoFillCouncil, seasonCouncil } from './diplomacy';
 import { drawSeasonEvents } from './events/engine';
 import { seasonPlots } from './intrigue';
+import { seasonCourt } from './court';
+import { seasonPlague } from './plague';
+import { seasonProgression } from './progression';
+import { applyEventBattle } from './war/eventBattle';
 import { seasonIncome, seasonRealm } from './realm';
 import type { GameState, LineageScore } from './state';
 import {
@@ -47,10 +51,12 @@ export function closeBattle(ctx: Ctx): void {
   const { state } = ctx;
   if (!state.battle || state.battle.phase !== 'fin') return;
   const debug = state.battle.id.startsWith('debug');
-  if (!debug) applyBattleResult(ctx, state.battle);
+  const event = !!state.battle.event;
+  if (event) applyEventBattle(ctx, state.battle);
+  else if (!debug) applyBattleResult(ctx, state.battle);
   state.battle = undefined;
   state.phase = 'saison';
-  if (debug) return;
+  if (debug || event) return;
   if (startNextBattle(ctx)) return;
   continueSeason(ctx);
 }
@@ -58,6 +64,7 @@ export function closeBattle(ctx: Ctx): void {
 export function continueSeason(ctx: Ctx): void {
   const { state } = ctx;
   seasonCampaign(ctx);
+  seasonPlague(ctx);
   seasonLife(ctx);
   checkLandless(state);
   if (state.gameOver) {
@@ -85,11 +92,13 @@ export function startSeason(ctx: Ctx): void {
   for (const c of Object.values(state.characters))
     if (c.recruitedThisSeason) c.recruitedThisSeason = 0;
   seasonIncome(ctx);
+  seasonProgression(ctx);
   seasonRealm(ctx);
   seasonCouncil(ctx);
   seasonPlots(ctx);
   runAi(ctx);
   autoFillCouncil(state);
+  seasonCourt(ctx);
   drawSeasonEvents(ctx);
 }
 
@@ -126,6 +135,7 @@ function checkLandless(state: GameState): void {
       'succession',
     );
     state.playerId = titled.id;
+    recordRuler(state, titled.id);
     return;
   }
   state.gameOver = {

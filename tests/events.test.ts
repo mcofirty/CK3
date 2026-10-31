@@ -92,12 +92,20 @@ describe('Événements (section 6)', () => {
       const ctx: Ctx = { state, rng: new Rng(seed) };
       const p = state.characters[state.playerId];
       const gold = p.gold;
-      applyEffects(ctx, [{ hasard: { chance: 0.5, succes: [{ or: 100 }], echec: [{ or: -100 }] } }], { souverain: p.id });
+      applyEffects(
+        ctx,
+        [{ hasard: { chance: 0.5, succes: [{ or: 100 }], echec: [{ or: -100 }] } }],
+        { souverain: p.id },
+      );
       outcomes.add(p.gold - gold);
     }
     expect([...outcomes].sort()).toEqual([-100, 100]);
     const state = newGame({ seed: 2 });
-    const label = effectLabels(state, [{ hasard: { chance: 0.6, succes: [{ prestige: 10 }], echec: [] } }], {});
+    const label = effectLabels(
+      state,
+      [{ hasard: { chance: 0.6, succes: [{ prestige: 10 }], echec: [] } }],
+      {},
+    );
     expect(label[0]).toContain('60 %');
   });
 

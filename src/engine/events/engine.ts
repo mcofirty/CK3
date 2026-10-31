@@ -19,7 +19,24 @@ import {
   removeTrait,
   skill,
 } from '../characters';
+import { createCharacter } from '../characters';
 import { giveBirth, heirsOf, killCharacter } from '../characters/lifecycle';
+import { AMBITION_BY_ID } from '../../data/ambitions';
+import { ambitionStatus, startAmbition } from '../ambitions';
+import { coastalCounties, foreignKingdoms } from '../geo';
+import { playerRealmPlagued, startPlague } from '../plague';
+import { gainXp } from '../progression';
+import {
+  addMemory,
+  companions,
+  endLovers,
+  makeFriends,
+  makeLovers,
+  makeRivals,
+  reconcile,
+} from '../relations';
+import { addStress, stressFromSpec, stressOf } from '../stress';
+import { startEventBattle } from '../war/eventBattle';
 import { chronicle, clamp, newId, notify, seasonOf, yearOf, type Ctx } from '../context';
 import { celebrateMarriage, makeAlliance } from '../diplomacy';
 import { startPlot } from '../intrigue';
@@ -55,6 +72,10 @@ const ROLE_PATTERNS: Record<Role, RegExp> = {
   comte_rival: /(\{comte_rival\.|"comte_rival")/,
   complotiste: /(\{complotiste\.|"complotiste")/,
   prisonnier: /(\{prisonnier\.|"prisonnier")/,
+  ami: /(\{ami\.|:"ami")/,
+  ennemi: /(\{ennemi\.|:"ennemi")/,
+  amant: /(\{amant\.|:"amant")/,
+  proche: /(\{proche\.|:"proche")/,
 };
 
 const roleCache = new Map<string, Role[]>();
@@ -106,9 +127,25 @@ function candidates(ctx: Ctx, role: Role): string[] {
         )
         .map((c) => c.id);
     }
+    case 'ami':
+      return p.friends.filter((id) => state.characters[id]?.alive);
+    case 'ennemi':
+      return p.rivals.filter((id) => state.characters[id]?.alive);
+    case 'amant':
+      return (p.lovers ?? []).filter(
+        (id) => state.characters[id]?.alive && !state.characters[id].imprisonedBy,
+      );
+    case 'proche':
+      return companions(state).map((c) => c.id);
     default:
       return [];
   }
+}
+
+/** Tous les rôles de l'événement ont-ils au moins un candidat ? */
+export function rolesAvailable(state: GameState, def: EventDef): boolean {
+  const ctx = { state } as Ctx;
+  return rolesOf(def).every((r) => candidates(ctx, r).length > 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -244,6 +281,32 @@ export function checkCondition(
       case 'annee_min':
         if (state.turn / 4 < (v as number)) return false;
         break;
+      case 'drapeau':
+        if (state.flags?.[v as string] === undefined) return false;
+        break;
+      case 'pas_drapeau':
+        if (state.flags?.[v as string] !== undefined) return false;
+        break;
+      case 'stress_min':
+        if (stressOf(p) < (v as number)) return false;
+        break;
+      case 'stress_max':
+        if (stressOf(p) > (v as number)) return false;
+        break;
+      case 'a_ambition':
+        if (!!p.ambition !== v) return false;
+        break;
+      case 'epidemie':
+        if (playerRealmPlagued(state) !== v) return false;
+        break;
+      case 'cotier':
+        if (
+          Object.values(state.counties).some(
+            (c) => c.holderId === p.id && coastalCounties(state).has(c.id),
+          ) !== v
+        )
+          return false;
+        break;
       default:
         break;
     }
@@ -299,9 +362,14 @@ export function eventText(def: EventDef, scope: Record<string, string>): string 
 
 export function renderText(state: GameState, text: string, scope: Record<string, string>): string {
   return text.replace(
-    /\{(\w+)\.(\w+)\}|\{(annee|saison)\}/g,
+    /\{(\w+)\.(\w+)\}|\{(annee|saison|etranger|etranger2)\}/g,
     (m, role: string, field: string, special: string) => {
       if (special === 'annee') return String(yearOf(state));
+      if (special === 'etranger' || special === 'etranger2') {
+        const names = foreignKingdoms(state);
+        const i = Number(scope._e ?? 0) + (special === 'etranger2' ? 1 : 0);
+        return names[i % names.length];
+      }
       if (special === 'saison')
         return ['printemps', 'été', 'automne', 'hiver'][seasonOf(state.turn)];
       const id = scope[role];
@@ -338,7 +406,7 @@ export function effectLabels(
   const out: string[] = [];
   for (const e of effects) {
     if (e.hasard) {
-      const pct = Math.round(e.hasard.chance * 100);
+      const pct = Math.round(hasardChance(state, e.hasard) * 100);
       const ok = effectLabels(state, e.hasard.succes, scope).join(', ') || 'rien';
       const ko = effectLabels(state, e.hasard.echec, scope).join(', ') || 'rien';
       out.push(`🎲 ${pct} % : ${ok} — sinon : ${ko}`);
@@ -393,6 +461,37 @@ export function effectLabels(
     if (e.emprisonner) out.push(`${name(e.emprisonner)} est emprisonné`);
     if (e.liberer) out.push(`${name(e.liberer)} est libéré`);
     if (e.exiler) out.push(`${name(e.exiler)} quitte la cour`);
+    if (e.stress !== undefined) {
+      const st = stressFromSpec(player(state), e.stress);
+      if (st.value)
+        out.push(
+          `Stress ${sign(st.value)}${st.reasons.length ? ` (${st.reasons.join(', ')})` : ''}`,
+        );
+    }
+    if (e.xp)
+      out.push(
+        `Expérience ${SKILL_LABELS[e.xp.competence]}${e.xp.cible && e.xp.cible !== 'souverain' ? ` de ${name(e.xp.cible)}` : ''} : ${sign(e.xp.valeur)}`,
+      );
+    if (e.suite_differee) out.push('Cela aura des suites…');
+    if (e.amant)
+      out.push(
+        `${name(e.amant)} devient votre amant${state.characters[scope[e.amant]]?.female ? 'e' : ''}`,
+      );
+    if (e.fin_amant) out.push(`Fin de la liaison avec ${name(e.fin_amant)}`);
+    if (e.reconciliation) out.push(`Réconciliation avec ${name(e.reconciliation)}`);
+    if (e.epidemie) out.push('Une épidémie éclate');
+    if (e.quarantaine) out.push(`Quarantaine à ${name('comte')}`);
+    if (e.bataille)
+      out.push(`⚔️ Bataille contre ${e.bataille.ennemi} (force ×${e.bataille.force.toFixed(1)})`);
+    if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
+    if (e.ambition) {
+      const d = AMBITION_BY_ID[e.ambition];
+      if (d) out.push(`Ambition : ${d.name} (${d.years} ans)`);
+    }
+    if (e.rendre_otage)
+      out.push(
+        `${state.characters[e.rendre_otage.otage]?.name} rentre chez les siens (+${e.rendre_otage.montant} or)`,
+      );
     if (e.mariage)
       out.push(
         `Mariage de ${state.characters[e.mariage.a]?.name} et ${state.characters[e.mariage.b]?.name}`,
@@ -416,7 +515,7 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
   const who = (r: Role | string) => (r === 'souverain' ? p : char(state, scope[r]));
   for (const e of effects) {
     if (e.hasard) {
-      const win = rng.chance(e.hasard.chance);
+      const win = rng.chance(hasardChance(state, e.hasard));
       applyEffects(ctx, win ? e.hasard.succes : e.hasard.echec, scope);
       const t = win ? e.hasard.texte_succes : e.hasard.texte_echec;
       notify(
@@ -513,7 +612,10 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     }
     if (e.deces) {
       const c = who(e.deces);
-      if (c) killCharacter(ctx, c.id, 'tragiquement');
+      if (c) {
+        if (c.id !== p.id) addMemory(state, c.id, p.id, 'mort');
+        killCharacter(ctx, c.id, 'tragiquement');
+      }
     }
     if (e.developpement) {
       const cid =
@@ -533,25 +635,18 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     }
     if (e.ami) {
       const c = who(e.ami);
-      if (c && !c.friends.includes(p.id)) {
-        c.friends.push(p.id);
-        p.friends.push(c.id);
-        c.rivals = c.rivals.filter((x) => x !== p.id);
-        p.rivals = p.rivals.filter((x) => x !== c.id);
-      }
+      if (c) makeFriends(p, c);
     }
     if (e.devient_rival) {
       const c = who(e.devient_rival);
-      if (c && !c.rivals.includes(p.id)) {
-        c.rivals.push(p.id);
-        p.rivals.push(c.id);
-        c.friends = c.friends.filter((x) => x !== p.id);
-        p.friends = p.friends.filter((x) => x !== c.id);
-      }
+      if (c) makeRivals(p, c);
     }
     if (e.emprisonner) {
       const c = who(e.emprisonner);
-      if (c) c.imprisonedBy = p.id;
+      if (c) {
+        c.imprisonedBy = p.id;
+        addMemory(state, c.id, p.id, 'prison');
+      }
     }
     if (e.liberer) {
       const c = who(e.liberer);
@@ -567,6 +662,69 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
           if (seat.holderId === c.id) seat.holderId = undefined;
       }
     }
+    if (e.stress !== undefined) addStress(state, p, stressFromSpec(p, e.stress).value);
+    if (e.xp) gainXp(state, who(e.xp.cible ?? 'souverain'), e.xp.competence, e.xp.valeur);
+    if (e.drapeau) (state.flags ??= {})[e.drapeau] = state.turn;
+    if (e.retirer_drapeau && state.flags) delete state.flags[e.retirer_drapeau];
+    if (e.suite_differee)
+      (state.scheduled ??= []).push({
+        turn: state.turn + Math.max(1, e.suite_differee.saisons),
+        eventId: e.suite_differee.id,
+        scope: { ...scope },
+      });
+    if (e.amant) {
+      const c = who(e.amant);
+      if (c) makeLovers(p, c);
+    }
+    if (e.fin_amant) {
+      const c = who(e.fin_amant);
+      if (c) endLovers(p, c);
+    }
+    if (e.reconciliation) {
+      const c = who(e.reconciliation);
+      if (c) reconcile(p, c);
+    }
+    if (e.epidemie) {
+      const own = Object.values(state.counties).filter((c) => c.holderId === p.id);
+      const cid = scope.comte ?? (own.length ? rng.pick(own).id : undefined);
+      if (cid) startPlague(state, cid);
+    }
+    if (e.quarantaine && scope.comte && state.counties[scope.comte]) {
+      const c = state.counties[scope.comte];
+      c.quarantine = true;
+    }
+    if (e.nouveau_courtisan) {
+      const n = e.nouveau_courtisan;
+      const c = createCharacter(ctx, {
+        age: rng.int(n.age_min, n.age_max),
+        dynastyId: null,
+        courtId: p.id,
+        skillBase: 7,
+      });
+      if (n.trait) c.traits = [...c.traits.filter((t) => t !== n.trait), n.trait];
+      if (n.guerre) c.skills.guerre = clamp(c.skills.guerre + n.guerre, 0, 20);
+      notify(state, `${c.name} rejoint votre cour.`);
+    }
+    if (e.ambition) {
+      startAmbition(state, p, e.ambition);
+      const st = ambitionStatus(state, p);
+      if (st) notify(state, `Ambition : ${st.def.name}.`);
+    }
+    if (e.rendre_otage) {
+      const h = state.characters[e.rendre_otage.otage];
+      if (h?.hostageOf === p.id) {
+        const home = h.hostageHome ?? h.fatherId ?? h.motherId;
+        h.hostageOf = undefined;
+        h.hostageHome = undefined;
+        h.hostageSince = undefined;
+        const payer = home ? state.characters[home] : undefined;
+        const amount = Math.min(e.rendre_otage.montant, Math.max(0, payer?.gold ?? 0));
+        if (payer) payer.gold -= amount;
+        p.gold += amount;
+        if (payer) h.courtId = payer.courtId === payer.id ? payer.id : payer.courtId;
+      }
+    }
+    if (e.bataille) startEventBattle(ctx, e.bataille, scope);
     // Effets internes.
     if (e.mariage) celebrateMarriage(ctx, e.mariage.a, e.mariage.b);
     if (e.alliance) makeAlliance(state, p.id, e.alliance);
@@ -615,10 +773,14 @@ export function queueEvent(
   inline = false,
 ): void {
   const { state } = ctx;
+  const sc = { ...scope };
+  if (Array.isArray(def.texte) && sc._v === undefined)
+    sc._v = String(ctx.rng.int(0, def.texte.length - 1));
+  if (sc._e === undefined) sc._e = String(ctx.rng.int(0, 9));
   state.pendingEvents.push({
     uid: newId(state, 'e'),
     eventId: def.id,
-    scope,
+    scope: sc,
     inline: inline ? def : undefined,
   });
   state.eventCooldowns[def.id] = state.turn;
@@ -642,6 +804,23 @@ export function drawSeasonEvents(ctx: Ctx): void {
     }
   }
   state.pendingTriggers = [];
+  // Suites différées arrivées à échéance.
+  const due = (state.scheduled ?? []).filter((x) => x.turn <= state.turn);
+  state.scheduled = (state.scheduled ?? []).filter((x) => x.turn > state.turn);
+  for (const x of due) {
+    const def = EVENTS[x.eventId];
+    if (!def) continue;
+    const alive = Object.fromEntries(
+      Object.entries(x.scope).filter(
+        ([k, id]) =>
+          k.startsWith('_') ||
+          state.counties[id] ||
+          (state.characters[id]?.alive && (k !== 'souverain' || id === state.playerId)),
+      ),
+    );
+    const scope = buildScope(ctx, def, alive);
+    if (scope) queueEvent(ctx, def, scope);
+  }
   const season = SEASON_KEYS[seasonOf(state.turn)];
   const max = BALANCE.game.maxEventsPerSeason;
   let drawn = state.pendingEvents.length;
@@ -699,3 +878,17 @@ export function chooseEvent(ctx: Ctx, uid: string, index: number): boolean {
 }
 
 export { warBetween };
+
+/** Probabilité effective d'une issue incertaine (la compétence du souverain peut l'infléchir). */
+export function hasardChance(
+  state: GameState,
+  h: { chance: number; competence?: keyof typeof SKILL_LABELS },
+): number {
+  if (!h.competence) return h.chance;
+  const E = BALANCE.events;
+  return clamp(
+    h.chance + (skill(player(state), h.competence) - 10) * E.skillChancePerPoint,
+    E.chanceMin,
+    E.chanceMax,
+  );
+}
