@@ -1,0 +1,565 @@
+[
+  {
+    "id": "sai_semailles",
+    "titre": "Les semailles",
+    "texte": [
+      "Le dégel est arrivé tôt. Les paysans de {comte.nom} demandent des semences pour étendre les champs.",
+      "Le printemps verdit les collines de {comte.nom}. Les intendants proposent de défricher de nouvelles terres."
+    ],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps"]
+    },
+    "poids": 8,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Fournir les semences (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "developpement": 1
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Exiger une corvée supplémentaire.",
+        "effets": [
+          {
+            "or": 30
+          },
+          {
+            "opinion_vassaux": -5
+          },
+          {
+            "stress": {
+              "genereux": 10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser faire la nature.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "sai_fete_mai",
+    "titre": "La fête de mai",
+    "texte": "Les villageois dressent l'arbre de mai et vous invitent à ouvrir la danse.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps"]
+    },
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Danser avec le peuple.",
+        "effets": [
+          {
+            "stress": -25
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Offrir la bière et le pain (30 or).",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "opinion_vassaux": 5
+          },
+          {
+            "stress": -10
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ]
+      },
+      {
+        "libelle": "Décliner : il y a fort à faire.",
+        "effets": [
+          {
+            "stress": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_moisson",
+    "titre": "Une moisson exceptionnelle",
+    "texte": "Les greniers débordent : jamais on n'avait vu pareille moisson dans les Marches.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["ete"]
+    },
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Vendre les surplus.",
+        "effets": [
+          {
+            "or": 120
+          }
+        ]
+      },
+      {
+        "libelle": "Constituer des réserves contre les mauvais jours.",
+        "effets": [
+          {
+            "levees": 200
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Distribuer une part aux pauvres.",
+        "effets": [
+          {
+            "or": 40
+          },
+          {
+            "piete": 40
+          },
+          {
+            "opinion_vassaux": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_secheresse",
+    "titre": "La sécheresse",
+    "texte": "Pas une goutte de pluie depuis deux mois. Le blé brûle sur pied à {comte.nom}.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["ete"]
+    },
+    "poids": 6,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Ouvrir les greniers seigneuriaux.",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "opinion_vassaux": 10
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Organiser une procession pour la pluie.",
+        "effets": [
+          {
+            "piete": 30
+          },
+          {
+            "hasard": {
+              "chance": 0.4,
+              "succes": [
+                {
+                  "prestige": 30
+                }
+              ],
+              "echec": [
+                {
+                  "developpement": -1
+                }
+              ],
+              "texte_succes": "La pluie tombe le lendemain : on crie au miracle.",
+              "texte_echec": "Le ciel reste de plomb."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Maintenir les impôts.",
+        "effets": [
+          {
+            "or": 40
+          },
+          {
+            "developpement": -1
+          },
+          {
+            "stress": {
+              "genereux": 15,
+              "juste": 10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_foire",
+    "titre": "La grande foire d'automne",
+    "texte": "Marchands, jongleurs et montreurs d'ours se pressent à la foire de {comte.nom}.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne"]
+    },
+    "poids": 7,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Taxer les marchands.",
+        "effets": [
+          {
+            "or": 80
+          },
+          {
+            "opinion_vassaux": -3
+          }
+        ]
+      },
+      {
+        "libelle": "Abolir les péages pour attirer le commerce.",
+        "effets": [
+          {
+            "developpement": 1
+          },
+          {
+            "or": -20
+          }
+        ]
+      },
+      {
+        "libelle": "Flâner incognito parmi les étals.",
+        "effets": [
+          {
+            "stress": -20
+          },
+          {
+            "hasard": {
+              "chance": 0.3,
+              "succes": [
+                {
+                  "or": 60
+                }
+              ],
+              "echec": [
+                {
+                  "or": -20
+                }
+              ],
+              "texte_succes": "Un marchand vous cède une curiosité précieuse pour une bouchée de pain.",
+              "texte_echec": "Un tire-laine vous a délesté de votre bourse."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_vendanges",
+    "titre": "Les vendanges",
+    "texte": "La vigne a donné un vin d'une rare qualité cette année. Votre échanson propose d'en garder les meilleurs fûts.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne"]
+    },
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Les offrir à vos vassaux.",
+        "effets": [
+          {
+            "opinion_vassaux": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Les vendre à prix d'or.",
+        "effets": [
+          {
+            "or": 70
+          }
+        ]
+      },
+      {
+        "libelle": "Les garder pour la table du souverain.",
+        "effets": [
+          {
+            "stress": -15
+          },
+          {
+            "hasard": {
+              "chance": 0.2,
+              "succes": [],
+              "echec": [
+                {
+                  "trait_ajout": "ivrogne"
+                }
+              ],
+              "texte_echec": "Le vin est un peu trop bon…"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_grand_froid",
+    "titre": "Le grand froid",
+    "texte": [
+      "L'hiver mord comme jamais. Les loups rôdent jusqu'aux portes de {comte.nom} et les vieux meurent dans leurs chaumières.",
+      "La neige ensevelit les routes. Les paysans de {comte.nom} brûlent leurs meubles pour se chauffer."
+    ],
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "poids": 7,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Faire distribuer du bois et des vivres (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "piete": 20
+          },
+          {
+            "opinion_vassaux": 5
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "Lancer une battue contre les loups.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 30
+                },
+                {
+                  "stress": -10
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -15
+                }
+              ],
+              "competence": "guerre",
+              "texte_succes": "Les loups sont repoussés dans les forêts.",
+              "texte_echec": "Un loup vous mord au mollet pendant la battue."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Attendre le printemps.",
+        "effets": [
+          {
+            "levees": -200
+          },
+          {
+            "stress": {
+              "genereux": 10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_veillee",
+    "titre": "Une longue veillée",
+    "texte": "Le feu crépite dans la grande salle. Un vieux barde propose de chanter les exploits de vos ancêtres.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "poids": 7,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Écouter jusqu'à l'aube.",
+        "effets": [
+          {
+            "stress": -20
+          },
+          {
+            "renommee": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Lui commander une chanson sur vos propres exploits (20 or).",
+        "effets": [
+          {
+            "or": -20
+          },
+          {
+            "prestige": 30
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 20
+          }
+        ]
+      },
+      {
+        "libelle": "Travailler aux comptes du domaine.",
+        "effets": [
+          {
+            "xp": {
+              "competence": "gestion",
+              "valeur": 30
+            }
+          },
+          {
+            "stress": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_insomnie",
+    "titre": "Les nuits sans sommeil",
+    "texte": "Le poids du trône vous empêche de dormir. Vos mains tremblent au conseil.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "stress_min": 50
+      }
+    ],
+    "poids": 10,
+    "delai_retour": 8,
+    "choix": [
+      {
+        "libelle": "Consulter un médecin (30 or).",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "stress": -20
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ]
+      },
+      {
+        "libelle": "Partir quelques jours à cheval, seul.",
+        "effets": [
+          {
+            "stress": -25
+          },
+          {
+            "prestige": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Se jeter dans le travail.",
+        "effets": [
+          {
+            "xp": {
+              "competence": "gestion",
+              "valeur": 40
+            }
+          },
+          {
+            "stress": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sai_jour_saint",
+    "titre": "Le jour du saint patron",
+    "texte": "La procession du saint patron de {comte.nom} attend votre présence.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["printemps", "ete"]
+    },
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Marcher en tête, pieds nus.",
+        "effets": [
+          {
+            "piete": 40
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Faire un don au sanctuaire (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "piete": 60
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Envoyer un représentant.",
+        "effets": [
+          {
+            "piete": -10
+          }
+        ]
+      }
+    ]
+  }
+]

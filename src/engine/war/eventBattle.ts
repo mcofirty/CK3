@@ -6,7 +6,7 @@ import type { BattleState, Commander } from '../battle/types';
 import { addTrait } from '../characters';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, newId, seasonOf, type Ctx } from '../context';
-import { applyEffects } from '../events/engine';
+import { applyEffects, renderText } from '../events/engine';
 import type { EventBattle } from '../events/types';
 import { gainXp, record } from '../progression';
 import { availableLevies, capitalOf, standingOf } from '../realm';
@@ -57,7 +57,7 @@ export function startEventBattle(ctx: Ctx, spec: EventBattle, scope: Record<stri
   const mine = [toCommander(state, cmdId, p.id)].filter((x): x is Commander => !!x);
   const chief: Commander = {
     id: `evt-chef-${state.nextId + 1}`,
-    name: `Chef de ${spec.ennemi}`,
+    name: `Chef de ${renderText(state, spec.ennemi, scope)}`,
     guerre: rng.int(7, 14),
     ruse: rng.int(6, 12),
     traits: [],
@@ -79,8 +79,9 @@ export function startEventBattle(ctx: Ctx, spec: EventBattle, scope: Record<stri
     friendlyTerritory: true,
     spied: false,
   };
+  const enemyName = renderText(state, spec.ennemi, scope);
   const theirSide = {
-    name: spec.ennemi,
+    name: enemyName,
     men: enemy,
     commanders: [chief],
     mainCommanderId: chief.id,

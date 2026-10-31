@@ -482,7 +482,9 @@ export function effectLabels(
     if (e.epidemie) out.push('Une épidémie éclate');
     if (e.quarantaine) out.push(`Quarantaine à ${name('comte')}`);
     if (e.bataille)
-      out.push(`⚔️ Bataille contre ${e.bataille.ennemi} (force ×${e.bataille.force.toFixed(1)})`);
+      out.push(
+        `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${e.bataille.force.toFixed(1)})`,
+      );
     if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
     if (e.ambition) {
       const d = AMBITION_BY_ID[e.ambition];

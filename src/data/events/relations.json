@@ -1,0 +1,740 @@
+[
+  {
+    "id": "rel_amitie_nait",
+    "titre": "Une amitié naissante",
+    "texte": [
+      "Au fil des soirées, {proche.nom} est devenu{proche.e} un compagnon de conversation précieux. Vous partagez les mêmes goûts, les mêmes rires.",
+      "{proche.nom} vous a tenu compagnie pendant une longue nuit de veille. Quelque chose comme de l'amitié est né entre vous."
+    ],
+    "declencheur": {
+      "type": "relation_ami"
+    },
+    "choix": [
+      {
+        "libelle": "Faire de {proche.nom} un ami.",
+        "effets": [
+          {
+            "ami": "proche"
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Garder ses distances : un souverain n'a pas d'amis.",
+        "effets": [
+          {
+            "prestige": 10
+          },
+          {
+            "stress": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_rivalite_nait",
+    "titre": "Un affront",
+    "texte": [
+      "{proche.nom} a ri de vous devant la cour. Le rire s'est tu quand vous vous êtes retourné, mais tout le monde l'a entendu.",
+      "{proche.nom} conteste ouvertement chacune de vos décisions au conseil. Ce n'est plus une divergence : c'est un défi."
+    ],
+    "declencheur": {
+      "type": "relation_rival"
+    },
+    "choix": [
+      {
+        "libelle": "Relever l'affront : {proche.nom} sera mon rival.",
+        "effets": [
+          {
+            "devient_rival": "proche"
+          },
+          {
+            "prestige": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Ravaler sa fierté et apaiser les choses.",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "proche",
+              "valeur": 20,
+              "raison": "Affront pardonné"
+            }
+          },
+          {
+            "stress": {
+              "*": 10,
+              "irascible": 10,
+              "courtois": -10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le faire jeter au cachot pour insolence.",
+        "effets": [
+          {
+            "emprisonner": "proche"
+          },
+          {
+            "opinion_vassaux": -5
+          },
+          {
+            "stress": {
+              "juste": 20
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_amour_nait",
+    "titre": "Un regard de trop",
+    "texte": [
+      "Les regards de {proche.nom} s'attardent sur vous, et les vôtres sur {proche.le}. La cour commence à le remarquer.",
+      "Une promenade dans les jardins, une main frôlée… {proche.nom} vous trouble plus que de raison."
+    ],
+    "declencheur": {
+      "type": "relation_amant"
+    },
+    "choix": [
+      {
+        "libelle": "Céder à la passion.",
+        "effets": [
+          {
+            "amant": "proche"
+          },
+          {
+            "stress": -20
+          },
+          {
+            "hasard": {
+              "chance": 0.25,
+              "succes": [
+                {
+                  "opinion_vassaux": -5
+                }
+              ],
+              "echec": [],
+              "texte_succes": "La rumeur court déjà dans les couloirs."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Résister, par devoir.",
+        "effets": [
+          {
+            "stress": {
+              "*": 10,
+              "juste": -5
+            }
+          },
+          {
+            "piete": 15
+          }
+        ]
+      },
+      {
+        "libelle": "L'éloigner de la cour.",
+        "effets": [
+          {
+            "exiler": "proche"
+          },
+          {
+            "stress": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_ami_conseil",
+    "titre": "Le conseil d'un ami",
+    "texte": "{ami.nom} vous prend à part : « Tu sembles épuisé. Laisse-moi t'aider, comme autrefois. »",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Se confier à {ami.nom}.",
+        "effets": [
+          {
+            "stress": -25
+          },
+          {
+            "opinion": {
+              "cible": "ami",
+              "valeur": 10,
+              "raison": "Confidences"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui demander de veiller sur vos intérêts.",
+        "effets": [
+          {
+            "xp": {
+              "competence": "diplomatie",
+              "valeur": 30
+            }
+          },
+          {
+            "opinion": {
+              "cible": "ami",
+              "valeur": 5
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Repousser son aide.",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "ami",
+              "valeur": -15,
+              "raison": "Aide repoussée"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_ami_trahison",
+    "titre": "Une trahison",
+    "texte": "Votre maître-espion vous apporte des lettres : {ami.nom} aurait vendu des secrets de votre cour à un seigneur voisin.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "Confronter {ami.nom} en face.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "stress": -5
+                },
+                {
+                  "opinion": {
+                    "cible": "ami",
+                    "valeur": 20,
+                    "raison": "Malentendu dissipé"
+                  }
+                }
+              ],
+              "echec": [
+                {
+                  "devient_rival": "ami"
+                },
+                {
+                  "stress": 20
+                }
+              ],
+              "texte_succes": "Ce n'était qu'une intrigue pour vous diviser : votre amitié en sort renforcée.",
+              "texte_echec": "{ami.nom} ne nie pas. Votre amitié est morte."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le faire arrêter sans attendre.",
+        "effets": [
+          {
+            "emprisonner": "ami"
+          },
+          {
+            "stress": {
+              "*": 15,
+              "juste": 10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Ne rien dire, et l'observer.",
+        "effets": [
+          {
+            "stress": 10
+          },
+          {
+            "xp": {
+              "competence": "ruse",
+              "valeur": 30
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_ami_chasse",
+    "titre": "Une virée entre amis",
+    "texte": "{ami.nom} vous propose de fausser compagnie à la cour pour une journée de chasse et de vin.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 7,
+    "delai_retour": 12,
+    "choix": [
+      {
+        "libelle": "Accepter !",
+        "effets": [
+          {
+            "stress": -30
+          },
+          {
+            "opinion": {
+              "cible": "ami",
+              "valeur": 10
+            }
+          },
+          {
+            "prestige": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : le devoir d'abord.",
+        "effets": [
+          {
+            "stress": 5
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_duel",
+    "titre": "Le défi",
+    "texte": [
+      "{ennemi.nom} vous jette son gant au visage devant toute la cour : « Réglons cela par les armes, si vous en avez le courage. »",
+      "Une provocation de trop : {ennemi.nom} exige réparation, l'épée à la main."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "Relever le défi.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "prestige": 120
+                },
+                {
+                  "trait_ajout": "heros"
+                },
+                {
+                  "opinion": {
+                    "cible": "ennemi",
+                    "valeur": -20
+                  }
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -30
+                },
+                {
+                  "sante": -25
+                },
+                {
+                  "trait_ajout": "blesse"
+                }
+              ],
+              "competence": "guerre",
+              "texte_succes": "Vous désarmez {ennemi.nom} sous les acclamations !",
+              "texte_echec": "La lame de {ennemi.nom} vous ouvre le bras."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Désigner un champion.",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 40
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -40
+                }
+              ],
+              "texte_succes": "Votre champion l'emporte.",
+              "texte_echec": "Votre champion mord la poussière."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser avec mépris.",
+        "effets": [
+          {
+            "prestige": -40
+          },
+          {
+            "stress": {
+              "courageux": 25,
+              "lache": -10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_reconciliation",
+    "titre": "Une main tendue",
+    "texte": "{ennemi.nom} se présente, humble, et vous propose d'enterrer la hache de guerre.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Accepter la réconciliation.",
+        "effets": [
+          {
+            "reconciliation": "ennemi"
+          },
+          {
+            "opinion": {
+              "cible": "ennemi",
+              "valeur": 20,
+              "raison": "Réconciliation"
+            }
+          },
+          {
+            "stress": -15
+          }
+        ]
+      },
+      {
+        "libelle": "Exiger des excuses publiques d'abord.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "reconciliation": "ennemi"
+                },
+                {
+                  "prestige": 40
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": 10
+                }
+              ],
+              "competence": "diplomatie",
+              "texte_succes": "{ennemi.nom} s'agenouille devant la cour.",
+              "texte_echec": "{ennemi.nom} tourne les talons, furieux."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le chasser.",
+        "effets": [
+          {
+            "prestige": 10
+          },
+          {
+            "stress": {
+              "genereux": 15
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_rumeurs_rival",
+    "titre": "Des rumeurs venimeuses",
+    "texte": "On murmure à la cour que vous seriez de naissance douteuse. La rumeur vient de l'entourage de {ennemi.nom}.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 6,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Lancer un complot pour le discréditer.",
+        "effets": [
+          {
+            "complot": {
+              "type": "discrediter",
+              "cible": "ennemi"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Répondre par l'éclat d'un festin (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "prestige": 40
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Ignorer : cela passera.",
+        "effets": [
+          {
+            "prestige": -25
+          },
+          {
+            "stress": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_amant_jaloux",
+    "titre": "Le conjoint soupçonne",
+    "texte": "{conjoint.nom} a trouvé une lettre parfumée. Son regard est glacé : « Qui est-ce ? »",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "a_conjoint": true
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Tout avouer et rompre avec {amant.nom}.",
+        "effets": [
+          {
+            "fin_amant": "amant"
+          },
+          {
+            "opinion": {
+              "cible": "conjoint",
+              "valeur": -10,
+              "raison": "Liaison avouée"
+            }
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Nier avec aplomb.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "stress": 5
+                }
+              ],
+              "echec": [
+                {
+                  "opinion": {
+                    "cible": "conjoint",
+                    "valeur": -40,
+                    "raison": "Liaison découverte"
+                  }
+                },
+                {
+                  "prestige": -30
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "{conjoint.nom} vous croit… pour l'instant.",
+              "texte_echec": "{conjoint.nom} n'est pas dupe et le fait savoir à toute la cour."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Assumer : un souverain fait ce qu'il veut.",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "conjoint",
+              "valeur": -30,
+              "raison": "Liaison assumée"
+            }
+          },
+          {
+            "prestige": -15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_amant_enfant",
+    "titre": "Un enfant de l'amour",
+    "texte": "{amant.nom} vous annonce, les yeux baissés, attendre un enfant de vous.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "Le reconnaître et l'élever à la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 0,
+              "age_max": 0
+            }
+          },
+          {
+            "prestige": -20
+          },
+          {
+            "opinion": {
+              "cible": "amant",
+              "valeur": 30,
+              "raison": "Enfant reconnu"
+            }
+          },
+          {
+            "drapeau": "batard_reconnu"
+          }
+        ]
+      },
+      {
+        "libelle": "Pourvoir à ses besoins, discrètement (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "opinion": {
+              "cible": "amant",
+              "valeur": 10
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "Rompre sur-le-champ.",
+        "effets": [
+          {
+            "fin_amant": "amant"
+          },
+          {
+            "stress": {
+              "genereux": 15,
+              "juste": 10
+            }
+          },
+          {
+            "opinion": {
+              "cible": "amant",
+              "valeur": -40,
+              "raison": "Abandon"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rel_amant_fin",
+    "titre": "La fin d'une passion",
+    "texte": "La flamme s'est éteinte. {amant.nom} et vous n'échangez plus que des politesses.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Se séparer en bons termes.",
+        "effets": [
+          {
+            "fin_amant": "amant"
+          },
+          {
+            "ami": "amant"
+          }
+        ]
+      },
+      {
+        "libelle": "Raviver la flamme.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "stress": -20
+                }
+              ],
+              "echec": [
+                {
+                  "fin_amant": "amant"
+                },
+                {
+                  "stress": 10
+                }
+              ],
+              "texte_succes": "La passion renaît de ses cendres.",
+              "texte_echec": "Il est trop tard : tout est fini."
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

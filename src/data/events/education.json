@@ -1,0 +1,659 @@
+[
+  {
+    "id": "edu_bagarre",
+    "titre": "Une bagarre dans la cour",
+    "texte": [
+      "{enfant.nom} s'est battu{enfant.e} avec le fils du palefrenier. L'autre garçon saigne du nez, et {enfant.nom} ne semble pas désolé{enfant.e}.",
+      "On vous amène {enfant.nom}, la lèvre fendue : {enfant.il} a frappé un page plus âgé qui se moquait de la maison."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 6,
+        "enfant_age_max": 14
+      }
+    ],
+    "poids": 8,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Le punir sévèrement : un noble se maîtrise.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "juste"
+            }
+          },
+          {
+            "opinion": {
+              "cible": "enfant",
+              "valeur": -10,
+              "raison": "Puni sévèrement"
+            }
+          },
+          {
+            "stress": {
+              "cruel": -5
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le féliciter : il faut savoir se battre.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "courageux"
+            }
+          },
+          {
+            "xp": {
+              "competence": "guerre",
+              "valeur": 30,
+              "cible": "enfant"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui faire présenter des excuses publiques.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "courtois"
+            }
+          },
+          {
+            "competence": {
+              "competence": "diplomatie",
+              "valeur": 1,
+              "cible": "enfant"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_epee_livre",
+    "titre": "L'épée ou le livre",
+    "texte": "Le maître d'armes et le précepteur se disputent les heures de {enfant.nom}. Chacun vient plaider sa cause devant vous.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 8,
+        "enfant_age_max": 15
+      }
+    ],
+    "poids": 8,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "L'épée : la maison a besoin de guerriers.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "guerre",
+              "valeur": 2,
+              "cible": "enfant"
+            }
+          },
+          {
+            "xp": {
+              "competence": "guerre",
+              "valeur": 40,
+              "cible": "enfant"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le livre : le savoir gouverne le monde.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 2,
+              "cible": "enfant"
+            }
+          },
+          {
+            "xp": {
+              "competence": "savoir",
+              "valeur": 40,
+              "cible": "enfant"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Les deux, quitte à l'épuiser.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "guerre",
+              "valeur": 1,
+              "cible": "enfant"
+            }
+          },
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 1,
+              "cible": "enfant"
+            }
+          },
+          {
+            "sante": {
+              "cible": "enfant",
+              "valeur": -10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_mensonge",
+    "titre": "Un mensonge éventé",
+    "texte": "{enfant.nom} a juré ne pas avoir touché aux confitures de la cuisine. Ses doigts collants disent le contraire.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 5,
+        "enfant_age_max": 12
+      }
+    ],
+    "poids": 7,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Rire de l'astuce : il ira loin.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "ruse",
+              "valeur": 2,
+              "cible": "enfant"
+            }
+          },
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "ambitieux"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Exiger la vérité, toujours.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "juste"
+            }
+          },
+          {
+            "competence": {
+              "competence": "ruse",
+              "valeur": -1,
+              "cible": "enfant"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui apprendre à mieux mentir.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "ruse",
+              "valeur": 3,
+              "cible": "enfant"
+            }
+          },
+          {
+            "stress": {
+              "juste": 10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_mendiant",
+    "titre": "Le mendiant à la porte",
+    "texte": "{enfant.nom} a donné son manteau à un vieux mendiant, en plein hiver. {enfant.Il} revient grelottant, fier de {enfant.le}-même.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 5,
+        "enfant_age_max": 14
+      }
+    ],
+    "poids": 7,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Le louer : la générosité honore la maison.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "genereux"
+            }
+          },
+          {
+            "piete": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Le gronder : on ne gaspille pas le bien de la famille.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "avare"
+            }
+          },
+          {
+            "or": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Lui offrir un manteau neuf, et un sourire.",
+        "effets": [
+          {
+            "or": -10
+          },
+          {
+            "opinion": {
+              "cible": "enfant",
+              "valeur": 15,
+              "raison": "Un père aimant"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_tour",
+    "titre": "La tour interdite",
+    "texte": "{enfant.nom} a escaladé la vieille tour en ruine, malgré l'interdiction. On l'aperçoit au sommet, agitant les bras.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 6,
+        "enfant_age_max": 13
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Grimper le chercher soi-même.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                {
+                  "opinion": {
+                    "cible": "enfant",
+                    "valeur": 20,
+                    "raison": "Sauvé de la tour"
+                  }
+                },
+                {
+                  "prestige": 10
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -15
+                }
+              ],
+              "texte_succes": "Vous le ramenez sain et sauf, sous les vivats.",
+              "texte_echec": "Une pierre cède : vous vous foulez la cheville."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "L'encourager à redescendre seul.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "trait_ajout": {
+                    "cible": "enfant",
+                    "trait": "courageux"
+                  }
+                }
+              ],
+              "echec": [
+                {
+                  "sante": {
+                    "cible": "enfant",
+                    "valeur": -25
+                  }
+                }
+              ],
+              "texte_succes": "Il redescend, triomphant.",
+              "texte_echec": "Il glisse et se blesse dans sa chute."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Envoyer les gardes, et le priver de sortie.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "prudent"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_maitre",
+    "titre": "Un maître itinérant",
+    "texte": "Un vieux lettré venu de loin propose d'enseigner à {enfant.nom} les mathématiques et l'astronomie, contre le gîte et un peu d'or.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 7,
+        "enfant_age_max": 15
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "L'engager (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 2,
+              "cible": "enfant"
+            }
+          },
+          {
+            "competence": {
+              "competence": "gestion",
+              "valeur": 1,
+              "cible": "enfant"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Lui préférer un capitaine pour les armes (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "competence": {
+              "competence": "guerre",
+              "valeur": 2,
+              "cible": "enfant"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer poliment.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "edu_premiere_chasse",
+    "titre": "Première chasse",
+    "texte": "{enfant.nom} vous accompagne pour sa première chasse. Un renard surgit devant son cheval.",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne"]
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 9,
+        "enfant_age_max": 15
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Le laisser tirer.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "xp": {
+                    "competence": "guerre",
+                    "valeur": 40,
+                    "cible": "enfant"
+                  }
+                },
+                {
+                  "stress": -10
+                }
+              ],
+              "echec": [
+                {
+                  "stress": -5
+                }
+              ],
+              "texte_succes": "La flèche fait mouche : premier trophée !",
+              "texte_echec": "La flèche se perd dans les fourrés ; il rit quand même."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui apprendre la patience du chasseur.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "prudent"
+            }
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "Lui apprendre à épargner la bête.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "genereux"
+            }
+          },
+          {
+            "piete": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_cruaute",
+    "titre": "Un jeu cruel",
+    "texte": "Les servantes rapportent que {enfant.nom} tourmente les chiots du chenil. L'enfant ne semble pas comprendre le mal.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "enfant_age_min": 5,
+        "enfant_age_max": 12
+      }
+    ],
+    "poids": 5,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "Lui faire soigner lui-même les bêtes blessées.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "juste"
+            }
+          },
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 1,
+              "cible": "enfant"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Fermer les yeux : cela lui passera.",
+        "effets": [
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "cruel"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le confier au chapelain pour un temps.",
+        "effets": [
+          {
+            "piete": 10
+          },
+          {
+            "trait_ajout": {
+              "cible": "enfant",
+              "trait": "satisfait"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "edu_heritier_conseil",
+    "titre": "L'héritier au conseil",
+    "texte": "{heritier.nom} a {heritier.age} ans. Il est temps de lui apprendre le métier : l'admettrez-vous au conseil ?",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "heritier_age_min": 13,
+        "heritier_age_max": 17
+      }
+    ],
+    "poids": 6,
+    "unique": "personnage",
+    "choix": [
+      {
+        "libelle": "Oui : qu'il apprenne en écoutant.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "diplomatie",
+              "valeur": 1,
+              "cible": "heritier"
+            }
+          },
+          {
+            "competence": {
+              "competence": "gestion",
+              "valeur": 1,
+              "cible": "heritier"
+            }
+          },
+          {
+            "xp": {
+              "competence": "gestion",
+              "valeur": 40,
+              "cible": "heritier"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Pas encore : qu'il fasse d'abord ses preuves à l'armée.",
+        "effets": [
+          {
+            "competence": {
+              "competence": "guerre",
+              "valeur": 2,
+              "cible": "heritier"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Non : je règne seul.",
+        "effets": [
+          {
+            "prestige": 10
+          },
+          {
+            "opinion": {
+              "cible": "heritier",
+              "valeur": -15,
+              "raison": "Écarté du conseil"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

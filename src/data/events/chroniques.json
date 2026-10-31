@@ -1,0 +1,765 @@
+[
+  {
+    "id": "chr_prophetie_1",
+    "titre": "La voyante des marais",
+    "texte": "Une vieille femme aux yeux laiteux s'est postée devant le château. Elle crie à qui veut l'entendre que « la maison de {souverain.nom} connaîtra la gloire ou la ruine avant que l'hiver revienne trois fois ».",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "annee_min": 2
+      }
+    ],
+    "poids": 3,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "La faire entrer et l'écouter.",
+        "effets": [
+          {
+            "drapeau": "prophetie"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_prophetie_2",
+              "saisons": 6
+            }
+          },
+          {
+            "stress": 10
+          }
+        ]
+      },
+      {
+        "libelle": "La chasser du domaine.",
+        "effets": [
+          {
+            "drapeau": "prophetie_chassee"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_prophetie_2",
+              "saisons": 6
+            }
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "La faire brûler pour sorcellerie.",
+        "effets": [
+          {
+            "piete": 20
+          },
+          {
+            "stress": {
+              "*": 10,
+              "juste": 20,
+              "cruel": -10
+            }
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_prophetie_2",
+    "titre": "Le deuxième signe",
+    "texte": "Un veau à deux têtes est né à {comte.nom}. Les paysans se souviennent de la voyante et chuchotent que la prophétie s'accomplit.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Faire bénir le domaine.",
+        "effets": [
+          {
+            "piete": 30
+          },
+          {
+            "stress": -10
+          },
+          {
+            "suite_differee": {
+              "id": "chr_prophetie_3",
+              "saisons": 6
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Clamer qu'il s'agit d'un signe de gloire.",
+        "effets": [
+          {
+            "prestige": 30
+          },
+          {
+            "suite_differee": {
+              "id": "chr_prophetie_3",
+              "saisons": 6
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Interdire qu'on en parle.",
+        "effets": [
+          {
+            "opinion_vassaux": -5
+          },
+          {
+            "suite_differee": {
+              "id": "chr_prophetie_3",
+              "saisons": 6
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_prophetie_3",
+    "titre": "L'heure de la prophétie",
+    "texte": "Le troisième hiver est venu. Toute la cour attend le signe annoncé. Ce matin, un aigle s'est posé sur la plus haute tour du château.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Interpréter le signe : la gloire est à nous !",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 150
+                },
+                {
+                  "renommee": 50
+                },
+                {
+                  "stress": -20
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -50
+                },
+                {
+                  "stress": 25
+                }
+              ],
+              "competence": "diplomatie",
+              "texte_succes": "Les vassaux s'inclinent devant le souverain choisi par le destin.",
+              "texte_echec": "L'aigle s'envole vers l'ouest et meurt dans les douves. Le peuple frémit."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Rester humble devant le destin.",
+        "effets": [
+          {
+            "piete": 60
+          },
+          {
+            "renommee": 20
+          }
+        ]
+      },
+      {
+        "libelle": "Rire de ces superstitions.",
+        "effets": [
+          {
+            "prestige": 20
+          },
+          {
+            "retirer_drapeau": "prophetie"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_pretendant_1",
+    "titre": "Un prétendant à la porte",
+    "texte": "Un jeune homme aux traits étrangement familiers se présente : il affirme être le fils illégitime de votre père, et réclame sa place dans la maison.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "annee_min": 3
+      }
+    ],
+    "poids": 3,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "L'accueillir à la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 18,
+              "age_max": 24,
+              "guerre": 3,
+              "trait": "ambitieux"
+            }
+          },
+          {
+            "drapeau": "pretendant_accueilli"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_pretendant_2",
+              "saisons": 8
+            }
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      },
+      {
+        "libelle": "Le faire chasser du royaume.",
+        "effets": [
+          {
+            "drapeau": "pretendant_banni"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_pretendant_3",
+              "saisons": 8
+            }
+          },
+          {
+            "prestige": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Démasquer l'imposteur.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.55,
+              "succes": [
+                {
+                  "prestige": 50
+                }
+              ],
+              "echec": [
+                {
+                  "drapeau": "pretendant_banni"
+                },
+                {
+                  "suite_differee": {
+                    "id": "chr_pretendant_3",
+                    "saisons": 8
+                  }
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "Il avoue : un aventurier payé par un seigneur rival.",
+              "texte_echec": "Rien ne prouve qu'il mente. Il s'enfuit avant qu'on l'arrête."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_pretendant_2",
+    "titre": "Le prétendant s'impatiente",
+    "texte": "Le jeune prétendant que vous avez accueilli rassemble des partisans parmi les mécontents. On dit qu'il compte réclamer des terres, de gré ou de force.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Lui accorder une rente et un titre honorifique (100 or).",
+        "effets": [
+          {
+            "or": -100
+          },
+          {
+            "opinion_vassaux": 5
+          },
+          {
+            "retirer_drapeau": "pretendant_accueilli"
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 100
+          }
+        ]
+      },
+      {
+        "libelle": "Écraser ses partisans par les armes.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Partisans du prétendant",
+              "force": 0.5,
+              "composition": {
+                "levees": 0.6,
+                "infanterie": 0.25,
+                "cavalerie": 0.15
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 80
+                },
+                {
+                  "opinion_vassaux": 5
+                }
+              ],
+              "defaite": [
+                {
+                  "prestige": -80
+                },
+                {
+                  "opinion_vassaux": -15
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le marier loin d'ici.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "prestige": 30
+                }
+              ],
+              "echec": [
+                {
+                  "opinion_vassaux": -10
+                }
+              ],
+              "competence": "diplomatie",
+              "texte_succes": "Il part, satisfait, épouser une héritière lointaine.",
+              "texte_echec": "Il refuse et quitte la cour en vous maudissant."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_pretendant_3",
+    "titre": "Le retour du banni",
+    "texte": "Le prétendant que vous aviez chassé revient, à la tête d'une bande de mercenaires d'outre-mer. Il réclame sa part de l'héritage.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Lui livrer bataille.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "La bande du prétendant",
+              "force": 0.7,
+              "composition": {
+                "infanterie": 0.4,
+                "archers": 0.2,
+                "cavalerie": 0.2,
+                "levees": 0.2
+              },
+              "victoire": [
+                {
+                  "prestige": 100
+                },
+                {
+                  "renommee": 20
+                }
+              ],
+              "defaite": [
+                {
+                  "prestige": -100
+                },
+                {
+                  "or": -100
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Acheter son départ (150 or).",
+        "effets": [
+          {
+            "or": -150
+          },
+          {
+            "prestige": -40
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 150
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_peste_1",
+    "titre": "La peste !",
+    "texte": "Des corps couverts de bubons noirs ont été trouvés à {comte.nom}. La terreur s'empare du comté ; on parle de fuir, de brûler, de prier.",
+    "declencheur": {
+      "type": "peste"
+    },
+    "choix": [
+      {
+        "libelle": "Décréter la quarantaine (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "quarantaine": true
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Ordonner des prières dans toutes les églises.",
+        "effets": [
+          {
+            "piete": 40
+          },
+          {
+            "drapeau": "peste_priere"
+          }
+        ]
+      },
+      {
+        "libelle": "Fuir dans un domaine éloigné avec la cour.",
+        "effets": [
+          {
+            "stress": -10
+          },
+          {
+            "prestige": -50
+          },
+          {
+            "drapeau": "peste_fuite"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_peste_2",
+              "saisons": 3
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_peste_2",
+    "titre": "Le retour du souverain",
+    "texte": "La peste a reculé. Mais quand vous revenez, le peuple se souvient que vous avez fui.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Faire pénitence publique.",
+        "effets": [
+          {
+            "piete": 30
+          },
+          {
+            "prestige": -20
+          },
+          {
+            "retirer_drapeau": "peste_fuite"
+          }
+        ]
+      },
+      {
+        "libelle": "Ignorer les murmures.",
+        "effets": [
+          {
+            "opinion_vassaux": -10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_navire_malheur",
+    "titre": "Le navire de malheur",
+    "texte": "Un navire marchand venu de {etranger} a jeté l'ancre. Ses marins sont fiévreux et deux sont morts pendant la traversée.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "cotier": true
+      }
+    ],
+    "poids": 3,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "Interdire le débarquement.",
+        "effets": [
+          {
+            "or": -20
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser débarquer la cargaison : elle vaut de l'or.",
+        "effets": [
+          {
+            "or": 100
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [],
+              "echec": [
+                {
+                  "epidemie": true
+                }
+              ],
+              "texte_echec": "La fièvre se répand dans le port."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Brûler le navire.",
+        "effets": [
+          {
+            "stress": {
+              "genereux": 15,
+              "juste": 10
+            }
+          },
+          {
+            "piete": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_comete",
+    "titre": "La comète",
+    "texte": "Une étoile chevelue traverse le ciel pendant sept nuits. Toute la cour y voit un présage.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 2,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "Un présage de victoire !",
+        "effets": [
+          {
+            "prestige": 50
+          },
+          {
+            "opinion_vassaux": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Un présage de malheur : prions.",
+        "effets": [
+          {
+            "piete": 50
+          },
+          {
+            "stress": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Étudier sa course avec les astronomes.",
+        "effets": [
+          {
+            "xp": {
+              "competence": "savoir",
+              "valeur": 50
+            }
+          },
+          {
+            "competence": {
+              "competence": "savoir",
+              "valeur": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_epee_1",
+    "titre": "L'épée de l'ancêtre",
+    "texte": "Un laboureur a déterré une épée rouillée frappée aux armes de votre maison. Le fondateur de la lignée l'aurait perdue lors d'une bataille oubliée.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 3,
+    "unique": "partie",
+    "choix": [
+      {
+        "libelle": "La racheter et la faire restaurer (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "renommee": 40
+          },
+          {
+            "drapeau": "epee_ancetre"
+          },
+          {
+            "suite_differee": {
+              "id": "chr_epee_2",
+              "saisons": 10
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "La faire déposer à la chapelle.",
+        "effets": [
+          {
+            "piete": 30
+          },
+          {
+            "renommee": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Ce n'est qu'un vieux fer.",
+        "effets": [
+          {
+            "or": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chr_epee_2",
+    "titre": "On réclame l'épée",
+    "texte": "Un seigneur voisin affirme que l'épée retrouvée appartenait à ses propres ancêtres, et exige qu'on la lui rende.",
+    "declencheur": {
+      "type": "suite"
+    },
+    "choix": [
+      {
+        "libelle": "Défendre l'honneur de la maison en duel.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.55,
+              "succes": [
+                {
+                  "prestige": 100
+                },
+                {
+                  "renommee": 30
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -60
+                },
+                {
+                  "trait_ajout": "blesse"
+                },
+                {
+                  "retirer_drapeau": "epee_ancetre"
+                }
+              ],
+              "competence": "guerre",
+              "texte_succes": "L'épée reste dans la maison, et votre nom grandit.",
+              "texte_echec": "Vous perdez le duel, et l'épée avec lui."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Prouver son origine par les archives.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "renommee": 20
+                },
+                {
+                  "prestige": 30
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -20
+                }
+              ],
+              "competence": "savoir",
+              "texte_succes": "Les vieilles chartes vous donnent raison.",
+              "texte_echec": "Les archives sont muettes."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "La rendre pour la paix.",
+        "effets": [
+          {
+            "prestige": -30
+          },
+          {
+            "retirer_drapeau": "epee_ancetre"
+          },
+          {
+            "piete": 20
+          }
+        ]
+      }
+    ]
+  }
+]

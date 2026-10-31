@@ -1,0 +1,668 @@
+[
+  {
+    "id": "etr_emissaire",
+    "titre": "Un émissaire d'outre-mer",
+    "texte": [
+      "Un émissaire de {etranger} débarque avec une suite chamarrée. Son souverain souhaite nouer des liens avec votre maison.",
+      "Des voiles inconnues dans la baie : ce sont les ambassadeurs de {etranger}, porteurs de présents et de propositions."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Les recevoir avec faste (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "prestige": 70
+          },
+          {
+            "xp": {
+              "competence": "diplomatie",
+              "valeur": 30
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "Négocier un traité de commerce.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "or": 150
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -10
+                }
+              ],
+              "competence": "diplomatie",
+              "texte_succes": "Le traité est signé : les marchands affluent.",
+              "texte_echec": "Les négociations s'enlisent."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Les congédier poliment.",
+        "effets": [
+          {
+            "prestige": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_marchands",
+    "titre": "Les épices de {etranger}",
+    "texte": "Des marchands de {etranger} proposent des épices, de la soie et des remèdes inconnus dans les Marches.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Acheter des remèdes pour la cour (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "sante": 10
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Acheter de la soie pour impressionner (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "prestige": 60
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Taxer leur passage.",
+        "effets": [
+          {
+            "or": 50
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_princesse",
+    "titre": "Une alliance d'outre-mer",
+    "texte": "Le roi de {etranger} propose d'envoyer à votre cour un parent de sang royal, gage d'amitié entre vos maisons.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 3,
+    "delai_retour": 60,
+    "choix": [
+      {
+        "libelle": "Accepter avec honneur.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 17,
+              "age_max": 24
+            }
+          },
+          {
+            "prestige": 60
+          },
+          {
+            "renommee": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Décliner : on ne mêle pas son sang à des étrangers.",
+        "effets": [
+          {
+            "prestige": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_pillards",
+    "titre": "Des voiles à l'horizon",
+    "texte": [
+      "Des drakkars venus de {etranger} ont été aperçus au large. Les pillards débarqueront avant l'aube près de {comte.nom}.",
+      "Le tocsin sonne : des pillards de {etranger} ont accosté et marchent sur {comte.nom}."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "cotier": true
+      },
+      {
+        "annee_min": 1
+      }
+    ],
+    "poids": 4,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Rassembler les troupes et les repousser.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Pillards de {etranger}",
+              "force": 0.6,
+              "composition": {
+                "infanterie": 0.5,
+                "archers": 0.2,
+                "levees": 0.3
+              },
+              "victoire": [
+                {
+                  "prestige": 80
+                },
+                {
+                  "or": 60
+                },
+                {
+                  "opinion_vassaux": 5
+                }
+              ],
+              "defaite": [
+                {
+                  "developpement": -1
+                },
+                {
+                  "or": -80
+                },
+                {
+                  "prestige": -40
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Payer un tribut pour qu'ils repartent (100 or).",
+        "effets": [
+          {
+            "or": -100
+          },
+          {
+            "prestige": -30
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 100
+          }
+        ]
+      },
+      {
+        "libelle": "Évacuer et laisser piller.",
+        "effets": [
+          {
+            "developpement": -1
+          },
+          {
+            "levees": -200
+          },
+          {
+            "stress": 15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_invasion",
+    "titre": "L'invasion",
+    "texte": "Une armée de {etranger} a débarqué en force. Ce n'est plus un raid : leur chef veut se tailler un royaume dans les Marches.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "cotier": true
+      },
+      {
+        "annee_min": 8
+      }
+    ],
+    "poids": 1,
+    "delai_retour": 80,
+    "choix": [
+      {
+        "libelle": "Marcher à leur rencontre.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Armée de {etranger}",
+              "force": 0.9,
+              "composition": {
+                "infanterie": 0.35,
+                "cavalerie": 0.2,
+                "archers": 0.2,
+                "piquiers": 0.1,
+                "levees": 0.15
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 200
+                },
+                {
+                  "renommee": 60
+                },
+                {
+                  "opinion_vassaux": 10
+                }
+              ],
+              "defaite": [
+                {
+                  "prestige": -120
+                },
+                {
+                  "developpement": -1
+                },
+                {
+                  "or": -150
+                },
+                {
+                  "stress": 30
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Attendre derrière les murailles.",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Armée de {etranger}",
+              "force": 0.9,
+              "composition": {
+                "infanterie": 0.35,
+                "cavalerie": 0.2,
+                "archers": 0.2,
+                "piquiers": 0.1,
+                "levees": 0.15
+              },
+              "victoire": [
+                {
+                  "prestige": 150
+                },
+                {
+                  "renommee": 40
+                }
+              ],
+              "defaite": [
+                {
+                  "prestige": -100
+                },
+                {
+                  "developpement": -2
+                },
+                {
+                  "or": -100
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Négocier un tribut (200 or).",
+        "effets": [
+          {
+            "or": -200
+          },
+          {
+            "prestige": -80
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 200
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_explorateur",
+    "titre": "Retour d'expédition",
+    "texte": "Un capitaine de votre domaine revient d'un long voyage vers {etranger2}. Il rapporte des cartes, des récits incroyables… et des dettes.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "cotier": true
+      }
+    ],
+    "poids": 3,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "Payer ses dettes et financer un nouveau voyage (80 or).",
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "or": 250
+                },
+                {
+                  "renommee": 20
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -10
+                }
+              ],
+              "texte_succes": "L'expédition revient chargée de richesses.",
+              "texte_echec": "On n'a plus jamais revu le navire."
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 80
+          }
+        ]
+      },
+      {
+        "libelle": "Acheter ses cartes pour la bibliothèque.",
+        "effets": [
+          {
+            "or": -20
+          },
+          {
+            "xp": {
+              "competence": "savoir",
+              "valeur": 40
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer à ses créanciers.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "etr_refugies",
+    "titre": "Des réfugiés de {etranger}",
+    "texte": "Une guerre ravage {etranger}. Des familles entières débarquent, épuisées, et implorent asile.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "Les accueillir sur vos terres.",
+        "effets": [
+          {
+            "levees": 300
+          },
+          {
+            "piete": 30
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      },
+      {
+        "libelle": "N'accueillir que les artisans.",
+        "effets": [
+          {
+            "developpement": 1
+          }
+        ]
+      },
+      {
+        "libelle": "Les refouler à la mer.",
+        "effets": [
+          {
+            "stress": {
+              "genereux": 20,
+              "juste": 10,
+              "cruel": -5
+            }
+          },
+          {
+            "piete": -20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_mercenaires",
+    "titre": "Une compagnie à vendre",
+    "texte": "Un capitaine de {etranger} offre ses lances à prix d'ami : quatre cents hommes aguerris, pour une saison de solde.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "conditions": [
+      {
+        "en_guerre": true
+      }
+    ],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      {
+        "libelle": "Engager la compagnie (120 or).",
+        "effets": [
+          {
+            "or": -120
+          },
+          {
+            "levees": 400
+          },
+          {
+            "ravitaillement": 10
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 120
+          }
+        ]
+      },
+      {
+        "libelle": "La recommander à un vassal.",
+        "effets": [
+          {
+            "opinion_vassaux": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : on ne paie pas des étrangers pour se battre.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "etr_relique",
+    "titre": "Une relique d'outre-mer",
+    "texte": "Un pèlerin revenu de {etranger} vous offre un fragment d'os, qu'il affirme être celui d'un saint martyr.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "L'acheter pour la chapelle (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "piete": 120
+                }
+              ],
+              "echec": [
+                {
+                  "piete": 20
+                },
+                {
+                  "prestige": -20
+                }
+              ],
+              "texte_succes": "La relique fait des miracles : les pèlerins affluent.",
+              "texte_echec": "On découvre qu'il s'agit d'un os de mouton."
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "Le remercier et le laisser repartir.",
+        "effets": [
+          {
+            "piete": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "etr_espion",
+    "titre": "Un espion étranger",
+    "texte": "Vos gardes ont arrêté un homme qui dessinait les murailles. Il porte des lettres scellées aux armes de {etranger}.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "L'interroger sans ménagement.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "xp": {
+                    "competence": "ruse",
+                    "valeur": 40
+                  }
+                },
+                {
+                  "prestige": 20
+                }
+              ],
+              "echec": [
+                {
+                  "stress": 10
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "Il livre les noms de ses complices.",
+              "texte_echec": "Il meurt sans avoir parlé."
+            }
+          },
+          {
+            "stress": {
+              "juste": 10
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le retourner contre ses maîtres.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "xp": {
+                    "competence": "ruse",
+                    "valeur": 60
+                  }
+                },
+                {
+                  "or": 60
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -20
+                }
+              ],
+              "competence": "ruse",
+              "texte_succes": "Il vous livrera désormais leurs secrets.",
+              "texte_echec": "Il s'évade à la première occasion."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer chez lui, en signe de dédain.",
+        "effets": [
+          {
+            "prestige": 20
+          }
+        ]
+      }
+    ]
+  }
+]

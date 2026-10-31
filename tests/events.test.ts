@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_EVENTS } from '../src/data/events';
+import { DECISIONS } from '../src/data/decisions';
 import { TRAITS } from '../src/data/traits';
+import type { Effect } from '../src/engine/events/types';
 import {
   EVENTS,
   applyEffects,
@@ -30,6 +32,29 @@ describe('Événements (section 6)', () => {
         }
       }
     }
+  });
+
+  it('plus de cent événements ; traits, suites et rôles des effets imbriqués sont valides', () => {
+    expect(ALL_EVENTS.length).toBeGreaterThanOrEqual(100);
+    const walk = (id: string, effs: Effect[]): void => {
+      for (const eff of effs) {
+        const t = eff.trait_ajout ?? eff.trait_retrait;
+        if (t) expect(TRAITS[typeof t === 'string' ? t : t.trait], id).toBeDefined();
+        if (eff.suite_differee)
+          expect(EVENTS[eff.suite_differee.id], `${id} → ${eff.suite_differee.id}`).toBeDefined();
+        if (eff.hasard) {
+          walk(id, eff.hasard.succes);
+          walk(id, eff.hasard.echec);
+        }
+        if (eff.bataille) {
+          walk(id, eff.bataille.victoire);
+          walk(id, eff.bataille.defaite);
+        }
+      }
+    };
+    for (const e of ALL_EVENTS) for (const c of e.choix) walk(e.id, c.effets);
+    // Les événements de décision sont bien reliés.
+    for (const d of DECISIONS) expect(EVENTS[d.event], d.id).toBeDefined();
   });
 
   it('répartit les événements selon les catégories du cahier', () => {
