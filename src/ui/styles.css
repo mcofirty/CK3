@@ -1455,19 +1455,23 @@ body {
 html {
   min-height: calc(100% + var(--vh-gap));
 }
-body,
-.overlay,
-.battle {
-  bottom: calc(0px - var(--vh-gap));
-}
 body {
+  bottom: calc(0px - var(--vh-gap));
   height: auto;
 }
+/*
+ * Selon la version d'iOS, les éléments fixes se placent par rapport au body (déjà prolongé)
+ * ou par rapport à la fenêtre trop courte : main.tsx mesure lequel (--fixed-gap).
+ */
+.overlay,
+.battle {
+  bottom: calc(0px - var(--fixed-gap, 0px));
+}
 .tabbar {
-  bottom: calc(var(--safe-bottom) + 8px - var(--vh-gap));
+  bottom: calc(var(--safe-bottom) + 8px - var(--fixed-gap, 0px));
 }
 .fab {
-  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px - var(--vh-gap));
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px - var(--fixed-gap, 0px));
 }
 .screen {
   touch-action: pan-y;
