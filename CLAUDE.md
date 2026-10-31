@@ -36,6 +36,7 @@ Les scripts passent par `vite-node` (nécessaire pour `import.meta.glob` des év
 - Une nouvelle règle du moteur arrive avec son test Vitest, avant le branchement UI.
 - Ajouter un événement : un objet dans `src/data/events/*.json` (format dans `src/engine/events/README.md`). Aucun code.
 - Mobile d'abord : zones tactiles ≥ 44 px, texte ≥ 16 px, appui long pour les infobulles (`<Tip>`), zones sûres.
+- Hauteur d'écran iPhone : `#root` est le cadre de l'app ; lancée depuis l'écran d'accueil, `main.tsx` (`fitScreen`) lui donne la hauteur réelle de l'écran (`--app-h`), et son `transform` en fait le repère de tous les éléments `position: fixed`. Ne pas remettre `100dvh`/`100vh` sur `body` ni faire déborder un enfant de `#root`.
 - Écran de débogage : appui long sur « Highborn » dans la barre du haut.
 
 ## Méthode de travail (section 15 du cahier)
