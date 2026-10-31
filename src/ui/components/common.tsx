@@ -21,8 +21,10 @@ export function TipLayer() {
   }, []);
   if (!tip) return null;
   const left = Math.max(8, Math.min(window.innerWidth - 308, tip.x - 150));
-  const top = tip.y > window.innerHeight / 2 ? undefined : tip.y + 24;
-  const bottom = tip.y > window.innerHeight / 2 ? window.innerHeight - tip.y + 16 : undefined;
+  // Hauteur du cadre de l'app (#root), qui peut dépasser la fenêtre annoncée sur iPhone.
+  const h = document.getElementById('root')?.clientHeight ?? window.innerHeight;
+  const top = tip.y > h / 2 ? undefined : tip.y + 24;
+  const bottom = tip.y > h / 2 ? h - tip.y + 16 : undefined;
   return (
     <div className="tip" style={{ left, top, bottom }}>
       {tip.text}

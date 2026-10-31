@@ -165,10 +165,10 @@ body {
   -webkit-touch-callout: none;
 }
 /* Fond « aurore » : il donne de la profondeur au verre. */
-body::before {
+#root::before {
   content: '';
-  position: fixed;
-  inset: -10%;
+  position: absolute;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
   background:
@@ -178,7 +178,7 @@ body::before {
     radial-gradient(36% 28% at 92% 92%, rgba(138, 47, 36, 0.14), transparent 70%);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not(.theme-light) body::before {
+  :root:not(.theme-light) #root::before {
     background:
       radial-gradient(42% 32% at 8% 4%, rgba(210, 96, 79, 0.22), transparent 70%),
       radial-gradient(40% 30% at 100% 26%, rgba(201, 162, 39, 0.12), transparent 70%),
@@ -186,7 +186,7 @@ body::before {
       radial-gradient(36% 28% at 92% 92%, rgba(138, 47, 36, 0.2), transparent 70%);
   }
 }
-:root.theme-dark body::before {
+:root.theme-dark #root::before {
   background:
     radial-gradient(42% 32% at 8% 4%, rgba(210, 96, 79, 0.22), transparent 70%),
     radial-gradient(40% 30% at 100% 26%, rgba(201, 162, 39, 0.12), transparent 70%),
@@ -1209,7 +1209,7 @@ strong {
    ========================================================================= */
 .map-wrap {
   height: calc(
-    100svh + var(--vh-gap) - var(--safe-top) - var(--safe-bottom) - var(--topbar-h) -
+    var(--app-h, 100svh) - var(--safe-top) - var(--safe-bottom) - var(--topbar-h) -
       var(--tabbar-h) - 64px
   );
   min-height: 420px;
@@ -1474,33 +1474,23 @@ body {
 }
 
 /*
- * iPhone en mode « écran d'accueil » (barre d'état translucide) : la hauteur de fenêtre
- * annoncée par iOS oublie parfois la barre d'état. main.tsx mesure l'écart (--vh-gap) et
- * on prolonge jusqu'au bas réel de l'écran tout ce qui est ancré en bas.
+ * Hauteur de l'application : #root est le cadre de tout le jeu.
+ * Lancée depuis l'écran d'accueil, l'app occupe toujours tout l'écran : main.tsx donne alors
+ * à #root la hauteur réelle de l'écran (--app-h), sans se fier à la fenêtre annoncée par iOS.
+ * Le transform fait de #root le repère de tous les éléments « fixes » (barres, fenêtres,
+ * bataille) : ils se calent sur ce cadre et jamais sur une fenêtre mal mesurée.
  */
-:root {
-  --vh-gap: 0px;
-}
-html {
-  min-height: calc(100% + var(--vh-gap));
-}
-body {
-  bottom: calc(0px - var(--vh-gap));
-  height: auto;
-}
-/*
- * Selon la version d'iOS, les éléments fixes se placent par rapport au body (déjà prolongé)
- * ou par rapport à la fenêtre trop courte : main.tsx mesure lequel (--fixed-gap).
- */
-.overlay,
-.battle {
-  bottom: calc(0px - var(--fixed-gap, 0px));
-}
-.tabbar {
-  bottom: calc(var(--safe-bottom) + 8px - var(--fixed-gap, 0px));
-}
-.fab {
-  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px - var(--fixed-gap, 0px));
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  height: var(--app-h, 100%);
+  overflow: hidden;
+  overflow: clip;
+  background: var(--bg);
+  transform: translateZ(0);
 }
 .screen {
   touch-action: pan-y;
@@ -2065,10 +2055,16 @@ body {
     background var(--t-fast) var(--ease),
     color var(--t-fast) var(--ease);
 }
+.gear-btn svg {
+  pointer-events: none;
+  transition: transform var(--t-med) var(--ease);
+}
 .gear-btn:active {
-  transform: rotate(40deg) scale(0.92);
   background: var(--accent-soft);
   color: var(--accent);
+}
+.gear-btn:active svg {
+  transform: rotate(40deg) scale(0.92);
 }
 .title-screen {
   position: relative;

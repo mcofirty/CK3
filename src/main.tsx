@@ -7,39 +7,32 @@ import './ui/styles.css';
 registerSW({ immediate: true });
 
 /**
- * En mode « écran d'accueil », iOS annonce parfois une fenêtre plus courte que l'écran
- * (la hauteur de la barre d'état est retranchée) : l'app s'arrêtait avant le bas de l'écran.
- * On mesure cet écart et on le passe au CSS.
+ * Lancée depuis l'écran d'accueil, l'app occupe toujours tout l'écran ; or iOS annonce parfois
+ * une fenêtre plus courte (sans la barre d'état), et cela varie au démarrage. On donne donc à
+ * l'app la hauteur réelle de l'écran (--app-h). Dans Safari, l'app suit simplement la fenêtre.
  */
-function fixViewport(): void {
-  const root = document.documentElement;
+function fitScreen(): void {
   const nav = navigator as Navigator & { standalone?: boolean };
   const standalone =
     nav.standalone === true ||
     window.matchMedia?.('(display-mode: standalone)').matches ||
     window.matchMedia?.('(display-mode: fullscreen)').matches;
+  const root = document.documentElement;
   const portrait = window.innerHeight >= window.innerWidth;
   const screenH = portrait
     ? Math.max(screen.width, screen.height)
     : Math.min(screen.width, screen.height);
-  const raw = standalone ? screenH - window.innerHeight : 0;
-  const gap = raw > 0 && raw <= 100 ? raw : 0;
-  root.style.setProperty('--vh-gap', `${gap}px`);
-  // Un élément fixe ancré en bas : s'arrête-t-il déjà au bas réel de l'écran ?
-  const probe = document.createElement('div');
-  probe.style.cssText =
-    'position:fixed;left:0;bottom:0;width:1px;height:1px;pointer-events:none;visibility:hidden';
-  (document.getElementById('root') ?? document.body).appendChild(probe);
-  const bottom = probe.getBoundingClientRect().bottom;
-  probe.remove();
-  const missing = gap > 0 ? Math.round(screenH - bottom) : 0;
-  root.style.setProperty('--fixed-gap', `${missing > 0 && missing <= 100 ? missing : 0}px`);
+  const diff = screenH - window.innerHeight;
+  // Petit écart seulement (barre d'état) : au-delà, fenêtre partagée (iPad), on suit la fenêtre.
+  if (standalone && diff >= 0 && diff <= 120) root.style.setProperty('--app-h', `${screenH}px`);
+  else root.style.removeProperty('--app-h');
 }
-fixViewport();
-requestAnimationFrame(fixViewport);
-window.addEventListener('load', fixViewport);
-window.addEventListener('resize', fixViewport);
-window.addEventListener('orientationchange', () => setTimeout(fixViewport, 300));
+fitScreen();
+window.addEventListener('resize', fitScreen);
+window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') fitScreen();
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
