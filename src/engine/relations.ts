@@ -1,7 +1,7 @@
 /** Relations personnelles (amis, rivaux, amants) et souvenirs qui durent. */
 import { BALANCE } from '../data/balance';
 import { TRAITS } from '../data/traits';
-import { addOpinion, ageOf, closeFamily, isAdult, isCloseFamily } from './characters';
+import { addOpinion, ageOf, closeFamily, isAdult, isCloseFamily, parentsOf } from './characters';
 import type { Ctx } from './context';
 import { vassalsOf } from './realm';
 import type { Character, GameState } from './state';
@@ -55,7 +55,9 @@ export function addMemory(
   const value = kind === 'mort' ? R.memoryKill : R.memoryPrison;
   const seasons = kind === 'mort' ? R.memoryKillSeasons : R.memoryKillSeasons / 2;
   const reason = kind === 'mort' ? `A fait périr ${v.name}` : `A jeté ${v.name} au cachot`;
-  const kin = [v, ...closeFamily(state, v)].filter((k) => k.alive && k.id !== culpritId);
+  const kin = [v, ...parentsOf(state, v), ...closeFamily(state, v)].filter(
+    (k, i, all) => k.alive && k.id !== culpritId && all.findIndex((x) => x.id === k.id) === i,
+  );
   for (const k of kin)
     if (k.id !== v.id || kind === 'prison')
       addOpinion(state, k.id, culpritId, reason, value, seasons);

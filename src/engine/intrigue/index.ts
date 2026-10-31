@@ -2,6 +2,8 @@
 import { BALANCE } from '../../data/balance';
 import {
   addOpinion,
+  ageOf,
+  closeFamily,
   displayName,
   hasTrait,
   opinion,
@@ -10,6 +12,8 @@ import {
   topLiege,
 } from '../characters';
 import { gainXp, record } from '../progression';
+import { addMemory } from '../relations';
+import { addStress, stressFromSpec } from '../stress';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, newId, notify, type Ctx } from '../context';
 import { vassalsOf } from '../realm';
@@ -39,9 +43,16 @@ export interface PlotOdds {
   reasons: { label: string; value: string }[];
 }
 
-/** Ruse défensive d'une cible : la sienne ou celle de l'espion de sa cour. */
-function defenseRuse(state: GameState, target: Character): number {
+/**
+ * Ruse défensive d'une cible : la sienne, celle du seigneur qui la garde (enfants, conjoints,
+ * courtisans sans terre sont protégés par leur cour), ou celle de l'espion du joueur.
+ */
+export function defenseRuse(state: GameState, target: Character): number {
   let r = skill(target, 'ruse');
+  const holds = Object.values(state.counties).some((c) => c.holderId === target.id);
+  const guardian =
+    !holds && target.courtId !== target.id ? state.characters[target.courtId] : undefined;
+  if (guardian?.alive) r = Math.max(r, skill(guardian, 'ruse'));
   if (topLiege(state, target.id) === state.playerId) {
     const seat = state.council.espion;
     const h = seat.holderId ? state.characters[seat.holderId] : undefined;
@@ -221,6 +232,17 @@ function completePlot(ctx: Ctx, p: Plot): void {
             'intrigue',
           );
         if (againstMe && !mine) notify(state, `${target.name} a été assassiné.`);
+        if (mine) {
+          // Le poids du crime, plus lourd si la victime est un enfant.
+          const child = ageOf(state, target) < BALANCE.characters.adulthood;
+          addStress(state, owner, stressFromSpec(owner, I.assassinStress).value);
+          if (child) addStress(state, owner, stressFromSpec(owner, I.assassinChildStress).value);
+          // La famille peut deviner qui a frappé : elle n'oubliera pas.
+          if (rng.chance(I.assassinSuspicion)) {
+            addMemory(state, target.id, owner.id, 'mort');
+            notify(state, `La famille de ${target.name} soupçonne votre main.`);
+          }
+        }
         killCharacter(ctx, target.id, 'assassiné');
       } else {
         addOpinion(state, p.targetId, p.ownerId, 'Tentative d’assassinat', -60, 60);
@@ -303,4 +325,59 @@ export function hasGrudge(state: GameState, c: Character, againstId: string): bo
       m.value <= BALANCE.relations.memoryKill &&
       (m.expires === undefined || m.expires > state.turn),
   );
+}
+
+export interface PlotTargetGroup {
+  rulerId: string;
+  members: { id: string; relation: string }[];
+}
+
+/** Lien d'un membre de la cour avec son souverain (« fille », « épouse », « vassal »…). */
+function relationTo(state: GameState, ruler: Character, c: Character): string {
+  if (c.id === ruler.id) return 'souverain';
+  const f = c.female;
+  if (ruler.spouseId === c.id) return f ? 'épouse' : 'époux';
+  if (ruler.childrenIds.includes(c.id)) return f ? 'fille' : 'fils';
+  if (ruler.childrenIds.some((k) => state.characters[k]?.childrenIds.includes(c.id)))
+    return f ? 'petite-fille' : 'petit-fils';
+  if (c.liegeId === ruler.id) return f ? 'vassale' : 'vassal';
+  return f ? 'sœur' : 'frère';
+}
+
+/**
+ * Cibles possibles d'un complot, regroupées par cour rivale : le souverain, sa famille proche
+ * (conjoint, enfants, petits-enfants, frères et sœurs) et ses vassaux.
+ */
+export function plotTargets(state: GameState, ownerId: string, type: PlotType): PlotTargetGroup[] {
+  const groups: PlotTargetGroup[] = [];
+  const me = state.characters[ownerId];
+  const ok = (c: Character | undefined): c is Character =>
+    !!c?.alive && c.id !== ownerId && (!me?.dynastyId || c.dynastyId !== me.dynastyId);
+  const rulers = Object.values(state.characters).filter(
+    (c) =>
+      c.alive &&
+      !c.liegeId &&
+      c.id !== ownerId &&
+      Object.values(state.counties).some((k) => k.holderId === c.id),
+  );
+  for (const r of rulers) {
+    const vassals = Object.values(state.characters).filter((c) => c.alive && c.liegeId === r.id);
+    let list: Character[];
+    if (type === 'revolte') list = vassals;
+    else list = [r, ...closeFamily(state, r), ...vassals];
+    const seen = new Set<string>();
+    const members = list
+      .filter((c) => ok(c) && !seen.has(c.id) && seen.add(c.id))
+      .map((c) => ({ id: c.id, relation: relationTo(state, r, c) }));
+    if (members.length) groups.push({ rulerId: r.id, members });
+  }
+  if (type === 'amitie') {
+    const own = Object.values(state.characters).filter((c) => c.alive && c.liegeId === ownerId);
+    if (own.length)
+      groups.unshift({
+        rulerId: ownerId,
+        members: own.map((c) => ({ id: c.id, relation: c.female ? 'vassale' : 'vassal' })),
+      });
+  }
+  return groups;
 }

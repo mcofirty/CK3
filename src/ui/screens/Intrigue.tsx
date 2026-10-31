@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BALANCE } from '../../data/balance';
 import {
+  ageOf,
   allied,
   atWar,
   closeFamily,
@@ -15,8 +16,8 @@ import {
   tributeAcceptance,
   type Acceptance,
 } from '../../engine/diplomacy';
-import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
-import { independentRulers, realmCounties, realmName, vassalsOf } from '../../engine/realm';
+import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
+import { independentRulers, realmCounties, realmName } from '../../engine/realm';
 import type { Character, GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
 import {
@@ -267,13 +268,7 @@ function Plots({ game }: { game: GameState }) {
   const mine = Object.values(game.plots).find((p) => p.ownerId === pl);
   const [type, setType] = useState<PlotType>('discrediter');
   const [targetId, setTargetId] = useState<string>('');
-  const rulers = independentRulers(game).filter((r) => r !== pl);
-  const targets =
-    type === 'revolte'
-      ? rulers.flatMap((r) => vassalsOf(game, r))
-      : type === 'amitie'
-        ? [...rulers, ...vassalsOf(game, pl)]
-        : [...rulers, ...rulers.flatMap((r) => vassalsOf(game, r))];
+  const groups = plotTargets(game, pl, type);
   const odds = targetId ? plotOdds(game, pl, targetId, 0) : undefined;
   const chk = targetId ? canStartPlot(game, pl, type, targetId) : { ok: false };
   return (
@@ -347,10 +342,20 @@ function Plots({ game }: { game: GameState }) {
             onChange={(e) => setTargetId(e.target.value)}
           >
             <option value="">— Cible —</option>
-            {targets.map((t) => (
-              <option key={t} value={t}>
-                {displayName(game, game.characters[t])}
-              </option>
+            {groups.map((g) => (
+              <optgroup
+                key={g.rulerId}
+                label={g.rulerId === pl ? 'Vos vassaux' : realmName(game, g.rulerId)}
+              >
+                {g.members.map((m) => {
+                  const c = game.characters[m.id];
+                  return (
+                    <option key={m.id} value={m.id}>
+                      {displayName(game, c)} — {m.relation}, {ageOf(game, c)} ans
+                    </option>
+                  );
+                })}
+              </optgroup>
             ))}
           </select>
           {odds && (

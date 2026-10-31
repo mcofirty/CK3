@@ -37,7 +37,8 @@ import {
   titleOf,
   vassalContribution,
 } from '../../engine/realm';
-import { SKILL_KEYS, SKILL_LABELS, type GameState } from '../../engine/state';
+import { SKILL_KEYS, SKILL_LABELS, type GameState, type PlotType } from '../../engine/state';
+import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
 import { armyUpkeep, totalMen } from '../../engine/units';
 import { armyOf, findPath, militaryStrength, truceWith } from '../../engine/war';
 import { useStore } from '../store';
@@ -230,6 +231,12 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
           })}
         </div>
       </Section>
+
+      {c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
+        <Section title="Comploter">
+          <PlotActions game={game} id={id} />
+        </Section>
+      )}
 
       {op && (
         <Section title={`Opinion envers vous : ${signed(op.total)}`}>
@@ -722,6 +729,56 @@ function ArmyDetail({ game, id }: { game: GameState; id: string }) {
           })()}
         </p>
       )}
+    </>
+  );
+}
+
+/** Lancer un complot depuis la fiche d'un personnage. */
+function PlotActions({ game, id }: { game: GameState; id: string }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const pl = game.playerId;
+  const c = game.characters[id];
+  const current = Object.values(game.plots).find((p) => p.ownerId === pl);
+  if (current)
+    return (
+      <p className="small muted">
+        Un complot est déjà en cours contre {game.characters[current.targetId]?.name ?? '—'} : un
+        seul à la fois (Intrigues → Complots).
+      </p>
+    );
+  const types = (Object.keys(PLOT_INFO) as PlotType[]).filter(
+    (t) => t !== 'revolte' || (c.liegeId && c.liegeId !== pl),
+  );
+  const child = ageOf(game, c) < BALANCE.characters.adulthood;
+  return (
+    <>
+      {child && (
+        <p className="small muted" style={{ marginTop: 0 }}>
+          Un enfant est protégé par la vigilance de sa cour ; le tuer pèse lourd sur la conscience.
+        </p>
+      )}
+      <div className="plot-actions">
+        {types.map((t) => {
+          const chk = canStartPlot(game, pl, t, id);
+          const o = plotOdds(game, pl, id, 0);
+          return (
+            <button
+              key={t}
+              className={`btn small${t === 'assassiner' ? ' danger-ghost' : ''}`}
+              disabled={!chk.ok}
+              onClick={() => dispatch({ type: 'startPlot', plotType: t, targetId: id })}
+            >
+              {PLOT_INFO[t].label}
+              <span className="small">
+                {chk.ok ? `${Math.round(o.success * 100)} % · ${o.seasons} saison(s)` : chk.reason}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="small muted" style={{ margin: '6px 0 0' }}>
+        Ajoutez des agents et suivez le complot dans Intrigues → Complots.
+      </p>
     </>
   );
 }

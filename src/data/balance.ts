@@ -405,6 +405,11 @@ export const BALANCE = {
     discreditPrestige: -80,
     discreditOpinion: -25,
     assassinKillChance: 0.75,
+    /** Après un assassinat réussi : la famille de la victime devine-t-elle qui a frappé ? */
+    assassinSuspicion: 0.35,
+    /** Stress de l'assassin selon ses traits, et en plus si la victime est un enfant. */
+    assassinStress: { juste: 15, genereux: 10, cruel: -5 },
+    assassinChildStress: { '*': 10, juste: 15, genereux: 10, cruel: -10 },
     friendshipOpinion: 40,
     aiPlotChance: 0.05,
   },
