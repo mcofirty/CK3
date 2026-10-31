@@ -841,7 +841,7 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
     const newly: FrontId[] = [];
     for (const f of FRONTS) {
       const fr = side.fronts[f];
-      if (!isActive(fr)) continue;
+      if (fr.broken || fr.withdrawn || fr.startMen <= 0) continue;
       if (fr.morale <= B.breakMorale || totalMen(fr.men) < B.breakMenRatio * fr.startMen) {
         fr.broken = true;
         fr.morale = 0;
