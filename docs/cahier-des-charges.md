@@ -494,7 +494,7 @@ Un jalon n'est terminé que si tous ces critères de qualité sont tenus.
 Hors périmètre de cette version :
 
 - Multijoueur, serveur, compte utilisateur, monétisation, publication sur l'App Store.
-- Musique et effets sonores.
+- Musique. (Révision du 31/10/2026, à la demande du propriétaire : des effets sonores synthétisés et des vibrations ont été ajoutés, désactivables.)
 - Religions et cultures multiples, hérésies, croisades.
 - Carte de plus de 40 comtés, batailles navales.
 - Tout nom, texte, carte, image ou son issu des jeux Paradox.

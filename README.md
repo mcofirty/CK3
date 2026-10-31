@@ -27,18 +27,21 @@ Incarnez un souverain, faites durer votre lignée sur environ 150 ans, tenez vos
 
 ## Fonctionnalités
 
-| Domaine                     | Contenu                                                                                                                                                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Boucle de jeu**           | 1 tour = 1 saison (4 par an). Revenus et entretien, 0 à 3 événements, décisions, résolution militaire, puis santé, naissances, décès et succession. Sauvegarde automatique à chaque fin de saison.              |
-| **Personnages**             | 5 compétences (Diplomatie, Guerre, Gestion, Ruse, Savoir) notées de 0 à 20, ~30 traits (personnalité, éducation, héréditaires, acquis), santé, âge, opinions de -100 à +100 avec le détail des raisons.         |
-| **Dynastie**                | Mariages, naissances, éducation des enfants à 16 ans, succession par Partage ou Primogéniture, Renommée de la lignée, arbre généalogique.                                                                       |
-| **Royaume**                 | ~30 comtés sur une carte SVG zoomable, 7 duchés, 2 royaumes à fonder. Développement, fortifications, 8 bâtiments à 2 niveaux, vassaux dont la contribution dépend de leur opinion.                              |
-| **Événements**              | 40 événements narratifs écrits en français, décrits en JSON et interprétés par un moteur d'effets : ajouter un événement ne demande aucune ligne de code.                                                       |
-| **Diplomatie & intrigues**  | Conseil à 5 postes, mariages, alliances, cadeaux, appels aux armes, tributs ; complots (assassiner, discréditer, gagner l'amitié, inciter à la révolte) avec chances et raisons affichées.                      |
-| **Guerre de campagne**      | Levées et compagnies professionnelles, déplacements, ravitaillement et usure, pillage, sièges et assauts, score de guerre, paix.                                                                                |
-| **Bataille à trois fronts** | Reconnaissance, déploiement, 8 rounds d'ordres simultanés (Charger, Tenir, Tirer, Feindre la retraite, Se replier, Prendre de flanc), réserve, terrain, météo, commandants et leurs traits, IA à trois niveaux. |
-| **IA rivale**               | 4 souverains rivaux et leurs vassaux pilotés par une IA à scores d'utilité, factions et révoltes, 3 niveaux de difficulté.                                                                                      |
-| **Mobile d'abord**          | Portrait, une main, onglets en bas, bouton « Fin de saison » flottant, appui long pour les infobulles, zones sûres de l'iPhone, thème clair/sombre automatique, 100 % hors ligne.                               |
+| Domaine                     | Contenu                                                                                                                                                                                                                                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Boucle de jeu**           | 1 tour = 1 saison (4 par an). Revenus et entretien, 0 à 3 événements, décisions, résolution militaire, puis santé, naissances, décès et succession. Sauvegarde automatique à chaque fin de saison.                                                                                       |
+| **Personnages**             | 5 compétences (Diplomatie, Guerre, Gestion, Ruse, Savoir) notées de 0 à 20, ~40 traits (personnalité, éducation, héréditaires, acquis), santé, âge, stress et crises, amis, rivaux et amants, souvenirs qui poussent à la vengeance, opinions de -100 à +100 avec le détail des raisons. |
+| **Arbres de compétences**   | Par personnage : 30 talents en 5 branches, gagnés avec l'expérience, perdus à sa mort. Par famille : 15 héritages achetés avec la renommée, conservés jusqu'à la fin de la partie.                                                                                                       |
+| **Ambitions**               | À chaque règne, une ambition au choix parmi trois (15 au total) : agrandir le royaume, ceindre une couronne, remplir le trésor… Réussir rapporte prestige, renommée et expérience ; échouer stresse.                                                                                     |
+| **Dynastie**                | Mariages, naissances, éducation des enfants à 16 ans, succession par Partage ou Primogéniture, Renommée de la lignée, arbre généalogique.                                                                                                                                                |
+| **Royaume**                 | ~30 comtés sur une carte SVG zoomable, 7 duchés, 2 royaumes à fonder. Développement, fortifications, 8 bâtiments à 2 niveaux, vassaux dont la contribution dépend de leur opinion.                                                                                                       |
+| **Événements**              | 107 événements narratifs en JSON (éducation, relations, saisons, royaumes d'outre-mer, chroniques en plusieurs actes : prophétie, prétendant, peste…), suites différées, épidémies, batailles d'événement ; 8 décisions actives (tournoi, chasse, festin, pèlerinage…).                  |
+| **Diplomatie & intrigues**  | Conseil à 5 postes, mariages, alliances, cadeaux, appels aux armes, tributs ; complots (assassiner, discréditer, gagner l'amitié, inciter à la révolte) avec chances et raisons affichées.                                                                                               |
+| **Guerre de campagne**      | Levées, compagnies professionnelles et mercenaires, déplacements, ravitaillement et usure, pillage, sièges (assaut, blocus ou négociation), otages, score de guerre, paix.                                                                                                               |
+| **Bataille à trois fronts** | Reconnaissance, déploiement, 8 rounds d'ordres simultanés, réserve, terrain, météo (pluie, brouillard, neige), main de 10 tactiques, élan, duels de commandants, incidents, IA à trois niveaux.                                                                                          |
+| **Fin et rejouabilité**     | 7 fins (Empire, Couronne, Puissance, Légende, Survie, Extinction, Ruine), livre de la dynastie, 20 succès gardés sur l'appareil, sons synthétisés et vibrations.                                                                                                                         |
+| **IA rivale**               | 4 souverains rivaux et leurs vassaux pilotés par une IA à scores d'utilité, factions et révoltes, 3 niveaux de difficulté.                                                                                                                                                               |
+| **Mobile d'abord**          | Portrait, une main, onglets en bas, bouton « Fin de saison » flottant, appui long pour les infobulles, zones sûres de l'iPhone, thème clair/sombre automatique, 100 % hors ligne.                                                                                                        |
 
 ## Installer sur iPhone
 
@@ -96,10 +99,23 @@ src/
     diplomacy/       propositions, alliances, mariages, conseil
     intrigue/        complots du joueur et de l'IA
     war/             armées, déplacements, ravitaillement, sièges, score de guerre
-    battle/          reconnaissance, déploiement, ordres, résolution, IA de bataille
+    battle/          reconnaissance, déploiement, ordres, tactiques, élan, duels, IA de bataille
     ai/              IA des souverains et des vassaux
+    progression/     expérience, talents des personnages, héritages de la maison
+    court.ts         vie de cour par saison : stress, ambitions, otages, relations
+    ambitions.ts     ambitions du règne
+    stress.ts        stress et crises
+    relations.ts     amis, rivaux, amants, souvenirs
+    decisions.ts     décisions actives
+    plague.ts        épidémies
+    endings.ts       fins de partie et succès
   data/
     balance.ts       toutes les constantes d'équilibrage
+    perks.ts         talents et héritages
+    tactics.ts       tactiques de bataille
+    ambitions.ts     ambitions
+    decisions.ts     décisions actives
+    mercenaries.ts   compagnies de mercenaires
     traits.ts        définitions des traits
     units.ts         statistiques et matrice des contres
     terrain.ts       effets des terrains
@@ -154,7 +170,7 @@ Tout le contenu vit dans `src/data/` ; l'univers peut être changé sans toucher
 }
 ```
 
-Effets disponibles : `or`, `prestige`, `piete`, `opinion`, `trait_ajout`, `trait_retrait`, `sante`, `competence`, `revendication`, `guerre`, `complot`, `naissance`, `deces`, `renommee`, `developpement`, `ravitaillement`. La liste complète des déclencheurs, conditions et variables de texte est documentée dans [`src/engine/events/README.md`](src/engine/events/README.md).
+Effets disponibles (extrait) : `or`, `prestige`, `piete`, `opinion`, `trait_ajout`, `sante`, `competence`, `xp`, `stress`, `hasard`, `drapeau`, `suite_differee`, `amant`, `reconciliation`, `epidemie`, `quarantaine`, `bataille`, `nouveau_courtisan`, `guerre`, `complot`, `deces`, `renommee`, `developpement`. La liste complète des déclencheurs, conditions et variables de texte est documentée dans [`src/engine/events/README.md`](src/engine/events/README.md).
 
 ## Équilibrage
 
@@ -194,7 +210,7 @@ Une seule fois, dans le repo GitHub : **Settings → Pages → Build and deploym
 
 ## Hors périmètre
 
-Multijoueur, serveur, compte, monétisation, App Store ; musique et sons ; religions et cultures multiples, hérésies, croisades ; carte de plus de 40 comtés, batailles navales ; tout contenu issu de jeux existants.
+Multijoueur, serveur, compte, monétisation, App Store ; musique ; religions et cultures multiples, hérésies, croisades ; carte de plus de 40 comtés, batailles navales ; tout contenu issu de jeux existants.
 
 ## Identité visuelle
 

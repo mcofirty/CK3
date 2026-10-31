@@ -20,7 +20,9 @@ Les scripts passent par `vite-node` (nécessaire pour `import.meta.glob` des év
 ## Architecture
 
 - `src/engine/` : moteur **pur**, sans DOM ni React. Point d'entrée unique `applyAction(state, action)` (`actions.ts`) qui clone l'état, crée un `Rng` depuis `state.rng`, applique, réécrit la graine. Les sous-modules reçoivent un `Ctx { state, rng }` et modifient la copie.
-- `src/engine/turn.ts` : `endSeason` → déplacements et batailles (`war/moveAndDetect`) → si bataille du joueur, `phase = 'bataille'` et pause → `continueSeason` (sièges, usure, vie, successions) → `startSeason` (revenus, bâtiments, conseil, complots, IA, événements).
+- `src/engine/turn.ts` : `endSeason` → déplacements et batailles (`war/moveAndDetect`) → si bataille du joueur, `phase = 'bataille'` et pause → `continueSeason` (sièges, mercenaires, épidémies, vie, successions, succès) → `startSeason` (revenus, progression, bâtiments, conseil, complots, IA, vie de cour `court.ts`, événements).
+- Progression : talents par personnage (`Character.perks`, perdus à la mort) et héritages par maison (`Dynasty.legacies`) ; leurs bonus sont lus via `perkBonus(state, c, clé)` (données dans `data/perks.ts`).
+- Une bataille peut naître d'un événement (`war/eventBattle.ts`, `BattleState.event`) : `closeBattle` applique alors l'issue sans poursuivre la saison.
 - `src/engine/battle/` : bataille autonome (utilisée par le jeu et le script de simulation). L'IA Difficile choisit ses ordres par anticipation d'un round contre l'ordre prévu de l'adversaire.
 - `src/data/` : tout le contenu et **toutes les constantes** (`balance.ts`, `units.ts`, `terrain.ts`, `traits.ts`, `buildings.ts`, `names.ts`, `map.json`, `events/*.json`). Aucun nombre d'équilibrage en dur dans le moteur.
 - `src/ui/` : React 18 + Zustand (`store.ts`). L'UI ne modifie jamais l'état : elle appelle `dispatch(action)`. Sauvegarde auto à chaque fin de saison et en arrière-plan.
@@ -42,4 +44,4 @@ Un jalon à la fois, plan court validé avant de coder, une branche par jalon, c
 
 ## État d'équilibrage connu
 
-`npm run simulate` (10 000 batailles) : 4 cibles sur 6 tenues. Correction terrain appliquée le 31/10/2026 (colline ×1,25 → ×1,15, montagne ×1,4 → ×1,2) : l'avantage défensif passe de +25/+27 pts à environ +22 (colline) et +20 (montagne), encore un peu au-dessus de la cible +10 à +20. Piste : colline ×1,1 ou archers défenseurs ×1,1 (`src/data/terrain.ts`).
+`npm run simulate` : les 6 cibles sont tenues (vérifié aussi sur 40 000 batailles avec `-- --n 40000`) depuis l'ajout des tactiques, de l'élan et des duels : mono-type ≤ 60 %, colline ≈ +15, montagne ≈ +18, commandant ≈ +13. L'élan reste volontairement faible (`elan.attackPerLevel` 0,015) : plus fort, il avantage l'infanterie lourde seule. Le bruit statistique est d'environ ±2 pts sur 10 000 batailles.

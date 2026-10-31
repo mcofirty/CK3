@@ -61,3 +61,24 @@ Rôles : `opinion_vassal_max`/`min`, `vassal_trait`, `enfant_age_min`/`max`, `he
 `or`, `prestige`, `piete`, `renommee`, `opinion` (`{ "cible": "vassal", "valeur": 20 }`), `opinion_vassaux`, `trait_ajout` / `trait_retrait` (id ou `{ "cible", "trait" }`), `sante` (nombre ou `{ "cible", "valeur" }`), `competence` (`{ "competence", "valeur", "cible"? }`), `revendication` (`"comte_rival"`), `guerre` (`{ "cible": "rival", "attaquant": "souverain" | "rival" }`), `complot` (`{ "type", "cible" }`), `naissance`, `deces`, `developpement`, `ravitaillement`, `levees`, `ami`, `devient_rival`, `emprisonner`, `liberer`, `exiler`.
 
 Chaque choix affiche automatiquement ses effets connus avant validation.
+
+## Ajouts (version 3)
+
+**Déclencheurs** : `decision` (ouvert par une décision active, voir `src/data/decisions.ts`), `relation_ami`, `relation_rival`, `relation_amant` (rôle `proche` fourni), `peste` (rôle `comte` fourni).
+
+**Rôles** : `ami`, `ennemi` (rival personnel), `amant`, `proche` (courtisan, conseiller ou vassal). Un rôle utilisé n'importe où dans l'événement est requis : sans candidat, l'événement n'est pas tiré.
+
+**Variables** : `{etranger}`, `{etranger2}` (royaumes d'outre-mer de la partie).
+
+**Conditions** : `drapeau`, `pas_drapeau`, `stress_min`, `stress_max`, `a_ambition`, `epidemie`, `cotier`.
+
+**Effets** :
+
+- `stress` : nombre, ou par trait (`{ "juste": 20, "cruel": -10, "*": 5 }`) — agir contre sa nature stresse.
+- `xp` : `{ "competence": "guerre", "valeur": 30, "cible"? }` — expérience vers l'arbre de talents.
+- `drapeau` / `retirer_drapeau`, `suite_differee` (`{ "id", "saisons" }`) : chaînes d'événements sur plusieurs années.
+- `amant`, `fin_amant`, `reconciliation` : relations personnelles.
+- `epidemie`, `quarantaine` : épidémies qui se propagent de comté en comté.
+- `nouveau_courtisan` : `{ "age_min", "age_max", "guerre"?, "trait"? }`.
+- `bataille` : `{ "ennemi", "force", "composition"?, "attaque"?, "victoire": [...], "defaite": [...] }` — une bataille jouée sur-le-champ (armée levée, sinon levées d'urgence).
+- `hasard` accepte `"competence"` : la chance varie de ±2,5 % par point autour de 10.
