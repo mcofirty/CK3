@@ -41,9 +41,21 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     achievements: [],
     stats: emptyStats(),
     ...s,
+    // Une bataille en cours reçoit météo, tactiques et élan.
+    battle: s.battle ? upgradeBattle(s.battle as AnySave) : s.battle,
     version: 3,
   }),
 };
+
+function upgradeBattle(b: AnySave): AnySave {
+  const side = (x: unknown) => ({ tactics: [], usedTactics: [], elan: 0, ...(x as AnySave) });
+  return {
+    weather: b.rain ? 'pluie' : 'clair',
+    ...b,
+    attacker: side(b.attacker),
+    defender: side(b.defender),
+  };
+}
 
 export class SaveError extends Error {}
 

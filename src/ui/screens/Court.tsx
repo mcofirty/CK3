@@ -29,6 +29,8 @@ import {
   usePager,
   TraitChips,
 } from '../components/common';
+import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../components/Progression';
+import { perkPoints } from '../../engine/progression';
 import { useStore } from '../store';
 
 const COURT_VIEWS = ['souverain', 'famille', 'conseil', 'arbre'] as const;
@@ -44,7 +46,7 @@ export function CourtScreen({ game }: { game: GameState }) {
           { value: 'souverain', label: 'Souverain' },
           { value: 'famille', label: 'Famille' },
           { value: 'conseil', label: 'Conseil' },
-          { value: 'arbre', label: 'Arbre' },
+          { value: 'arbre', label: 'Maison' },
         ]}
         value={view}
         onChange={setView}
@@ -110,6 +112,28 @@ function RulerView({ game }: { game: GameState }) {
             Toucher pour la fiche complète ›
           </p>
         </div>
+      </div>
+      <AmbitionCard game={game} />
+      <div className="card">
+        <h3>Esprit et talents</h3>
+        <StressGauge c={p} />
+        <div className="row small" style={{ marginTop: 10 }}>
+          <span className="grow">
+            {(p.perks?.length ?? 0) > 0
+              ? `${p.perks!.length} talent${p.perks!.length > 1 ? 's' : ''} acquis`
+              : 'Aucun talent pour l’instant'}
+          </span>
+          {perkPoints(p) > 0 && <b className="good">{perkPoints(p)} point(s) à dépenser</b>}
+        </div>
+        <button
+          className={`btn block${perkPoints(p) > 0 ? ' primary' : ''}`}
+          style={{ marginTop: 8 }}
+          onClick={() => inspect({ kind: 'perso', id: p.id })}
+        >
+          Arbre de compétences ›
+        </button>
+        <h3 style={{ marginTop: 14 }}>Relations</h3>
+        <RelationsList game={game} c={p} />
       </div>
       <div className="card">
         <h3>Maison {dyn.name}</h3>
@@ -401,9 +425,15 @@ function TreeView({ game }: { game: GameState }) {
     );
   };
   return (
-    <div className="card tree">
-      <h3>Arbre de la maison {dyn.name}</h3>
-      <ul style={{ borderLeft: 0, paddingLeft: 0 }}>{render(founder, 0)}</ul>
-    </div>
+    <>
+      <div className="card">
+        <h3>Héritages de la maison</h3>
+        <LegacyTree game={game} />
+      </div>
+      <div className="card tree">
+        <h3>Arbre de la maison {dyn.name}</h3>
+        <ul style={{ borderLeft: 0, paddingLeft: 0 }}>{render(founder, 0)}</ul>
+      </div>
+    </>
   );
 }

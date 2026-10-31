@@ -3,7 +3,9 @@ import { TERRAINS } from '../../data/terrain';
 import { TRAITS } from '../../data/traits';
 import { UNIT_TYPES, UNITS } from '../../data/units';
 import { SEASON_NAMES } from '../../data/names';
+import { TACTICS, type TacticId } from '../../data/tactics';
 import {
+  duelPower,
   flankTargets,
   frontCommander,
   hasAbility,
@@ -24,6 +26,8 @@ import {
   type Order,
   type Preset,
   type SideOrders,
+  WEATHER_ICONS,
+  WEATHER_LABELS,
 } from '../../engine/battle/types';
 import type { GameState, UnitType } from '../../engine/state';
 import { totalMen } from '../../engine/units';
@@ -84,14 +88,18 @@ export function BattleScreen({ game }: { game: GameState }) {
           </span>
         </div>
         <div className="small muted">
-          {terrain} · {SEASON_NAMES[b.season]}
-          {b.rain ? ' · pluie (archers ×0,7)' : ''}
+          {terrain} · {SEASON_NAMES[b.season]} · {WEATHER_ICONS[b.weather ?? 'clair']}{' '}
+          {WEATHER_LABELS[b.weather ?? 'clair']}
           {b.river ? ' · rivière franchie' : ''}
           {' · '}vous {me === 'attacker' ? 'attaquez' : 'défendez'} · reconnaissance {mine.recon}
         </div>
       </div>
 
       <div className="battle-body">
+        {b.duel?.status === 'propose' && b.duel.challenger !== me && <DuelPrompt b={b} />}
+        {b.duel?.text && b.duel.status !== 'propose' && (
+          <div className="duel-banner glass small">🤺 {b.duel.text}</div>
+        )}
         <SideHeader side={enemy} recon={mine.recon} estimate={b.estimate} enemy />
         <div className="fronts">
           {FRONTS.map((f) => (
@@ -239,10 +247,24 @@ export function BattleScreen({ game }: { game: GameState }) {
                 onChange={(v) => setRally(v === 'non' ? null : (v as FrontId))}
               />
             )}
+            <TacticHand
+              side={mine}
+              value={orders.tactic}
+              onChange={(t) => setOrders({ ...orders, tactic: t })}
+            />
             <div className="row">
               <button className="btn ghost" onClick={() => dispatch({ type: 'battleAuto' })}>
                 Auto
               </button>
+              {!mine.challenged && !b.duel && mine.mainCommanderId && enemy.mainCommanderId && (
+                <button
+                  className="btn ghost"
+                  aria-label="Défier le commandant ennemi en duel"
+                  onClick={() => dispatch({ type: 'battleChallenge' })}
+                >
+                  🤺<span className="hide-narrow"> Défier</span>
+                </button>
+              )}
               <button className="btn primary grow" onClick={launch}>
                 Lancer le round
               </button>
@@ -273,8 +295,16 @@ function SideHeader({
   const men = sideMen(side);
   const total = totalMen(men);
   return (
-    <div className="row small" style={{ margin: '4px 0' }}>
+    <div className="row small wrap" style={{ margin: '4px 0', gap: 6 }}>
       <b>{side.name}</b>
+      {side.elan > 0 && (
+        <span className="elan" title="Élan : attaque renforcée">
+          {'🔥'.repeat(side.elan)}
+        </span>
+      )}
+      {enemy && side.tactics?.length > 0 && (
+        <span className="chip tiny">🃏 {side.tactics.length} tactique(s)</span>
+      )}
       <span className="muted">
         {enemy && recon === 0
           ? `~${estimate} hommes (estimation)`
@@ -498,6 +528,78 @@ function Report({ game, b }: { game: GameState; b: BattleState }) {
       {r.captured.length > 0 && (
         <p className="small">Capturés : {r.captured.map(name).join(', ')}</p>
       )}
+    </div>
+  );
+}
+
+function TacticHand({
+  side,
+  value,
+  onChange,
+}: {
+  side: BattleSide;
+  value?: TacticId;
+  onChange: (t?: TacticId) => void;
+}) {
+  if (!side.tactics?.length)
+    return (
+      <p className="small muted" style={{ margin: '0 0 6px' }}>
+        Plus de tactique en main.
+      </p>
+    );
+  const sel = value ? TACTICS[value] : undefined;
+  return (
+    <div className="tactics" data-noswipe>
+      <div className="tactic-hand">
+        {side.tactics.map((t) => (
+          <button
+            key={t}
+            className={`tactic${value === t ? ' active' : ''}`}
+            onClick={() => onChange(value === t ? undefined : t)}
+          >
+            <span className="t-icon">{TACTICS[t].icon}</span>
+            <span className="t-name">{TACTICS[t].name}</span>
+          </button>
+        ))}
+      </div>
+      <p className="small muted" style={{ margin: '4px 0 6px' }}>
+        {sel
+          ? `${sel.name} : ${sel.description}`
+          : 'Touchez une tactique pour la jouer ce round (une seule fois par bataille).'}
+      </p>
+    </div>
+  );
+}
+
+function DuelPrompt({ b }: { b: BattleState }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const d = b.duel!;
+  const ch = b[d.challenger].commanders.find((c) => c.id === d.challengerId);
+  const me = b[other(d.challenger)].commanders.find((c) => c.id === d.targetId);
+  if (!ch || !me) return null;
+  const a = duelPower(me);
+  const e = duelPower(ch);
+  return (
+    <div className="duel-prompt glass">
+      <b>🤺 {ch.name} vous défie en duel !</b>
+      <p className="small" style={{ margin: '4px 0 8px' }}>
+        {me.name} (force {a}) contre {ch.name} (force {e}). Le vainqueur galvanise son armée, le
+        vaincu risque blessure ou mort. Refuser fait murmurer vos rangs.
+      </p>
+      <div className="row">
+        <button
+          className="btn grow"
+          onClick={() => dispatch({ type: 'battleDuel', accept: false })}
+        >
+          Refuser
+        </button>
+        <button
+          className="btn primary grow"
+          onClick={() => dispatch({ type: 'battleDuel', accept: true })}
+        >
+          Relever le défi
+        </button>
+      </div>
     </div>
   );
 }

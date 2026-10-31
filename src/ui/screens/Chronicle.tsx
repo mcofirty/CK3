@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { yearOf } from '../../engine/context';
 import type { GameState } from '../../engine/state';
 import { downloadExport } from '../../save/storage';
+import { AchievementList, DynastyBook } from '../components/Book';
 import { Segmented, usePager } from '../components/common';
 import { useStore } from '../store';
 
@@ -18,10 +19,13 @@ const KIND_ICON: Record<string, string> = {
   divers: '•',
 };
 
-const CHRONICLE_VIEWS = ['chronique', 'nouvelles'] as const;
+const CHRONICLE_VIEWS = ['chronique', 'livre', 'nouvelles', 'succes'] as const;
 
 export function ChronicleScreen({ game }: { game: GameState }) {
-  const [view, setView] = useState<'chronique' | 'nouvelles'>('chronique');
+  const [view, setView] = useState<(typeof CHRONICLE_VIEWS)[number]>('chronique');
+  const settings = useStore((s) => s.settings);
+  const setSettings = useStore((s) => s.setSettings);
+  const globalAch = useStore((s) => s.globalAchievements);
   const dir = usePager(CHRONICLE_VIEWS, view, setView);
   const quit = useStore((s) => s.quit);
   const entries = [...game.chronicle].reverse();
@@ -36,7 +40,9 @@ export function ChronicleScreen({ game }: { game: GameState }) {
         style={{ marginBottom: 12 }}
         options={[
           { value: 'chronique', label: 'Chronique' },
+          { value: 'livre', label: 'Livre' },
           { value: 'nouvelles', label: 'Nouvelles' },
+          { value: 'succes', label: 'Succès' },
         ]}
         value={view}
         onChange={setView}
@@ -53,6 +59,12 @@ export function ChronicleScreen({ game }: { game: GameState }) {
               ))}
             </div>
           ))}
+        {view === 'livre' && <DynastyBook game={game} />}
+        {view === 'succes' && (
+          <div className="card">
+            <AchievementList unlocked={globalAch} current={game.achievements} />
+          </div>
+        )}
         {view === 'nouvelles' && (
           <div className="card">
             {game.notifications.length === 0 && <p className="muted">Rien de neuf.</p>}
@@ -84,6 +96,20 @@ export function ChronicleScreen({ game }: { game: GameState }) {
           Sauvegarde automatique à chaque fin de saison. Exportez régulièrement pour ne jamais
           perdre votre lignée.
         </p>
+        <div className="row wrap" style={{ marginBottom: 10 }}>
+          <button
+            className={`btn small${settings.son ? ' primary' : ''}`}
+            onClick={() => setSettings({ son: !settings.son })}
+          >
+            {settings.son ? '🔊 Son activé' : '🔇 Son coupé'}
+          </button>
+          <button
+            className={`btn small${settings.vibrations ? ' primary' : ''}`}
+            onClick={() => setSettings({ vibrations: !settings.vibrations })}
+          >
+            {settings.vibrations ? '📳 Vibrations' : '📴 Sans vibrations'}
+          </button>
+        </div>
         <div className="row wrap">
           <button className="btn" onClick={() => downloadExport(game)}>
             Exporter (JSON)

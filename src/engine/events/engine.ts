@@ -21,7 +21,6 @@ import {
 } from '../characters';
 import { createCharacter } from '../characters';
 import { giveBirth, heirsOf, killCharacter } from '../characters/lifecycle';
-import { AMBITION_BY_ID } from '../../data/ambitions';
 import { ambitionStatus, startAmbition } from '../ambitions';
 import { coastalCounties, foreignKingdoms } from '../geo';
 import { playerRealmPlagued, startPlague } from '../plague';
@@ -486,10 +485,6 @@ export function effectLabels(
         `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${e.bataille.force.toFixed(1)})`,
       );
     if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
-    if (e.ambition) {
-      const d = AMBITION_BY_ID[e.ambition];
-      if (d) out.push(`Ambition : ${d.name} (${d.years} ans)`);
-    }
     if (e.rendre_otage)
       out.push(
         `${state.characters[e.rendre_otage.otage]?.name} rentre chez les siens (+${e.rendre_otage.montant} or)`,

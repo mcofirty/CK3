@@ -1699,3 +1699,306 @@ body {
   );
   border-radius: 3px;
 }
+
+/* =========================================================================
+   Progression : arbres de talents et d'héritages, stress, ambition
+   ========================================================================= */
+.tree-branch {
+  margin-bottom: 12px;
+}
+.tree-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.tree-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 6px;
+  position: relative;
+}
+.tree-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+.perk {
+  position: relative;
+  min-width: 0;
+  min-height: 46px;
+  padding: 4px 3px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  transition:
+    transform var(--t-fast) var(--ease),
+    background var(--t-med) var(--ease);
+}
+.perk:active {
+  transform: scale(0.95);
+}
+.perk.locked {
+  opacity: 0.45;
+}
+.perk.open {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent-soft),
+    var(--glass-hi);
+}
+.perk.owned {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.perk.sel {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.perk-cost {
+  font-size: 11px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.node-detail {
+  position: sticky;
+  bottom: 8px;
+  z-index: 2;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  animation: pop-in var(--t-fast) var(--ease) backwards;
+}
+.ambition .amb-icon {
+  font-size: 30px;
+  width: 44px;
+  text-align: center;
+}
+.rel-label {
+  font-weight: 600;
+  min-width: 56px;
+}
+.rel-label.good {
+  color: var(--good);
+}
+.rel-label.bad {
+  color: var(--bad);
+}
+.rel-label.love {
+  color: #c2457a;
+}
+.chip.good {
+  border-color: var(--good);
+  color: var(--good);
+}
+.btn.danger {
+  background: var(--bad);
+  color: #fff;
+  border-color: transparent;
+}
+.siege-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.siege-modes .btn {
+  flex-direction: column;
+  min-height: 64px;
+  white-space: normal;
+  line-height: 1.15;
+  gap: 2px;
+  padding: 6px 4px;
+}
+.siege-modes .btn .small {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+.decision {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.decision .dec-icon {
+  font-size: 26px;
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ---------- Bataille : tactiques, élan, duel ---------- */
+.tactic-hand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 6px;
+  padding: 2px;
+}
+.tactic-hand::-webkit-scrollbar {
+  display: none;
+}
+.tactic {
+  min-width: 0;
+  min-height: 58px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-strong);
+  box-shadow: var(--glass-hi);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 6px;
+  color: var(--ink);
+  transition:
+    transform var(--t-fast) var(--ease),
+    background var(--t-med) var(--ease);
+}
+.tactic:active {
+  transform: scale(0.95);
+}
+.tactic.active {
+  background: linear-gradient(180deg, var(--gold), #8a6a0c);
+  color: #fff8e6;
+  transform: translateY(-3px);
+}
+.tactic .t-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.tactic .t-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+}
+.elan {
+  letter-spacing: -2px;
+  animation: pop-in var(--t-fast) var(--ease) backwards;
+}
+.chip.tiny {
+  min-height: 22px;
+  padding: 1px 8px;
+  font-size: 12px;
+}
+.duel-prompt,
+.duel-banner {
+  border-radius: 18px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--gold);
+  animation: pop-in var(--t-med) var(--spring) backwards;
+}
+.duel-banner {
+  padding: 8px 12px;
+}
+
+/* ---------- Livre, succès, fin ---------- */
+.book-page {
+  border-left: 4px solid var(--gold);
+}
+.deeds {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+.deeds li {
+  margin: 2px 0;
+}
+.ach {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  opacity: 0.55;
+}
+.ach.got {
+  opacity: 1;
+}
+.ach-icon {
+  font-size: 24px;
+  width: 34px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.ending {
+  width: 100%;
+  border: 1px solid var(--gold);
+}
+.ending-icon {
+  font-size: 54px;
+  text-align: center;
+  animation: pop-in var(--t-slow) var(--spring) backwards;
+}
+.achievement-toast {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-left: 4px solid var(--gold);
+}
+
+/* ---------- Carte vivante ---------- */
+.army-token {
+  transition: transform 900ms cubic-bezier(0.45, 0, 0.2, 1);
+}
+.realm-tint {
+  transition:
+    fill 1200ms var(--ease),
+    opacity 1200ms var(--ease);
+}
+.map-fire {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker 900ms ease-in-out infinite alternate;
+}
+.map-plague {
+  animation: plague-pulse 2.4s ease-in-out infinite;
+}
+@keyframes flicker {
+  from {
+    transform: scale(1, 1);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.08, 1.18);
+    opacity: 1;
+  }
+}
+@keyframes plague-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .army-token,
+  .realm-tint {
+    transition: none;
+  }
+  .map-fire,
+  .map-plague {
+    animation: none;
+  }
+}
+
+.drawer .btn {
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .hide-narrow {
+    display: none;
+  }
+}

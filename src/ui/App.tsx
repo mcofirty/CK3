@@ -16,7 +16,9 @@ import {
   signed,
   useSlideSelect,
 } from './components/common';
+import { AchievementList, DynastyBook, EndingBanner } from './components/Book';
 import { Inspector } from './components/Inspector';
+import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
 import { ChronicleScreen } from './screens/Chronicle';
@@ -49,6 +51,10 @@ function TitleScreen() {
   const [female, setFemale] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const importSlot = useRef<Slot>(1);
+  const [showAch, setShowAch] = useState(false);
+  const globalAch = useStore((s) => s.globalAchievements);
+  const settings = useStore((s) => s.settings);
+  const setSettings = useStore((s) => s.setSettings);
   useEffect(() => {
     void listSlots().then(setSlots);
   }, []);
@@ -123,6 +129,24 @@ function TitleScreen() {
           }}
         />
       </div>
+      <div className="row" style={{ gap: 8, marginTop: 4, width: '100%', maxWidth: 560 }}>
+        <button className="btn grow" onClick={() => setShowAch(true)}>
+          🏆 Succès ({globalAch.length}/{ACHIEVEMENTS.length})
+        </button>
+        <button
+          className="btn"
+          aria-label={settings.son ? 'Couper le son' : 'Activer le son'}
+          onClick={() => setSettings({ son: !settings.son })}
+        >
+          {settings.son ? '🔊' : '🔇'}
+        </button>
+      </div>
+      {showAch && (
+        <Sheet onClose={() => setShowAch(false)}>
+          <h2>Succès</h2>
+          <AchievementList unlocked={globalAch} />
+        </Sheet>
+      )}
       {newSlot && (
         <Sheet onClose={() => setNewSlot(null)}>
           <h2>Nouvelle partie</h2>
@@ -191,7 +215,10 @@ function Game({ game }: { game: GameState }) {
       </SwipeScreen>
       <TabBar />
       {game.phase !== 'bataille' && <OutcomeToast outcome={game.lastOutcome} />}
-      {game.pendingEvents.length > 0 && game.tutorialSeen && <EventModal game={game} />}
+      {game.pendingEvents.length > 0 && game.tutorialSeen && game.phase !== 'bataille' && (
+        <EventModal game={game} />
+      )}
+      <AchievementToast />
       {summary && (
         <Sheet onClose={() => setSummary(null)}>
           <h2>Avant de finir la saison</h2>
@@ -319,6 +346,29 @@ function SwipeScreen({ className, children }: { className: string; children: Rea
     >
       {children}
     </main>
+  );
+}
+
+/** Bandeau : succès débloqué. */
+function AchievementToast() {
+  const toast = useStore((s) => s.achievementToast);
+  const [shown, setShown] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!toast) return;
+    setShown(toast.id);
+    const t = setTimeout(() => setShown(undefined), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+  const a = ACHIEVEMENTS.find((x) => x.id === shown);
+  if (!a) return null;
+  return (
+    <div className="toast glass achievement-toast" onClick={() => setShown(undefined)}>
+      <span className="ach-icon">{a.icon}</span>
+      <div>
+        <div className="small muted">Succès débloqué</div>
+        <b>{a.name}</b>
+      </div>
+    </div>
   );
 }
 
@@ -628,6 +678,7 @@ function EndScreen({ game }: { game: GameState }) {
     >
       <h1>Fin de la chronique</h1>
       <p className="center event-text">{game.gameOver!.reason}</p>
+      <EndingBanner game={game} />
       <div className="card">
         <h2>Maison {dyn?.name}</h2>
         <dl className="kv">
@@ -648,6 +699,8 @@ function EndScreen({ game }: { game: GameState }) {
           Dernier chef de maison : {displayName(game, game.characters[game.playerId])}
         </p>
       </div>
+      <h3 style={{ alignSelf: 'flex-start' }}>Livre de la dynastie</h3>
+      <DynastyBook game={game} />
       <div className="card">
         <h3>Chronique de la dynastie</h3>
         {game.chronicle

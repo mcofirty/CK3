@@ -12,6 +12,7 @@ import {
   displayName,
   healthOf,
   heldCounties,
+  isAdult,
   livingChildren,
   opinionOf,
   parentsOf,
@@ -42,6 +43,8 @@ import { armyOf, findPath, militaryStrength, truceWith } from '../../engine/war'
 import { useStore } from '../store';
 import { Bar, CharLine, CharLink, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
 import { realmColor, visibleMen } from './MapView';
+import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
+import { PERKS } from '../../data/perks';
 
 export function Inspector({ game }: { game: GameState }) {
   const stack = useStore((s) => s.inspectStack);
@@ -126,6 +129,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
   if (court) status.push(`À la cour de ${court.name}`);
   if (c.imprisonedBy) status.push(`Prisonnier de ${game.characters[c.imprisonedBy]?.name ?? '—'}`);
   if (c.inFaction) status.push('Membre d’une faction');
+  if (c.hostageOf) status.push(`Otage de ${game.characters[c.hostageOf]?.name ?? '—'}`);
   if (seat) status.push(COUNCIL_INFO[seat].label);
   const eco = independent || liege ? economyOf(game, id) : undefined;
 
@@ -172,6 +176,26 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
             </div>
           ))}
         </div>
+      </Section>
+
+      {c.alive && c.dynastyId === game.playerDynastyId && isAdult(game, c) && (
+        <Section title="Arbre de compétences">
+          <PerkTree game={game} c={c} />
+        </Section>
+      )}
+      {c.alive && c.dynastyId !== game.playerDynastyId && (c.perks?.length ?? 0) > 0 && (
+        <Section title="Talents">
+          <p className="small">{(c.perks ?? []).map((x) => PERKS[x]?.name).join(' · ')}</p>
+        </Section>
+      )}
+      {c.alive && (c.stress ?? 0) > 0 && (
+        <Section title="Esprit">
+          <StressGauge c={c} />
+        </Section>
+      )}
+      <Section title="Relations et faits d’armes">
+        <RelationsList game={game} c={c} />
+        <RecordLine c={c} />
       </Section>
 
       <Section title="Traits">

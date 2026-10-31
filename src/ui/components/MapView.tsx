@@ -424,6 +424,7 @@ export function MapView({
                 points={pts(m.polygon)}
                 fill={colors.get(r) ?? '#888'}
                 opacity={c.holderId === r ? 0.3 : 0.18}
+                className="realm-tint"
                 pointerEvents="none"
               />
             );
@@ -703,7 +704,26 @@ export function MapView({
         )}
 
         {/* Armées : jetons cliquables */}
-        {[...armiesByCounty.entries()].map(([cid, ids]) => {
+        {/* Sièges en feu, épidémies */}
+        {MAP_DATA.counties.map((m) => {
+          const c = game.counties[m.id];
+          if (!c.siege && !c.plague) return null;
+          return (
+            <g key={`fx-${m.id}`} pointerEvents="none">
+              {c.siege && (
+                <text x={m.x + 34} y={m.y - 30} fontSize={34} className="map-fire">
+                  🔥
+                </text>
+              )}
+              {c.plague && (
+                <text x={m.x - 40} y={m.y - 30} fontSize={30} className="map-plague">
+                  ☠️
+                </text>
+              )}
+            </g>
+          );
+        })}
+        {[...armiesByCounty.entries()].flatMap(([cid, ids]) => {
           const m = COUNTY.get(cid)!;
           return ids.map((id, i) => {
             const a = game.armies[id];
@@ -721,9 +741,9 @@ export function MapView({
             return (
               <g
                 key={id}
-                transform={`translate(${x} ${y})`}
+                className="army-token"
                 onClick={tap(() => onArmy?.(id))}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', transform: `translate(${x}px, ${y}px)` }}
               >
                 <rect
                   x={-34}

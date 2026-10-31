@@ -28,6 +28,8 @@ import {
   signed,
   usePager,
 } from '../components/common';
+import { DECISIONS } from '../../data/decisions';
+import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
 
 function AcceptanceView({ acc }: { acc: Acceptance }) {
@@ -51,10 +53,10 @@ function AcceptanceView({ acc }: { acc: Acceptance }) {
   );
 }
 
-const INTRIGUE_VIEWS = ['diplomatie', 'complots'] as const;
+const INTRIGUE_VIEWS = ['diplomatie', 'complots', 'decisions'] as const;
 
 export function IntrigueScreen({ game }: { game: GameState }) {
-  const [view, setView] = useState<'diplomatie' | 'complots'>('diplomatie');
+  const [view, setView] = useState<'diplomatie' | 'complots' | 'decisions'>('diplomatie');
   const dir = usePager(INTRIGUE_VIEWS, view, setView);
   return (
     <>
@@ -63,12 +65,15 @@ export function IntrigueScreen({ game }: { game: GameState }) {
         options={[
           { value: 'diplomatie', label: 'Diplomatie' },
           { value: 'complots', label: 'Complots' },
+          { value: 'decisions', label: 'Décisions' },
         ]}
         value={view}
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
-        {view === 'diplomatie' ? <Diplomacy game={game} /> : <Plots game={game} />}
+        {view === 'diplomatie' && <Diplomacy game={game} />}
+        {view === 'complots' && <Plots game={game} />}
+        {view === 'decisions' && <Decisions game={game} />}
       </div>
     </>
   );
@@ -387,5 +392,48 @@ function Plots({ game }: { game: GameState }) {
           ))}
       </div>
     </>
+  );
+}
+
+function Decisions({ game }: { game: GameState }) {
+  const dispatch = useStore((s) => s.dispatch);
+  return (
+    <div className="card">
+      <h3>Décisions</h3>
+      <p className="small muted">
+        Agissez au lieu d’attendre : chaque décision ouvre un événement, puis revient après un
+        délai.
+      </p>
+      {DECISIONS.map((d) => {
+        const chk = decisionCheck(game, d.id);
+        const cost = [
+          d.cost.or ? `${d.cost.or} or` : '',
+          d.cost.prestige ? `${d.cost.prestige} prestige` : '',
+          d.cost.piete ? `${d.cost.piete} piété` : '',
+        ]
+          .filter(Boolean)
+          .join(', ');
+        return (
+          <div key={d.id} className="list-item decision">
+            <span className="dec-icon">{d.icon}</span>
+            <div className="grow">
+              <b>{d.name}</b>
+              <div className="small">{d.description}</div>
+              <div className="small muted">
+                {cost} · tous les {d.cooldownYears} an{d.cooldownYears > 1 ? 's' : ''}
+                {!chk.ok && chk.reason && <span className="bad"> · {chk.reason}</span>}
+              </div>
+            </div>
+            <button
+              className="btn small primary"
+              disabled={!chk.ok}
+              onClick={() => dispatch({ type: 'takeDecision', id: d.id })}
+            >
+              Agir
+            </button>
+          </div>
+        );
+      })}
+    </div>
   );
 }

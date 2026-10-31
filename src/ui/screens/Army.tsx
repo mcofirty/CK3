@@ -1,10 +1,14 @@
 import { useState } from 'react';
+import { BALANCE } from '../../data/balance';
+import { MERCENARIES } from '../../data/mercenaries';
 import { UNIT_TYPES, UNITS } from '../../data/units';
+import { mercCheck, negotiateChance } from '../../engine/war/campaignExtras';
 import { allied, displayName, isAdult, skill, warSide } from '../../engine/characters';
 import { callToArmsAcceptance } from '../../engine/diplomacy';
 import {
   availableLevies,
   countyRuler,
+  fortLevel,
   independentRulers,
   realmCounties,
   realmName,
@@ -24,7 +28,7 @@ import {
   scoreFor,
   warsOf,
 } from '../../engine/war';
-import { Bar, Segmented, Sheet, signed } from '../components/common';
+import { Bar, Segmented, Sheet, Tip, signed } from '../components/common';
 import { useStore } from '../store';
 
 export function ArmyScreen({ game }: { game: GameState }) {
@@ -37,6 +41,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
   const levies = availableLevies(game, pl).total;
   const raise = canRaise(game, pl);
   const [declare, setDeclare] = useState(false);
+  const [confirmExec, setConfirmExec] = useState<string | null>(null);
   const commanders = [
     game.characters[pl],
     ...courtiersOf(game, pl),
@@ -142,13 +147,6 @@ export function ArmyScreen({ game }: { game: GameState }) {
                 Piller
               </button>
               <button
-                className="btn small"
-                disabled={!game.counties[army.location].siege}
-                onClick={() => dispatch({ type: 'assault', armyId: army.id })}
-              >
-                {army.assault ? 'Assaut ordonné' : 'Donner l’assaut'}
-              </button>
-              <button
                 className="btn small ghost"
                 onClick={() => dispatch({ type: 'disbandArmy', armyId: army.id })}
               >
@@ -158,6 +156,9 @@ export function ArmyScreen({ game }: { game: GameState }) {
           </>
         )}
       </div>
+      {army && game.counties[army.location].siege?.armyId === army.id && (
+        <SiegeCard game={game} armyId={army.id} />
+      )}
 
       <div className="card">
         <h3>Compagnies professionnelles</h3>
@@ -202,6 +203,8 @@ export function ArmyScreen({ game }: { game: GameState }) {
           );
         })}
       </div>
+
+      <MercCard game={game} />
 
       <div className="card">
         <h3>Guerres</h3>
@@ -315,11 +318,34 @@ export function ArmyScreen({ game }: { game: GameState }) {
                   Exiger un comté
                 </button>
               )}
+              {!Object.values(game.counties).some((k) => k.holderId === c.id) && (
+                <Tip text="Il vit à votre cour : tant qu’il y reste, sa famille ne peut pas vous attaquer.">
+                  <button
+                    className="btn small"
+                    onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'otage' })}
+                  >
+                    Garder en otage
+                  </button>
+                </Tip>
+              )}
               <button
                 className="btn small ghost"
                 onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'liberer' })}
               >
                 Libérer
+              </button>
+              <button
+                className={`btn small${confirmExec === c.id ? ' danger' : ' ghost'}`}
+                onClick={() => {
+                  if (confirmExec !== c.id) {
+                    setConfirmExec(c.id);
+                    return;
+                  }
+                  setConfirmExec(null);
+                  dispatch({ type: 'ransom', characterId: c.id, kind: 'executer' });
+                }}
+              >
+                {confirmExec === c.id ? 'Confirmer l’exécution' : 'Exécuter'}
               </button>
             </div>
           ))}
@@ -404,5 +430,121 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
         );
       })}
     </Sheet>
+  );
+}
+
+function SiegeCard({ game, armyId }: { game: GameState; armyId: string }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const army = game.armies[armyId];
+  const c = game.counties[army.location];
+  const required = BALANCE.war.siegeBase + fortLevel(c);
+  const progress = Math.min(required, c.siege?.progress ?? 0);
+  const chance = Math.round(negotiateChance(game, armyId) * 100);
+  const negotiated = army.negotiated === army.location;
+  return (
+    <div className="card">
+      <h3>Siège de {c.name}</h3>
+      <div className="row small">
+        <span className="grow">Progression</span>
+        <b>
+          {progress} / {required} saison(s)
+        </b>
+      </div>
+      <Bar value={progress} max={required} color="var(--accent)" />
+      <p className="small muted" style={{ margin: '6px 0 8px' }}>
+        Choisissez comment mener le siège :
+      </p>
+      <div className="siege-modes">
+        <button
+          className={`btn small${army.assault ? ' primary' : ''}`}
+          onClick={() => dispatch({ type: 'assault', armyId })}
+        >
+          ⚔️ Assaut
+          <span className="small">prise immédiate, pertes lourdes</span>
+        </button>
+        <button
+          className={`btn small${army.siegeMode === 'blocus' ? ' primary' : ''}`}
+          onClick={() =>
+            dispatch({
+              type: 'siegeMode',
+              armyId,
+              mode: army.siegeMode === 'blocus' ? undefined : 'blocus',
+            })
+          }
+        >
+          🛡️ Blocus
+          <span className="small">usure −30 %</span>
+        </button>
+        <button
+          className={`btn small${army.siegeMode === 'negocier' ? ' primary' : ''}`}
+          disabled={negotiated}
+          onClick={() =>
+            dispatch({
+              type: 'siegeMode',
+              armyId,
+              mode: army.siegeMode === 'negocier' ? undefined : 'negocier',
+            })
+          }
+        >
+          🕊️ Négocier
+          <span className="small">
+            {negotiated ? 'déjà tenté' : `${chance} %, ${BALANCE.siege.negotiateGold} or`}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MercCard({ game }: { game: GameState }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const pl = game.playerId;
+  const contracts = (game.mercenaries ?? []).filter((m) => m.ownerId === pl);
+  return (
+    <div className="card">
+      <h3>Mercenaires</h3>
+      <p className="small muted">
+        Disponibles tout de suite, pour {BALANCE.mercenaries.contractSeasons} saisons. Leur solde
+        s’ajoute à l’entretien des troupes.
+      </p>
+      {MERCENARIES.map((m) => {
+        const contract = contracts.find((x) => x.id === m.id);
+        const chk = mercCheck(game, pl, m.id);
+        return (
+          <div key={m.id} className="list-item">
+            <div className="grow">
+              <b>{m.name}</b>
+              <div className="small muted">
+                {m.origin} ·{' '}
+                {(Object.entries(m.men) as [UnitType, number][])
+                  .map(([u, n]) => `${UNITS[u].short} ${n / 100}`)
+                  .join(' · ')}
+              </div>
+              <div className="small">
+                {contract ? (
+                  <span className="good">
+                    Sous contrat ({contract.until - game.turn} saison(s) restantes)
+                  </span>
+                ) : (
+                  <>
+                    {m.description}
+                    {!chk.ok && <span className="bad"> · {chk.reason}</span>}
+                  </>
+                )}
+              </div>
+            </div>
+            {!contract && (
+              <button
+                className="btn small"
+                disabled={!chk.ok}
+                onClick={() => dispatch({ type: 'hireMercenaries', id: m.id })}
+              >
+                {m.cost} or
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
