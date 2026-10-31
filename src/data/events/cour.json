@@ -1,0 +1,138 @@
+[
+  {
+    "id": "cour_tournoi",
+    "titre": "Le temps des joutes",
+    "texte": "Les beaux jours reviennent et vos chevaliers s'impatientent. On murmure qu'un tournoi ferait parler de votre cour jusqu'aux marches lointaines.",
+    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "poids": 8,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Organiser un grand tournoi (80 or)", "conditions": [{ "or_min": 80 }],
+        "effets": [{ "or": -80 }, { "prestige": 35 }, { "opinion_vassaux": 5 }] },
+      { "libelle": "Descendre soi-même en lice", "conditions": [{ "competence_min": { "competence": "guerre", "valeur": 10 } }],
+        "effets": [{ "or": -30 }, { "prestige": 25 }, { "sante": -8 }] },
+      { "libelle": "Les joutes attendront", "effets": [{ "prestige": -5 }] }
+    ]
+  },
+  {
+    "id": "cour_marchand",
+    "titre": "Un marchand venu de loin",
+    "texte": "Un marchand aux manières polies demande audience. Ses coffres débordent de soieries et d'épices, et il propose aussi d'ouvrir un comptoir à {comte.nom}.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 10,
+    "delai_retour": 12,
+    "choix": [
+      { "libelle": "Acheter quelques merveilles (40 or)", "conditions": [{ "or_min": 40 }],
+        "effets": [{ "or": -40 }, { "prestige": 15 }] },
+      { "libelle": "Négocier un comptoir", "conditions": [{ "competence_min": { "competence": "gestion", "valeur": 10 } }],
+        "effets": [{ "developpement": 1 }] },
+      { "libelle": "Le congédier", "effets": [] }
+    ]
+  },
+  {
+    "id": "cour_ivresse",
+    "titre": "Le vin de la veille",
+    "texte": "Les banquets se succèdent et votre coupe ne désemplit guère. Ce matin, {courtisan.nom} vous a trouvé endormi sur les marches de la grande salle.",
+    "declencheur": { "type": "aleatoire", "saisons": ["automne", "hiver"] },
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Faire pénitence et modérer ses excès", "effets": [{ "piete": 10 }, { "sante": 5 }] },
+      { "libelle": "Rire de l'incident avec {courtisan.nom}", "effets": [{ "opinion": { "cible": "courtisan", "valeur": 15 } }, { "sante": -5 }] }
+    ]
+  },
+  {
+    "id": "cour_poete",
+    "titre": "Une chanson à votre sujet",
+    "texte": "Un jongleur chante dans les tavernes une chanson qui raconte vos exploits… ou s'en moque, selon les couplets. La cour attend de voir comment vous prendrez la chose.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 8,
+    "delai_retour": 20,
+    "choix": [
+      { "libelle": "L'inviter et le récompenser (30 or)", "conditions": [{ "or_min": 30 }],
+        "effets": [{ "or": -30 }, { "prestige": 15 }] },
+      { "libelle": "Le chasser de vos terres", "effets": [{ "prestige": -5 }] },
+      { "libelle": "Le faire bâtonner en place publique", "effets": [{ "prestige": 5 }, { "opinion_vassaux": -5 }, { "trait_ajout": "cruel" }] }
+    ]
+  },
+  {
+    "id": "cour_chasse",
+    "titre": "Le sanglier de la forêt",
+    "texte": "Lors d'une chasse, un sanglier énorme jaillit des fourrés. Les chiens hésitent, les rabatteurs reculent. {courtisan.nom} vous tend un épieu.",
+    "declencheur": { "type": "aleatoire", "saisons": ["automne"] },
+    "poids": 8,
+    "delai_retour": 12,
+    "choix": [
+      { "libelle": "Affronter la bête", "effets": [{ "prestige": 20 }, { "sante": -12 }] },
+      { "libelle": "Laisser l'honneur à {courtisan.nom}", "effets": [{ "opinion": { "cible": "courtisan", "valeur": 20 } }] },
+      { "libelle": "Rentrer au château", "effets": [{ "prestige": -5 }] }
+    ]
+  },
+  {
+    "id": "cour_melancolie",
+    "titre": "Une humeur sombre",
+    "texte": "Depuis des semaines, une lassitude vous accable. Les affaires du domaine vous paraissent vaines et le sommeil vous fuit.",
+    "declencheur": { "type": "aleatoire", "saisons": ["hiver"] },
+    "poids": 6,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "Consulter un médecin (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "sante": 10 }] },
+      { "libelle": "Se réfugier dans la prière", "effets": [{ "piete": 15 }] },
+      { "libelle": "Se jeter dans le travail", "effets": [{ "competence": { "competence": "gestion", "valeur": 1 } }, { "sante": -5 }] }
+    ]
+  },
+  {
+    "id": "cour_courtisan_ambitieux",
+    "titre": "Un courtisan trop pressé",
+    "texte": "{courtisan.nom} sollicite une pension et laisse entendre qu'un refus serait mal reçu par ses nombreux amis.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 8,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Lui accorder une pension (50 or)", "conditions": [{ "or_min": 50 }],
+        "effets": [{ "or": -50 }, { "opinion": { "cible": "courtisan", "valeur": 30 } }] },
+      { "libelle": "Refuser sèchement", "effets": [{ "opinion": { "cible": "courtisan", "valeur": -20 } }] },
+      { "libelle": "Le bannir de la cour", "effets": [{ "exiler": "courtisan" }, { "prestige": 5 }] }
+    ]
+  },
+  {
+    "id": "cour_architecte",
+    "titre": "Le maître d'œuvre",
+    "texte": "Un maître d'œuvre réputé propose d'agrandir votre résidence de {comte.nom} : une grande salle, des tours neuves, une cour pavée.",
+    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "poids": 6,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "Financer les travaux (100 or)", "conditions": [{ "or_min": 100 }],
+        "effets": [{ "or": -100 }, { "prestige": 25 }, { "developpement": 1 }] },
+      { "libelle": "Décliner", "effets": [] }
+    ]
+  },
+  {
+    "id": "cour_chroniqueur",
+    "titre": "La mémoire de la lignée",
+    "texte": "Un clerc lettré offre de consigner l'histoire de votre maison, depuis ses humbles origines jusqu'à vos propres hauts faits.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 5,
+    "unique": "personnage",
+    "choix": [
+      { "libelle": "Financer la chronique (40 or)", "conditions": [{ "or_min": 40 }],
+        "effets": [{ "or": -40 }, { "renommee": 20 }, { "prestige": 10 }] },
+      { "libelle": "L'histoire s'écrit avec l'épée", "effets": [{ "prestige": 5 }] }
+    ]
+  },
+  {
+    "id": "cour_mauvaise_recolte",
+    "titre": "Les greniers vides",
+    "texte": "La pluie a pourri les blés à {comte.nom}. Les paysans craignent l'hiver et vos receveurs attendent vos ordres.",
+    "declencheur": { "type": "aleatoire", "saisons": ["automne"] },
+    "poids": 9,
+    "delai_retour": 12,
+    "choix": [
+      { "libelle": "Ouvrir les greniers seigneuriaux (60 or)", "conditions": [{ "or_min": 60 }],
+        "effets": [{ "or": -60 }, { "opinion_vassaux": 5 }, { "piete": 10 }] },
+      { "libelle": "Laisser faire la Providence", "effets": [{ "developpement": -1 }, { "prestige": -10 }] },
+      { "libelle": "Prélever l'impôt malgré tout", "effets": [{ "or": 40 }, { "developpement": -1 }, { "opinion_vassaux": -10 }] }
+    ]
+  }
+]

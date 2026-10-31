@@ -1,0 +1,55 @@
+[
+  {
+    "id": "intrigue_complot_decouvert",
+    "titre": "Un complot démasqué",
+    "texte": "Votre maître-espion a démasqué un complot ourdi contre vous par {complotiste.nom}. Ses agents sont entre vos mains et ont tout avoué.",
+    "declencheur": { "type": "complot_decouvert" },
+    "poids": 10,
+    "delai_retour": 0,
+    "choix": [
+      { "libelle": "Pardonner", "effets": [{ "opinion": { "cible": "complotiste", "valeur": 15 } }, { "piete": 15 }] },
+      { "libelle": "Emprisonner les agents et exiger réparation", "effets": [{ "prestige": 15 }, { "or": 30 }, { "opinion": { "cible": "complotiste", "valeur": -15 } }] },
+      { "libelle": "Exécuter les agents", "effets": [{ "prestige": 25 }, { "piete": -10 }, { "devient_rival": "complotiste" }] }
+    ]
+  },
+  {
+    "id": "intrigue_rumeurs",
+    "titre": "Des murmures dans les couloirs",
+    "texte": "Des rumeurs déplaisantes courent sur {conjoint.nom}. Personne ne sait d'où elles viennent, mais tout le monde les répète.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 7,
+    "delai_retour": 20,
+    "choix": [
+      { "libelle": "Faire taire les bavards (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "opinion": { "cible": "conjoint", "valeur": 10 } }] },
+      { "libelle": "Mener votre propre enquête", "effets": [{ "competence": { "competence": "ruse", "valeur": 1 } }, { "opinion": { "cible": "conjoint", "valeur": -10 } }] },
+      { "libelle": "Mépriser les ragots", "effets": [{ "prestige": -10 }] }
+    ]
+  },
+  {
+    "id": "intrigue_gouteur",
+    "titre": "Le goûteur s'effondre",
+    "texte": "Au souper, votre goûteur porte la main à sa gorge et s'écroule. Le vin venait d'un tonneau offert par une cour voisine… peut-être celle de {rival.nom}.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 5,
+    "delai_retour": 30,
+    "choix": [
+      { "libelle": "Renforcer la garde (50 or)", "conditions": [{ "or_min": 50 }], "effets": [{ "or": -50 }, { "sante": 5 }] },
+      { "libelle": "Accuser publiquement {rival.nom}", "effets": [{ "prestige": 10 }, { "devient_rival": "rival" }] },
+      { "libelle": "Garder le silence et observer", "effets": [{ "competence": { "competence": "ruse", "valeur": 1 } }] }
+    ]
+  },
+  {
+    "id": "intrigue_serviteur",
+    "titre": "Un serviteur à vendre",
+    "texte": "Un intendant de {rival.nom} vous fait savoir, par des voies détournées, que sa loyauté a un prix.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 7,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "L'acheter et salir son maître (40 or)", "conditions": [{ "or_min": 40 }],
+        "effets": [{ "or": -40 }, { "complot": { "type": "discrediter", "cible": "rival" } }] },
+      { "libelle": "Dénoncer le traître à {rival.nom}", "effets": [{ "opinion": { "cible": "rival", "valeur": 20 } }] },
+      { "libelle": "Ne rien faire", "effets": [] }
+    ]
+  }
+]

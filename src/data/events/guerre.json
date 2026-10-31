@@ -1,0 +1,70 @@
+[
+  {
+    "id": "guerre_desertion",
+    "titre": "Des feux qui s'éteignent",
+    "texte": "Chaque matin, le camp compte moins de feux. Les levées pensent aux moissons et aux familles qu'elles ont laissées.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "armee_levee": true }],
+    "poids": 10,
+    "delai_retour": 8,
+    "choix": [
+      { "libelle": "Pendre les meneurs", "effets": [{ "prestige": 5 }, { "opinion_vassaux": -5 }, { "ravitaillement": -5 }] },
+      { "libelle": "Verser une solde (40 or)", "conditions": [{ "or_min": 40 }], "effets": [{ "or": -40 }, { "ravitaillement": 15 }] },
+      { "libelle": "Laisser partir ceux qui veulent partir", "effets": [{ "levees": -150 }, { "piete": 5 }] }
+    ]
+  },
+  {
+    "id": "guerre_veteran",
+    "titre": "Le vieux sergent",
+    "texte": "{courtisan.nom}, qui a servi dans bien des guerres, propose de mettre de l'ordre dans vos compagnies et de dresser les jeunes recrues.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 7,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "Lui confier l'entraînement (30 or)", "conditions": [{ "or_min": 30 }],
+        "effets": [{ "or": -30 }, { "competence": { "competence": "guerre", "valeur": 2, "cible": "courtisan" } }, { "opinion": { "cible": "courtisan", "valeur": 15 } }] },
+      { "libelle": "Décliner", "effets": [{ "opinion": { "cible": "courtisan", "valeur": -5 } }] }
+    ]
+  },
+  {
+    "id": "guerre_espion_capture",
+    "titre": "Un espion dans le camp",
+    "texte": "Vos gardes ont surpris un homme qui comptait vos tentes à la lueur de la lune. Il ne nie pas servir l'ennemi.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "en_guerre": true }],
+    "poids": 9,
+    "delai_retour": 12,
+    "choix": [
+      { "libelle": "Le pendre pour l'exemple", "effets": [{ "prestige": 10 }] },
+      { "libelle": "Le retourner contre ses maîtres", "conditions": [{ "competence_min": { "competence": "ruse", "valeur": 8 } }],
+        "effets": [{ "competence": { "competence": "ruse", "valeur": 1 } }, { "ravitaillement": 10 }] },
+      { "libelle": "Le relâcher par miséricorde", "effets": [{ "piete": 10 }, { "prestige": -5 }] }
+    ]
+  },
+  {
+    "id": "guerre_provocation",
+    "titre": "Des bannières à la frontière",
+    "texte": "{rival.nom} fait parader ses hommes d'armes le long de votre frontière, et son héraut vous traite de seigneur de basse-cour.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "rival_opinion_max": -10, "en_guerre": false }],
+    "poids": 7,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "Relever le défi : la guerre !", "effets": [{ "guerre": { "cible": "rival", "attaquant": "souverain" } }, { "prestige": 15 }] },
+      { "libelle": "Envoyer un émissaire (30 or)", "conditions": [{ "or_min": 30 }], "effets": [{ "or": -30 }, { "opinion": { "cible": "rival", "valeur": 15 } }] },
+      { "libelle": "Ignorer l'insulte", "effets": [{ "prestige": -15 }] }
+    ]
+  },
+  {
+    "id": "guerre_parchemin",
+    "titre": "Un vieux parchemin",
+    "texte": "Dans les archives poussiéreuses, votre chapelain a retrouvé une charte ancienne : {comte_rival.nom} aurait jadis appartenu à vos ancêtres.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 7,
+    "delai_retour": 20,
+    "choix": [
+      { "libelle": "Faire valoir ce droit (20 or)", "conditions": [{ "or_min": 20 }], "effets": [{ "or": -20 }, { "revendication": "comte_rival" }] },
+      { "libelle": "Brûler ce parchemin : la paix vaut mieux", "effets": [{ "piete": 10 }] }
+    ]
+  }
+]

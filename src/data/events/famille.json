@@ -1,0 +1,112 @@
+[
+  {
+    "id": "famille_conjoint_malade",
+    "titre": "Une fièvre tenace",
+    "texte": "{conjoint.nom} est alité{conjoint.e} depuis trois jours. La fièvre ne tombe pas et les servantes parlent à voix basse.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 6,
+    "delai_retour": 20,
+    "choix": [
+      { "libelle": "Faire venir le meilleur médecin (60 or)", "conditions": [{ "or_min": 60 }],
+        "effets": [{ "or": -60 }, { "sante": { "cible": "conjoint", "valeur": 20 } }, { "opinion": { "cible": "conjoint", "valeur": 10 } }] },
+      { "libelle": "Veiller et prier à son chevet", "effets": [{ "piete": 10 }, { "sante": { "cible": "conjoint", "valeur": 5 } }, { "opinion": { "cible": "conjoint", "valeur": 15 } }] },
+      { "libelle": "Les affaires du domaine n'attendent pas", "effets": [{ "sante": { "cible": "conjoint", "valeur": -10 } }, { "opinion": { "cible": "conjoint", "valeur": -15 } }] }
+    ]
+  },
+  {
+    "id": "famille_enfant_bagarre",
+    "titre": "Des poings et des larmes",
+    "texte": "{enfant.nom}, {enfant.age} ans, s'est battu{enfant.e} avec le fils du maître d'armes. Le garçon a le nez en sang ; {enfant.nom} n'a pas une égratignure et n'éprouve aucun remords.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "enfant_age_min": 6, "enfant_age_max": 15 }],
+    "poids": 8,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Le féliciter de sa bravoure", "effets": [{ "trait_ajout": { "cible": "enfant", "trait": "courageux" } }] },
+      { "libelle": "Exiger des excuses publiques", "effets": [{ "trait_ajout": { "cible": "enfant", "trait": "juste" } }, { "opinion": { "cible": "enfant", "valeur": -10 } }] },
+      { "libelle": "L'envoyer au chapelain", "effets": [{ "competence": { "competence": "savoir", "valeur": 1, "cible": "enfant" } }, { "piete": 5 }] }
+    ]
+  },
+  {
+    "id": "famille_heritier_talent",
+    "titre": "Un don qui se révèle",
+    "texte": "Les maîtres de {heritier.nom} sont unanimes : l'enfant apprend vite et montre un talent précoce. Reste à savoir vers quoi l'orienter.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "heritier_age_max": 15 }],
+    "poids": 7,
+    "unique": "personnage",
+    "choix": [
+      { "libelle": "L'art de convaincre", "effets": [{ "competence": { "competence": "diplomatie", "valeur": 2, "cible": "heritier" } }] },
+      { "libelle": "Le métier des armes", "effets": [{ "competence": { "competence": "guerre", "valeur": 2, "cible": "heritier" } }] },
+      { "libelle": "La tenue des comptes", "effets": [{ "competence": { "competence": "gestion", "valeur": 2, "cible": "heritier" } }] }
+    ]
+  },
+  {
+    "id": "famille_dispute",
+    "titre": "Une porte qui claque",
+    "texte": "{conjoint.nom} vous reproche votre froideur devant toute la maisonnée. Les éclats de voix résonnent encore dans les couloirs.",
+    "declencheur": { "type": "aleatoire" },
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Faire amende honorable et offrir un bijou (30 or)", "conditions": [{ "or_min": 30 }],
+        "effets": [{ "or": -30 }, { "opinion": { "cible": "conjoint", "valeur": 25 } }] },
+      { "libelle": "Exiger le respect qui vous est dû", "effets": [{ "prestige": 5 }, { "opinion": { "cible": "conjoint", "valeur": -20 } }] }
+    ]
+  },
+  {
+    "id": "famille_nouvel_enfant",
+    "titre": "Une maison à remplir",
+    "texte": "{conjoint.nom} vous confie son souhait d'agrandir la famille. Une lignée nombreuse est une lignée qui dure, dit-on.",
+    "declencheur": { "type": "aleatoire", "saisons": ["printemps", "ete"] },
+    "conditions": [{ "a_conjoint": true, "age_max": 50 }],
+    "poids": 6,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Consacrer du temps à votre foyer", "effets": [{ "naissance": true }, { "opinion": { "cible": "conjoint", "valeur": 10 } }] },
+      { "libelle": "Les affaires d'abord", "effets": [{ "opinion": { "cible": "conjoint", "valeur": -10 } }] }
+    ]
+  },
+  {
+    "id": "famille_heritier_amour",
+    "titre": "Un amour malvenu",
+    "texte": "{heritier.nom} s'est épris{heritier.e} d'une personne de la domesticité. Toute la cour en parle, et vos rivaux s'en amusent.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "heritier_age_min": 16 }],
+    "poids": 6,
+    "delai_retour": 24,
+    "choix": [
+      { "libelle": "Lui interdire de la revoir", "effets": [{ "opinion": { "cible": "heritier", "valeur": -20 } }, { "prestige": 5 }] },
+      { "libelle": "Fermer les yeux", "effets": [{ "opinion": { "cible": "heritier", "valeur": 15 } }, { "prestige": -10 }] }
+    ]
+  },
+  {
+    "id": "famille_enfant_lettres",
+    "titre": "La bibliothèque du château",
+    "texte": "On retrouve souvent {enfant.nom} caché{enfant.e} dans la bibliothèque, penché{enfant.e} sur des parchemins qu'aucun enfant de son âge ne devrait comprendre.",
+    "declencheur": { "type": "aleatoire" },
+    "conditions": [{ "enfant_age_min": 6, "enfant_age_max": 15 }],
+    "poids": 7,
+    "delai_retour": 16,
+    "choix": [
+      { "libelle": "Lui offrir un précepteur (40 or)", "conditions": [{ "or_min": 40 }],
+        "effets": [{ "or": -40 }, { "competence": { "competence": "savoir", "valeur": 2, "cible": "enfant" } }] },
+      { "libelle": "Le pousser vers l'exercice des armes", "effets": [{ "competence": { "competence": "guerre", "valeur": 1, "cible": "enfant" } }, { "opinion": { "cible": "enfant", "valeur": -5 } }] }
+    ]
+  },
+  {
+    "id": "famille_poids_des_ans",
+    "titre": "Le poids des ans",
+    "texte": "Vos mains tremblent parfois en scellant les chartes. Il est peut-être temps de songer à ce que vous laisserez à {heritier.nom}.",
+    "declencheur": { "type": "aleatoire", "saisons": ["hiver"] },
+    "conditions": [{ "age_min": 55 }],
+    "poids": 8,
+    "unique": "personnage",
+    "choix": [
+      { "libelle": "Associer {heritier.nom} au gouvernement", "effets": [{ "opinion": { "cible": "heritier", "valeur": 25 } }, { "prestige": 10 }] },
+      { "libelle": "Partir en pèlerinage tant qu'il est temps (50 or)", "conditions": [{ "or_min": 50 }],
+        "effets": [{ "or": -50 }, { "piete": 40 }, { "sante": -5 }] },
+      { "libelle": "Ne rien céder à personne", "effets": [{ "opinion": { "cible": "heritier", "valeur": -10 } }, { "prestige": 5 }] }
+    ]
+  }
+]
