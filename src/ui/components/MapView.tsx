@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { atWar } from '../../engine/characters';
+import { contentmentOf } from '../../engine/economy/local';
 import { Rng } from '../../engine/rng';
 import {
   capitalOf,
@@ -154,7 +155,7 @@ export function MapView({
 }) {
   const MAP_DATA = game.map;
   const { COUNTY, SHARED, COAST, LAND } = geometry(MAP_DATA);
-  const [mode, setMode] = useState<'royaumes' | 'terrain'>('royaumes');
+  const [mode, setMode] = useState<'royaumes' | 'terrain' | 'peuple'>('royaumes');
   const [legend, setLegend] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const decor = decorFor(MAP_DATA);
@@ -413,6 +414,24 @@ export function MapView({
           ),
         )}
 
+        {/* Couche « Peuple » : contentement des comtés du royaume */}
+        {mode === 'peuple' &&
+          MAP_DATA.counties.map((m) => {
+            const c = game.counties[m.id];
+            const mineRealm = rulerOf.get(m.id) === game.playerId;
+            const v = contentmentOf(c);
+            const hue = Math.round((v / 100) * 120);
+            return (
+              <polygon
+                key={`p-${m.id}`}
+                points={pts(m.polygon)}
+                fill={mineRealm ? `hsl(${hue} 70% 45%)` : '#6b5a45'}
+                opacity={mineRealm ? 0.5 : 0.18}
+                className="realm-tint"
+                pointerEvents="none"
+              />
+            );
+          })}
         {/* Teinte et liseré des royaumes */}
         {mode === 'royaumes' &&
           MAP_DATA.counties.map((m) => {
@@ -785,6 +804,13 @@ export function MapView({
         >
           {mode === 'royaumes' ? 'Relief' : 'Royaumes'}
         </button>
+        <button
+          className="btn"
+          aria-pressed={mode === 'peuple'}
+          onClick={() => setMode(mode === 'peuple' ? 'royaumes' : 'peuple')}
+        >
+          Peuple
+        </button>
         <button className="btn" onClick={() => setLegend(!legend)} aria-pressed={legend}>
           Légende
         </button>
@@ -801,6 +827,9 @@ export function MapView({
         </button>
       </div>
       {hint && <div className="map-hint glass">{hint}</div>}
+      {!hint && mode === 'peuple' && (
+        <div className="map-hint glass">Contentement : 🔴 colère · 🟡 calme · 🟢 prospérité</div>
+      )}
       {!hint && showRealms && !legend && (
         <div className="map-hint glass">Pincez pour voir les comtés</div>
       )}

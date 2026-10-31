@@ -44,6 +44,8 @@ import { useStore } from '../store';
 import { Bar, CharLine, CharLink, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
 import { realmColor, visibleMen } from './MapView';
 import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
+import { CountyEconomy } from './Economy';
+import { countyLevyMult } from '../../engine/economy/local';
 import { PERKS } from '../../data/perks';
 
 export function Inspector({ game }: { game: GameState }) {
@@ -462,7 +464,8 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
           )}
           <dt>Levées</dt>
           <dd>
-            {Math.round(c.levyPool)} / {Math.round(countyMaxLevies(c))} hommes
+            {Math.round(c.levyPool)} / {Math.round(countyMaxLevies(c) * countyLevyMult(game, c))}{' '}
+            hommes
           </dd>
           <dt>Fortification</dt>
           <dd>
@@ -480,6 +483,12 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
           )}
         </dl>
       </Section>
+
+      {(mine || inMyRealm) && (
+        <Section title="Économie locale">
+          <CountyEconomy game={game} id={id} />
+        </Section>
+      )}
 
       <Section title={`Terrain : ${terrain.label}`}>
         <ul className="fx-list small">

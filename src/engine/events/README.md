@@ -82,3 +82,11 @@ Chaque choix affiche automatiquement ses effets connus avant validation.
 - `nouveau_courtisan` : `{ "age_min", "age_max", "guerre"?, "trait"? }`.
 - `bataille` : `{ "ennemi", "force", "composition"?, "attaque"?, "victoire": [...], "defaite": [...] }` — une bataille jouée sur-le-champ (armée levée, sinon levées d'urgence).
 - `hasard` accepte `"competence"` : la chance varie de ±2,5 % par point autour de 10.
+
+## Économie locale (version 4)
+
+**Déclencheur** : `revolte_paysanne` (rôle `comte` fourni, contentement sous le seuil de révolte).
+
+**Conditions** : `comte_contentement_max` / `comte_contentement_min`, `comte_impots` (`faible`, `normal`, `eleve`, `ecrasant`), `contentement_moyen_max` / `contentement_moyen_min` (domaine), `edit` / `pas_edit` (identifiant d'édit, voir `src/data/edicts.ts`), `dette` (le souverain a des emprunts).
+
+**Effets** : `contentement` (comté du rôle `comte`, sinon tout le domaine), `impots` (fixe le taux du comté du rôle `comte`).

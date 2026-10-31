@@ -7,11 +7,36 @@ import {
   vassalsOf,
 } from '../../engine/realm';
 import type { GameState } from '../../engine/state';
-import { CharLine, CountyLink, Opinion } from '../components/common';
+import { useState } from 'react';
+import { CharLine, CountyLink, Opinion, Segmented, usePager } from '../components/common';
+import { EconomyView } from '../components/Economy';
 import { MapView, PLAYER_COLOR } from '../components/MapView';
 import { useStore } from '../store';
 
+const REALM_VIEWS = ['carte', 'economie'] as const;
+
 export function RealmScreen({ game }: { game: GameState }) {
+  const [view, setView] = useState<(typeof REALM_VIEWS)[number]>('carte');
+  const dir = usePager(REALM_VIEWS, view, setView);
+  return (
+    <>
+      <Segmented
+        style={{ marginBottom: 12 }}
+        options={[
+          { value: 'carte', label: 'Carte' },
+          { value: 'economie', label: 'Économie' },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+      <div className={`view enter-${dir}`} key={view}>
+        {view === 'carte' ? <MapAndRealm game={game} /> : <EconomyView game={game} />}
+      </div>
+    </>
+  );
+}
+
+function MapAndRealm({ game }: { game: GameState }) {
   const selected = useStore((s) => s.selectedCounty);
   const inspect = useStore((s) => s.inspect);
   const pl = game.playerId;
