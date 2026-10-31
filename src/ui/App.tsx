@@ -190,8 +190,8 @@ function Game({ game }: { game: GameState }) {
         {tab === 'chronique' && <ChronicleScreen game={game} />}
       </SwipeScreen>
       <TabBar />
-      <OutcomeToast outcome={game.lastOutcome} />
-      {game.pendingEvents.length > 0 && <EventModal game={game} />}
+      {game.phase !== 'bataille' && <OutcomeToast outcome={game.lastOutcome} />}
+      {game.pendingEvents.length > 0 && game.tutorialSeen && <EventModal game={game} />}
       {summary && (
         <Sheet onClose={() => setSummary(null)}>
           <h2>Avant de finir la saison</h2>
@@ -323,16 +323,19 @@ function SwipeScreen({ className, children }: { className: string; children: Rea
 }
 
 /** Bandeau : issue d'un tirage au sort dans un événement. */
-function OutcomeToast({ outcome }: { outcome?: { win: boolean; text: string } }) {
+function OutcomeToast({ outcome }: { outcome?: GameState['lastOutcome'] }) {
   const [shown, setShown] = useState<typeof outcome>(undefined);
-  const last = useRef(outcome);
+  // Chaque action clone l'état : on compare l'identifiant du tirage, pas la référence.
+  const key = outcome ? `${outcome.id ?? 0}|${outcome.text}` : '';
+  const last = useRef(key);
   useEffect(() => {
-    if (!outcome || outcome === last.current) return;
-    last.current = outcome;
+    if (!outcome || key === last.current) return;
+    last.current = key;
     setShown(outcome);
     const t = setTimeout(() => setShown(undefined), 3600);
     return () => clearTimeout(t);
-  }, [outcome]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
   if (!shown) return null;
   return (
     <div
@@ -344,8 +347,12 @@ function OutcomeToast({ outcome }: { outcome?: { win: boolean; text: string } })
   );
 }
 
-const compact = (n: number) =>
-  Math.abs(n) >= 10000 ? `${Math.round(n / 1000)}k` : String(Math.round(n));
+const compact = (n: number) => {
+  const a = Math.abs(n);
+  if (a >= 9950) return `${Math.round(n / 1000)}k`;
+  if (a >= 1000) return `${(n / 1000).toFixed(1).replace('.', ',')}k`;
+  return String(Math.round(n));
+};
 
 function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => void }) {
   const p = game.characters[game.playerId];
@@ -387,7 +394,7 @@ function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => voi
           </span>
           <span className="s2">
             {game.pendingEvents.length > 0
-              ? `${game.pendingEvents.length} événement(s)`
+              ? `${game.pendingEvents.length} événement${game.pendingEvents.length > 1 ? 's' : ''}`
               : 'Fin de saison ›'}
           </span>
         </button>

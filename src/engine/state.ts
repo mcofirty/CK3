@@ -229,7 +229,7 @@ export interface GameState {
   /** Origine tirée au début de la partie. */
   origin?: { id: string; titre: string; texte: string };
   /** Dernière issue tirée au sort (affichée à l'écran). */
-  lastOutcome?: { win: boolean; text: string };
+  lastOutcome?: { win: boolean; text: string; id?: number };
   /** Biais d'événements propre à la partie (identifiant → multiplicateur de poids). */
   eventBias?: Record<string, number>;
   seed: number;

@@ -428,6 +428,7 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
         ),
       );
       state.lastOutcome = {
+        id: (state.lastOutcome?.id ?? 0) + 1,
         win,
         text: renderText(
           state,

@@ -385,9 +385,13 @@ function Deployment({ b, side }: { b: BattleState; side: BattleSide }) {
   return (
     <div className="card" style={{ marginTop: 10 }}>
       <h3>Déploiement</h3>
-      <div className="segmented">
+      <div className="preset-grid">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
-          <button key={p} onClick={() => dispatch({ type: 'battleDeploy', preset: p })}>
+          <button
+            key={p}
+            className="btn small"
+            onClick={() => dispatch({ type: 'battleDeploy', preset: p })}
+          >
             {PRESET_LABELS[p]}
           </button>
         ))}

@@ -101,6 +101,16 @@ describe('Événements (section 6)', () => {
     expect(label[0]).toContain('60 %');
   });
 
+  it('chaque tirage reçoit un identifiant distinct (bandeau affiché une seule fois)', () => {
+    const state = newGame({ seed: 2 });
+    const ctx: Ctx = { state, rng: new Rng(1) };
+    const eff = [{ hasard: { chance: 0.5, succes: [], echec: [] } }];
+    applyEffects(ctx, eff, { souverain: state.playerId });
+    const first = state.lastOutcome!.id;
+    applyEffects(ctx, eff, { souverain: state.playerId });
+    expect(state.lastOutcome!.id).toBe((first ?? 0) + 1);
+  });
+
   it('chaque partie a ses propres fréquences d’événements', () => {
     const a = newGame({ seed: 3 }).eventBias!;
     const b = newGame({ seed: 4 }).eventBias!;
