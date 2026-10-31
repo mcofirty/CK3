@@ -35,3 +35,31 @@ describe('Succès', () => {
     expect(s.achievements).toEqual(expect.arrayContaining(['premier_sang', 'riche']));
   });
 });
+
+describe('Bilan final', () => {
+  it('est calculé même si la lignée s’éteint pendant un événement', async () => {
+    const { applyAction } = await import('../src/engine/actions');
+    const { clearEvents } = await import('./helpers');
+    let s = clearEvents(newGame({ seed: 54 }));
+    s.turn = 40;
+    // Plus aucun héritier : le souverain meurt pendant un événement.
+    for (const c of Object.values(s.characters))
+      if (c.dynastyId === s.playerDynastyId && c.id !== s.playerId) c.alive = false;
+    s.pendingEvents.push({
+      uid: 'x',
+      eventId: 'test_mort',
+      scope: { souverain: s.playerId },
+      inline: {
+        id: 'test_mort',
+        titre: 'Test',
+        texte: 'Test',
+        declencheur: { type: 'suite' },
+        choix: [{ libelle: 'Mourir', effets: [{ sante: -100 }, { deces: 'souverain' }] }],
+      },
+    });
+    s = applyAction(s, { type: 'chooseEvent', uid: 'x', choice: 0 });
+    expect(s.gameOver?.ending).toBe('extinction');
+    expect(s.gameOver?.score.years).toBe(10);
+    expect(s.phase).toBe('fin');
+  });
+});

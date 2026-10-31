@@ -151,3 +151,18 @@ describe('Événements (section 6)', () => {
     expect(a).not.toEqual(b);
   });
 });
+
+describe('Texte des événements', () => {
+  it('élide « de » devant un nom propre commençant par une voyelle', () => {
+    const s = newGame({ seed: 77 });
+    const c = Object.values(s.counties)[0];
+    c.name = 'Ardesse';
+    expect(renderText(s, 'Les pillards de {comte.nom} arrivent.', { comte: c.id })).toBe(
+      'Les pillards d’Ardesse arrivent.',
+    );
+    c.name = 'Vyrgard';
+    expect(renderText(s, 'Les pillards de {comte.nom}.', { comte: c.id })).toBe(
+      'Les pillards de Vyrgard.',
+    );
+  });
+});

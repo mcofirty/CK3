@@ -156,8 +156,10 @@ function checkLandless(state: GameState): void {
   };
 }
 
-function finishGame(state: GameState): void {
-  if (!state.gameOver) return;
+/** Bilan final (une seule fois), quelle que soit la façon dont la partie s'achève. */
+export function finishGame(state: GameState): void {
+  if (!state.gameOver || state.gameOver.done) return;
+  state.gameOver.done = true;
   state.gameOver.score = lineageScore(state);
   state.gameOver.ending ??= computeEnding(state);
   const cur = state.rulers?.find((r) => r.to === undefined);

@@ -329,7 +329,7 @@ export interface GameState {
   /** Batailles du joueur encore à jouer cette saison. */
   pendingBattles: { countyId: string; attackerArmyId: string; defenderArmyId: string }[];
   phase: 'saison' | 'bataille' | 'fin';
-  gameOver?: { reason: string; score: LineageScore; ending?: EndingId };
+  gameOver?: { reason: string; score: LineageScore; ending?: EndingId; done?: boolean };
   nextId: number;
   /** Bilan de la saison précédente, pour l'infobulle des ressources. */
   ledger: Ledger;

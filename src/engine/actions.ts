@@ -58,7 +58,7 @@ import type {
   TaxLevel,
   UnitType,
 } from './state';
-import { closeBattle, continueSeason, endSeason } from './turn';
+import { closeBattle, continueSeason, endSeason, finishGame } from './turn';
 import { callAllies } from './ai';
 import {
   declareWar,
@@ -132,6 +132,8 @@ export function applyAction(state: GameState, action: Action): GameState {
   const s = structuredClone(state);
   const ctx: Ctx = { state: s, rng: new Rng(s.rng) };
   dispatch(ctx, action);
+  // Une partie peut s'achever hors de la fin de saison (mort pendant un événement, une bataille).
+  if (s.gameOver && !s.gameOver.done) finishGame(s);
   s.rng = ctx.rng.s;
   return s;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { TRAITS } from '../../data/traits';
 import { ageOf, displayName, opinionOf, skillsOf } from '../../engine/characters';
 import { Rng } from '../../engine/rng';
@@ -225,7 +226,10 @@ export function Sheet({
   const cls = ['sheet', 'glass', closing ? (dragged ? 'closing dragged' : 'closing') : '']
     .filter(Boolean)
     .join(' ');
-  return (
+  // La fenêtre est rendue dans une couche à part, au-dessus de toute l'interface
+  // (barres du haut et du bas comprises), quel que soit l'écran qui l'ouvre.
+  const layer = typeof document !== 'undefined' ? document.getElementById('root') : null;
+  const node = (
     <div ref={overlayRef} className={`overlay${closing ? ' closing' : ''}`} onClick={() => close()}>
       <div
         ref={sheetRef}
@@ -243,6 +247,7 @@ export function Sheet({
       </div>
     </div>
   );
+  return layer ? createPortal(node, layer) : node;
 }
 
 /**

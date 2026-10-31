@@ -2244,3 +2244,24 @@ body {
 .tiny {
   font-size: 12px;
 }
+
+/* Le contenu qui défile s'efface derrière la barre d'état et sous la barre d'onglets. */
+.app::before,
+.app::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 29;
+  pointer-events: none;
+}
+.app::before {
+  top: 0;
+  height: calc(var(--safe-top) + 14px);
+  background: linear-gradient(var(--bg) 55%, transparent);
+}
+.app::after {
+  bottom: 0;
+  height: calc(var(--safe-bottom) + 18px);
+  background: linear-gradient(transparent, var(--bg) 60%);
+}

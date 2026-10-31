@@ -393,6 +393,15 @@ export function eventText(def: EventDef, scope: Record<string, string>): string 
 }
 
 export function renderText(state: GameState, text: string, scope: Record<string, string>): string {
+  return elide(renderRaw(state, text, scope));
+}
+
+/** Élision devant un nom propre commençant par une voyelle : « de Ardesse » → « d'Ardesse ». */
+function elide(t: string): string {
+  return t.replace(/\b([dD])e ([AEIOUYÉÈÊÂÎÔ][a-zà-ÿ])/g, '$1’$2');
+}
+
+function renderRaw(state: GameState, text: string, scope: Record<string, string>): string {
   return text.replace(
     /\{(\w+)\.(\w+)\}|\{(annee|saison|etranger|etranger2)\}/g,
     (m, role: string, field: string, special: string) => {
@@ -515,7 +524,7 @@ export function effectLabels(
     if (e.quarantaine) out.push(`Quarantaine à ${name('comte')}`);
     if (e.bataille)
       out.push(
-        `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${e.bataille.force.toFixed(1)})`,
+        `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${String(e.bataille.force).replace('.', ',')})`,
       );
     if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
     if (e.contentement)

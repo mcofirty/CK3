@@ -305,6 +305,8 @@ function SwipeScreen({ className, children }: { className: string; children: Rea
         const t = e.target as HTMLElement;
         // Depuis le bord de l'écran, on change toujours de page (même sur la carte).
         const edge = e.clientX < 24 || e.clientX > window.innerWidth - 24;
+        // Rien ne glisse sous une fenêtre ouverte.
+        if (t.closest('.overlay')) return;
         if (!edge && t.closest('.map-wrap, [data-noswipe], input, textarea')) return;
         if (edge) e.stopPropagation();
         g.current = {

@@ -26,7 +26,7 @@ export function foreignKingdoms(state: GameState): string[] {
   if (!names) {
     names = foreignLands(state.map, Rng)
       .filter((f) => f.kind === 'royaume')
-      .map((f) => f.name);
+      .map((f) => f.name.replace(/^Royaume d(e |')/, ''));
     if (!names.length) names = ['les Terres d’au-delà des mers'];
     foreignCache.set(key, names);
   }

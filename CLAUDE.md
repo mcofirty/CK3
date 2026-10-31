@@ -38,6 +38,7 @@ Les scripts passent par `vite-node` (nécessaire pour `import.meta.glob` des év
 - Ajouter un événement : un objet dans `src/data/events/*.json` (format dans `src/engine/events/README.md`). Aucun code.
 - Mobile d'abord : zones tactiles ≥ 44 px, texte ≥ 16 px, appui long pour les infobulles (`<Tip>`), zones sûres.
 - Hauteur d'écran iPhone : lancée depuis l'écran d'accueil, `main.tsx` (`fitScreen`) pose `--app-h` = hauteur réelle de l'écran ; `body` (fixe) prend cette hauteur (sinon WebKit découpe l'app à la fenêtre annoncée, parfois plus courte de 62 pt), `#root` le remplit et son `transform` en fait le repère de tous les éléments `position: fixed`. Ne pas remettre `100dvh`/`100vh` ni `inset: 0` sur `body`, ni faire déborder un enfant de `#root`. Paramètres affiche écran / fenêtre / app pour le diagnostic.
+- Fenêtres (`Sheet`) : toujours rendues par portail dans `#root`, au-dessus des barres ; ne pas les recréer en `position: fixed` à l'intérieur d'un écran défilant (WebKit les enferme sous la barre d'onglets).
 - Écran de débogage : appui long sur « Highborn » dans la barre du haut.
 
 ## Méthode de travail (section 15 du cahier)
