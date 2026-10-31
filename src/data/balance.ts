@@ -83,19 +83,19 @@ export const BALANCE = {
     /** Tactiques en main au début d'une bataille (hors talents). */
     tacticHand: 3,
     /** Élan : un camp qui inflige ×ratio les pertes subies gagne un niveau (max). */
-    elan: { ratio: 1.25, max: 3, attackPerLevel: 0.06 },
+    elan: { ratio: 1.5, max: 3, attackPerLevel: 0.015 },
     weather: {
-      fogChance: 0.15,
+      fogChance: 0.12,
       snowChanceWinter: 0.5,
       fogArchers: 0.75,
       snowCavalry: 0.8,
       snowMorale: -5,
     },
     duel: {
-      chance: 0.3,
+      chance: 0.25,
       randomMax: 10,
-      winnerMorale: 15,
-      loserMorale: 15,
+      winnerMorale: 10,
+      loserMorale: 10,
       refuseMorale: 10,
       woundChance: 0.35,
       deathChance: 0.12,
@@ -218,6 +218,7 @@ export const BALANCE = {
     sicknessChance: 0.01,
     recoverChance: 0.15,
     woundRecoverChance: 0.08,
+    scarChance: 0.3,
     educationTier2Skill: 12,
     educationSkillGain: 0.35,
     renownPerTitle: { duche: 2, royaume: 6 },

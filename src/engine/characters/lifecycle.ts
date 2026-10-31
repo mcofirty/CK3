@@ -136,7 +136,10 @@ export function seasonLife(ctx: Ctx): void {
       addTrait(c, 'malade');
       if (isPlayerFamily(state, c)) notify(state, `${c.name} tombe malade.`);
     } else if (hasTrait(c, 'malade') && rng.chance(C.recoverChance)) removeTrait(c, 'malade');
-    if (hasTrait(c, 'blesse') && rng.chance(C.woundRecoverChance)) removeTrait(c, 'blesse');
+    if (hasTrait(c, 'blesse') && rng.chance(C.woundRecoverChance)) {
+      removeTrait(c, 'blesse');
+      if (rng.chance(C.scarChance)) addTrait(c, 'balafre');
+    }
     if (winter) {
       if (age > C.healthDecayAfter) c.health -= C.healthDecayPerYear;
       else if (c.health < 80) c.health += C.healthRegen;

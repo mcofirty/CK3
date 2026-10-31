@@ -29,6 +29,30 @@ export const PRESET_LABELS: Record<Preset, string> = {
 
 export type SideKey = 'attacker' | 'defender';
 
+export type Weather = 'clair' | 'pluie' | 'brouillard' | 'neige';
+export const WEATHER_LABELS: Record<Weather, string> = {
+  clair: 'Temps clair',
+  pluie: 'Pluie : archers ×0,7',
+  brouillard: 'Brouillard : archers ×0,75, reconnaissance réduite',
+  neige: 'Neige : cavalerie ×0,8, moral −5',
+};
+export const WEATHER_ICONS: Record<Weather, string> = {
+  clair: '☀️',
+  pluie: '🌧️',
+  brouillard: '🌫️',
+  neige: '❄️',
+};
+
+export interface DuelState {
+  challenger: SideKey;
+  challengerId: string;
+  targetId: string;
+  /** propose : en attente de la réponse du joueur. */
+  status: 'propose' | 'fini' | 'refuse';
+  winner?: SideKey;
+  text?: string;
+}
+
 export interface Commander {
   id: string;
   name: string;
@@ -75,6 +99,13 @@ export interface BattleSide {
   initialMen: number;
   /** Morale de départ (pour les renforts). */
   baseMorale: number;
+  /** Tactiques en main (une par round, une fois chacune). */
+  tactics: TacticId[];
+  usedTactics: TacticId[];
+  /** Élan : 0 à 3, gagné en infligeant plus de pertes qu'on en subit. */
+  elan: number;
+  /** Duel déjà proposé par ce camp. */
+  challenged?: boolean;
 }
 
 export interface SideOrders {
@@ -83,12 +114,16 @@ export interface SideOrders {
   /** Hommes de la réserve envoyés sur chaque front. */
   reserve?: Partial<Record<FrontId, Partial<UnitCounts>>>;
   rally?: FrontId;
+  /** Tactique jouée ce round. */
+  tactic?: TacticId;
 }
 
 export interface RoundLog {
   round: number;
   lines: string[];
   orders: Record<SideKey, Record<FrontId, Order>>;
+  /** Tactiques effectivement jouées. */
+  tactics?: Partial<Record<SideKey, TacticId>>;
 }
 
 export interface BattleResult {
@@ -103,6 +138,8 @@ export interface BattleResult {
   menEngaged: number;
   /** Score de guerre gagné par le vainqueur. */
   warScore: number;
+  /** Duel livré pendant la bataille. */
+  duel?: { winnerId: string; loserId: string; winnerSide: SideKey };
 }
 
 export interface BattleState {
@@ -113,6 +150,7 @@ export interface BattleState {
   river: boolean;
   season: SeasonIndex;
   rain: boolean;
+  weather: Weather;
   attacker: BattleSide;
   defender: BattleSide;
   round: number;
@@ -132,6 +170,7 @@ export interface BattleState {
   precomputedOrders?: SideOrders;
   /** Commandants tués et blessés au fil des rounds. */
   casualties: { killed: string[]; wounded: string[] };
+  duel?: DuelState;
   /** Bataille née d'un événement : issue appliquée à la fin. */
   event?: {
     victoire: import('../events/types').Effect[];

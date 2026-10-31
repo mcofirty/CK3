@@ -20,6 +20,8 @@ import {
   warSide,
 } from '../characters';
 import type { TacticId } from '../../data/tactics';
+import { TRAITS } from '../../data/traits';
+import { gainXp, record } from '../progression';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, clamp, newId, notify, seasonOf, type Ctx } from '../context';
 import {
@@ -481,18 +483,50 @@ export function applyBattleResult(ctx: Ctx, battle: BattleState): void {
     if (winnerId === state.playerId) notify(state, `${c.name} est votre prisonnier.`);
     if (c.id === state.playerId) notify(state, `Vous êtes capturé par l’ennemi !`);
   }
-  // Traits acquis par le commandant vainqueur.
-  const wc = winner.mainCommanderId ? state.characters[winner.mainCommanderId] : undefined;
-  if (wc?.alive && rng.chance(0.06)) {
-    const t = rng.pick(['stratege', 'inebranlable', 'cavalier', 'inspirant']);
-    if (!hasTrait(wc, t)) {
-      addTrait(wc, t);
-      if (winnerId === state.playerId)
-        notify(
-          state,
-          `${wc.name} gagne le trait ${t === 'cavalier' ? 'Cavalier émérite' : t[0].toUpperCase() + t.slice(1)}.`,
-        );
+  // Faits d'armes des commandants : expérience, traits gagnés au feu.
+  const P = BALANCE.progression;
+  for (const k of sides) {
+    const bs = battle[k];
+    const won = k === res.winner;
+    for (const cm of bs.commanders) {
+      const c = state.characters[cm.id];
+      if (!c?.alive) continue;
+      const r = record(c);
+      r.battles += 1;
+      if (won) r.wins += 1;
+      gainXp(state, c, 'guerre', P.battleXp + (won ? P.battleWinXp : 0));
+      const gained = (t: string) => {
+        if (hasTrait(c, t)) return;
+        addTrait(c, t);
+        if (bs.rulerId === state.playerId)
+          notify(state, `${c.name} gagne le trait ${TRAITS[t]?.name ?? t}.`);
+      };
+      if (r.battles >= 5) gained('veteran');
+      if (won && cm.id === bs.mainCommanderId) {
+        const enemyLoss = res.losses[k === 'attacker' ? 'defender' : 'attacker'];
+        const ownLoss = res.losses[k];
+        if (r.wins >= 3 && rng.chance(0.25)) gained('tacticien');
+        if (enemyLoss > 3 * Math.max(1, ownLoss) && res.pursuitLosses > 0 && rng.chance(0.2))
+          gained('boucher');
+        if (rng.chance(0.06))
+          gained(rng.pick(['stratege', 'inebranlable', 'cavalier', 'inspirant']));
+      }
     }
+  }
+  // Duel.
+  if (res.duel) {
+    const w = state.characters[res.duel.winnerId];
+    if (w?.alive) {
+      record(w).duels += 1;
+      w.prestige += BALANCE.battle.duel.prestige;
+      if (!hasTrait(w, 'heros')) addTrait(w, 'heros');
+      if (battle[res.duel.winnerSide].rulerId === state.playerId && state.stats)
+        state.stats.duelsWon += 1;
+    }
+  }
+  if (state.stats && (winnerId === state.playerId || loserId === state.playerId)) {
+    if (winnerId === state.playerId) state.stats.battlesWon += 1;
+    else state.stats.battlesLost += 1;
   }
   if (war) adjustScore(state, war, winnerId, res.warScore);
   const wr = state.characters[winnerId];

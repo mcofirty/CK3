@@ -4,8 +4,10 @@
  */
 import { BALANCE } from '../data/balance';
 import {
+  answerDuel,
   autoResolve,
   createBattle,
+  proposeDuel,
   deployPreset,
   moveCompany,
   resolveRound,
@@ -104,6 +106,8 @@ export type Action =
   | { type: 'battleStart' }
   | { type: 'battleRound'; orders: SideOrders }
   | { type: 'battleAuto' }
+  | { type: 'battleDuel'; accept: boolean }
+  | { type: 'battleChallenge' }
   | { type: 'battleClose' }
   | { type: 'dismissTutorial' }
   | { type: 'takePerk'; characterId: string; perkId: string }
@@ -341,6 +345,12 @@ function dispatch(ctx: Ctx, a: Action): void {
     case 'battleRound':
       if (inBattle && state.battle!.phase !== 'fin')
         resolveRound(state.battle!, ctx.rng, { playerOrders: a.orders });
+      break;
+    case 'battleDuel':
+      if (inBattle) answerDuel(state.battle!, a.accept, ctx.rng);
+      break;
+    case 'battleChallenge':
+      if (inBattle && state.battle!.phase === 'rounds') proposeDuel(state.battle!, side, ctx.rng);
       break;
     case 'battleAuto':
       if (inBattle && state.battle!.phase !== 'fin') autoResolve(state.battle!, ctx.rng);

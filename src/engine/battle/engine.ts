@@ -4,6 +4,7 @@
  * toujours sur une copie de l'état.
  */
 import { BALANCE } from '../../data/balance';
+import { TACTICS, TACTIC_IDS, type TacticDef, type TacticId } from '../../data/tactics';
 import { TERRAINS, RIVER } from '../../data/terrain';
 import { TRAITS, type BattleAbility } from '../../data/traits';
 import { COUNTERS, UNIT_TYPES, UNITS } from '../../data/units';
@@ -26,6 +27,7 @@ import {
   type Preset,
   type SideKey,
   type SideOrders,
+  type Weather,
 } from './types';
 
 const B = BALANCE.battle;
@@ -65,10 +67,18 @@ function weightedBaseMorale(u: UnitCounts): number {
   return m / t;
 }
 
-function moraleModifiers(side: BattleSide, season: number): number {
+function moraleModifiers(battle: BattleState, key: SideKey): number {
+  const side = battle[key];
   let mod = 0;
   if (side.sovereignPresent) mod += B.sovereignMorale;
-  if (season === 3) mod += B.winterMorale;
+  if (battle.season === 3) mod += B.winterMorale;
+  if (battle.weather === 'neige') mod += B.weather.snowMorale;
+  const main = side.mainCommanderId
+    ? side.commanders.find((c) => c.id === side.mainCommanderId)
+    : undefined;
+  mod += main?.morale ?? 0;
+  // Un boucher en face fait trembler les rangs.
+  if (battle[other(key)].commanders.some((c) => hasAbility(c, 'boucher'))) mod -= B.boucherMorale;
   return mod;
 }
 
@@ -109,6 +119,9 @@ function createSide(s: BattleSetupSide): BattleSide {
     rallyUsed: false,
     initialMen: totalMen(s.men),
     baseMorale: 0,
+    tactics: [],
+    usedTactics: [],
+    elan: 0,
   };
   // Commandants : le principal au centre, les autres sur les ailes.
   if (main) side.fronts.center.commanderId = main.id;
@@ -128,7 +141,8 @@ export function createBattle(setup: BattleSetup, rng: Rng): BattleState {
     terrain: setup.terrain,
     river: setup.river,
     season: setup.season,
-    rain: setup.season !== 1 && rng.chance(B.rainChance),
+    rain: false,
+    weather: 'clair',
     attacker,
     defender,
     round: 0,
@@ -144,6 +158,12 @@ export function createBattle(setup: BattleSetup, rng: Rng): BattleState {
     estimate: 0,
     casualties: { killed: [], wounded: [] },
   };
+  battle.weather = rollWeather(setup.season, rng);
+  battle.rain = battle.weather === 'pluie';
+  if (battle.weather === 'brouillard')
+    for (const s of [attacker, defender]) s.recon = Math.max(0, s.recon - 1) as 0 | 1 | 2;
+  attacker.tactics = drawHand(attacker, rng);
+  defender.tactics = drawHand(defender, rng);
   for (const key of ['attacker', 'defender'] as SideKey[])
     deployPreset(battle, key, aiPreset(battle, key));
   // Embuscade en forêt.
@@ -158,6 +178,42 @@ export function createBattle(setup: BattleSetup, rng: Rng): BattleState {
     battle.estimate = Math.round((enemy.initialMen * (1 + rng.range(-0.25, 0.25))) / 10) * 10;
   }
   return battle;
+}
+
+function rollWeather(season: number, rng: Rng): Weather {
+  if (season === 3 && rng.chance(B.weather.snowChanceWinter)) return 'neige';
+  if (season !== 1 && rng.chance(B.rainChance)) return 'pluie';
+  if (rng.chance(B.weather.fogChance)) return 'brouillard';
+  return 'clair';
+}
+
+/** Tactiques auxquelles un camp a droit (composition de l'armée, commandant). */
+export function eligibleTactics(side: BattleSide): TacticId[] {
+  const men = sideMen(side);
+  const tot = totalMen(men) || 1;
+  const main = side.mainCommanderId
+    ? side.commanders.find((c) => c.id === side.mainCommanderId)
+    : side.commanders[0];
+  return TACTIC_IDS.filter((id) => {
+    const t = TACTICS[id];
+    if (t.minShare && t.minShare.units.reduce((s, u) => s + men[u], 0) / tot < t.minShare.share)
+      return false;
+    if (t.minGuerre && (main?.guerre ?? 0) < t.minGuerre) return false;
+    if (t.minRuse && (main?.ruse ?? 0) < t.minRuse) return false;
+    if (t.sovereign && !side.sovereignPresent) return false;
+    return true;
+  });
+}
+
+/** Main de départ : tactiques garanties par les talents, puis tirage parmi les tactiques permises. */
+export function drawHand(side: BattleSide, rng: Rng): TacticId[] {
+  const guaranteed = [...new Set(side.commanders.flatMap((c) => c.tactics ?? []))];
+  const bonus = side.commanders.some((c) => c.traits.includes('tacticien')) ? 1 : 0;
+  const size = B.tacticHand + bonus;
+  const hand = guaranteed.slice(0, size);
+  const pool = rng.shuffle(eligibleTactics(side).filter((t) => !hand.includes(t)));
+  while (hand.length < size && pool.length) hand.push(pool.shift()!);
+  return hand;
 }
 
 /** Préréglage choisi par l'IA. */
@@ -256,7 +312,7 @@ export function startBattle(battle: BattleState, rng: Rng): void {
   if (battle.phase !== 'deploiement') return;
   for (const key of ['attacker', 'defender'] as SideKey[]) {
     const side = battle[key];
-    const mod = moraleModifiers(side, battle.season);
+    const mod = moraleModifiers(battle, key);
     side.baseMorale = weightedBaseMorale(sideMen(side)) + mod;
     for (const f of FRONTS) {
       const fr = side.fronts[f];
@@ -267,6 +323,7 @@ export function startBattle(battle: BattleState, rng: Rng): void {
     side.reserveMorale = totalMen(side.reserve) > 0 ? weightedBaseMorale(side.reserve) + mod : 0;
   }
   battle.phase = 'rounds';
+  maybeDuel(battle, rng);
   // Stratège : les ordres ennemis du round 1 sont connus.
   if (battle.playerSide) {
     const mine = battle[battle.playerSide];
@@ -435,6 +492,7 @@ export function aiOrders(battle: BattleState, key: SideKey, rng: Rng): SideOrder
     }
   }
   const result: SideOrders = { orders, flankTargets: flank, reserve, rally };
+  result.tactic = aiTactic(battle, key, orders, rng);
   if (level === 'difficile' && !lookahead) return bestResponse(battle, key, result);
   return result;
 }
@@ -549,6 +607,7 @@ function unitAttackMod(
   u: UnitType,
   eff: Effective,
   feintTriggered: boolean,
+  tac?: TacticDef,
 ): number {
   const side = battle[key];
   const cmd = effectiveCommander(side, f);
@@ -590,6 +649,15 @@ function unitAttackMod(
   }
   if (battle.river && key === 'attacker' && battle.round <= RIVER.rounds) t *= RIVER.attackerAttack;
   if (u === 'cavalerie' && hasAbility(cmd, 'cavalier')) t *= B.traits.cavalierCavalry;
+  if (u === 'archers' && battle.weather === 'brouillard') t *= B.weather.fogArchers;
+  if (u === 'cavalerie' && battle.weather === 'neige') t *= B.weather.snowCavalry;
+  // Tactique jouée ce round.
+  if (tac) {
+    t *= tac.attack?.[eff.order] ?? tac.attack?.all ?? 1;
+    t *= tac.unitAttack?.[u] ?? 1;
+  }
+  // Élan.
+  t *= 1 + side.elan * B.elan.attackPerLevel;
   return o * t;
 }
 
@@ -599,6 +667,7 @@ function defenseOf(
   f: FrontId,
   eff: Effective,
   chargedBy: boolean,
+  tac?: TacticDef,
 ): number {
   const side = battle[key];
   const fr = side.fronts[f];
@@ -619,6 +688,7 @@ function defenseOf(
       dv *= B.orders.shoot.archerDefenseVsCharge;
     d += (fr.men[v] / t) * dv;
   }
+  if (tac) d *= tac.defense?.[eff.order] ?? tac.defense?.all ?? 1;
   return Math.max(0.1, d);
 }
 
@@ -724,6 +794,15 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       side.ai = savedAi;
     }
   }
+  // Un défi resté sans réponse vaut refus (en mode automatique, l'IA répond pour le joueur).
+  if (battle.duel?.status === 'propose') {
+    const d = battle.duel;
+    const c = battle[d.challenger].commanders.find((x) => x.id === d.challengerId);
+    const t = battle[other(d.challenger)].commanders.find((x) => x.id === d.targetId);
+    if (opts.autoPlayer && c && t && aiAcceptsDuel(t, c)) resolveDuel(battle, rng, lines);
+    else refuseDuel(battle, lines);
+    d.text = lines.join(' ');
+  }
   battle.round += 1;
   battle.revealedOrders = undefined;
   battle.precomputedOrders = undefined;
@@ -747,6 +826,9 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       );
     }
   }
+
+  // Tactiques.
+  const tac = playTactics(battle, sideOrders, lines);
 
   // B. Validation des ordres.
   const eff = {
@@ -815,10 +897,17 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
         if (n <= 0) continue;
         let counter = 0;
         for (const v of UNIT_TYPES) counter += (target.men[v] / tMen) * COUNTERS[u][v];
-        sum += n * UNITS[u].attack * unitAttackMod(battle, key, f, u, e, feintTriggered) * counter;
+        sum +=
+          n *
+          UNITS[u].attack *
+          unitAttackMod(battle, key, f, u, e, feintTriggered, tac[key]) *
+          counter;
       }
-      const D = R * C * sum;
-      const P = (B.k * D) / defenseOf(battle, ek, tf, eff[ek][tf], chargedBy(ek, tf));
+      // Contre-attaque : un front qui tient frappe fort celui qui le charge.
+      const counterMult =
+        tac[key]?.counter && e.order === 'tenir' && chargedBy(key, f) ? tac[key]!.counter! : 1;
+      const D = R * C * sum * counterMult;
+      const P = (B.k * D) / defenseOf(battle, ek, tf, eff[ek][tf], chargedBy(ek, tf), tac[ek]);
       // Répartition des pertes avec multiplicateurs.
       const targetEff = eff[ek][tf];
       // Mur de piques : la cavalerie qui charge un front qui tient avec assez de piquiers.
@@ -874,6 +963,7 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       let mLoss = (B.moraleLossFactor * lost) / Math.max(1, fr.startMen);
       if (eff[key][f].order === 'tenir') mLoss *= B.orders.hold.moraleLoss;
       mLoss += moraleHit[key][f];
+      mLoss *= tac[key]?.moraleLoss ?? 1;
       fr.lastLoss = lost;
       lostThisRound[key][f] = applyMoraleLoss(side, f, mLoss, 0);
       // Lâche.
@@ -893,6 +983,11 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       }
     }
   }
+
+  // Élan : le camp qui domine l'échange prend l'ascendant.
+  updateElan(battle, lines);
+  // Incidents du champ de bataille.
+  battleIncident(battle, rng, lines);
 
   // E. Fronts brisés, risques des commandants, chocs.
   const killed: string[] = [];
@@ -985,6 +1080,10 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
   battle.log.push({
     round,
     lines,
+    tactics: {
+      attacker: tac.attacker?.id,
+      defender: tac.defender?.id,
+    },
     orders: {
       attacker: {
         left: eff.attacker.left.order,
@@ -1013,6 +1112,286 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
     finishBattle(battle, winner, 'deroute', rng);
   } else if (round >= battle.maxRounds) {
     finishBattle(battle, 'defender', 'retraite', rng);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tactiques, élan, incidents, duels
+// ---------------------------------------------------------------------------
+
+/** Joue les tactiques choisies ; renvoie les effets actifs ce round par camp. */
+function playTactics(
+  battle: BattleState,
+  so: Record<SideKey, SideOrders>,
+  lines: string[],
+): Partial<Record<SideKey, TacticDef>> {
+  const chosen: Partial<Record<SideKey, TacticDef>> = {};
+  for (const key of ['attacker', 'defender'] as SideKey[]) {
+    const side = battle[key];
+    const id = so[key].tactic;
+    if (!id || !side.tactics.includes(id)) continue;
+    side.tactics = side.tactics.filter((t) => t !== id);
+    side.usedTactics.push(id);
+    chosen[key] = TACTICS[id];
+    lines.push(`${side.name} : ${TACTICS[id].icon} ${TACTICS[id].name} !`);
+  }
+  // Diversion : annule la tactique adverse (deux diversions s'annulent).
+  for (const key of ['attacker', 'defender'] as SideKey[]) {
+    const ek = other(key);
+    if (chosen[key]?.cancel && chosen[ek] && !chosen[ek]!.cancel) {
+      lines.push(`La diversion de ${battle[key].name} déjoue « ${chosen[ek]!.name} ».`);
+      chosen[ek] = undefined;
+    }
+  }
+  // Effets immédiats sur le moral et les volées.
+  for (const key of ['attacker', 'defender'] as SideKey[]) {
+    const t = chosen[key];
+    if (!t) continue;
+    const side = battle[key];
+    const enemy = battle[other(key)];
+    for (const f of FRONTS) {
+      if (t.morale && isActive(side.fronts[f])) side.fronts[f].morale += t.morale;
+      if (t.enemyMorale && isActive(enemy.fronts[f])) enemy.fronts[f].morale -= t.enemyMorale;
+      if (t.volleys && side.fronts[f].men.archers > 0.5) side.fronts[f].volleys += t.volleys;
+    }
+    if (t.enemyReserveMorale && totalMen(enemy.reserve) > 0)
+      enemy.reserveMorale = Math.max(0, enemy.reserveMorale - t.enemyReserveMorale);
+  }
+  return chosen;
+}
+
+/** Le camp qui inflige nettement plus de pertes qu'il n'en subit gagne de l'élan. */
+function updateElan(battle: BattleState, lines: string[]): void {
+  const lost = (k: SideKey) => FRONTS.reduce((s, f) => s + battle[k].fronts[f].lastLoss, 0);
+  const la = lost('attacker');
+  const ld = lost('defender');
+  const E = B.elan;
+  const gain = (k: SideKey) => {
+    const side = battle[k];
+    const before = side.elan;
+    side.elan = Math.min(E.max, side.elan + 1);
+    battle[other(k)].elan = 0;
+    if (side.elan > before)
+      lines.push(
+        side.elan >= E.max
+          ? `${side.name} : élan irrésistible !`
+          : `${side.name} prend l’ascendant (élan ${side.elan}).`,
+      );
+  };
+  if (ld > 0 && ld > la * E.ratio) gain('attacker');
+  else if (la > 0 && la > ld * E.ratio) gain('defender');
+}
+
+/** Un imprévu sur le champ de bataille. */
+function battleIncident(battle: BattleState, rng: Rng, lines: string[]): void {
+  if (!rng.chance(B.incidentChance)) return;
+  const key: SideKey = rng.chance(0.5) ? 'attacker' : 'defender';
+  const side = battle[key];
+  const active = FRONTS.filter((f) => isActive(side.fronts[f]));
+  if (!active.length) return;
+  const f = rng.pick(active);
+  const fr = side.fronts[f];
+  const M = B.incidentMorale;
+  const where = `${FRONT_LABELS[f].toLowerCase()} de ${side.name}`;
+  switch (rng.int(0, 3)) {
+    case 0:
+      fr.morale -= M;
+      lines.push(`Le porte-étendard tombe : ${where} vacille (−${M} moral).`);
+      break;
+    case 1:
+      fr.morale += M;
+      lines.push(`Un sergent se distingue et entraîne ses hommes : ${where} (+${M} moral).`);
+      break;
+    case 2:
+      if (fr.men.cavalerie > 0.5) {
+        fr.morale -= M;
+        lines.push(`Des chevaux s’emballent : ${where} en désordre (−${M} moral).`);
+      } else {
+        fr.morale += M / 2;
+        lines.push(`Un prêtre bénit les rangs : ${where} (+${M / 2} moral).`);
+      }
+      break;
+    default: {
+      const worse: Weather =
+        battle.season === 3 ? 'neige' : battle.season === 1 ? 'brouillard' : 'pluie';
+      const next: Weather = battle.weather === 'clair' ? worse : 'clair';
+      battle.weather = next;
+      battle.rain = next === 'pluie';
+      lines.push(
+        next === 'clair'
+          ? 'Le ciel se dégage.'
+          : next === 'pluie'
+            ? 'Une averse s’abat sur le champ de bataille : les cordes des arcs se détendent.'
+            : next === 'neige'
+              ? 'La neige se met à tomber.'
+              : 'Une brume épaisse monte du sol.',
+      );
+    }
+  }
+}
+
+/** L'IA choisit une tactique à jouer ce round (ou aucune). */
+function aiTactic(
+  battle: BattleState,
+  key: SideKey,
+  orders: Record<FrontId, Order>,
+  rng: Rng,
+): TacticId | undefined {
+  const side = battle[key];
+  if (!side.tactics.length) return undefined;
+  if (side.ai === 'facile' && !rng.chance(0.5)) return undefined;
+  const active = FRONTS.filter((f) => isActive(side.fronts[f]));
+  if (!active.length) return undefined;
+  const avgMorale = active.reduce((s, f) => s + side.fronts[f].morale, 0) / active.length;
+  const count = (o: Order) => active.filter((f) => orders[f] === o).length;
+  const late = battle.round + 1 >= battle.maxRounds - 1;
+  const score = (id: TacticId): number => {
+    switch (id) {
+      case 'harangue':
+      case 'cri_de_guerre':
+        return avgMorale < 55 ? 3 : 1;
+      case 'pluie_fleches':
+        return count('tirer') ? 3 : 0.5;
+      case 'charge_lourde':
+        return active.some((f) => orders[f] === 'charger' && side.fronts[f].men.cavalerie > 0.5)
+          ? 3
+          : 0.5;
+      case 'mur_boucliers':
+        return count('tenir') >= 2 ? 3 : 0.5;
+      case 'feux_trompeurs':
+        return battle.round <= 1 ? 2.6 : 1.5;
+      case 'contre_attaque':
+        return count('tenir') >= 1 ? 2 : 0.5;
+      case 'percee':
+        return count('charger') >= 2 ? 3 : 0.5;
+      case 'ordre_serre':
+        return active.some((f) => side.fronts[f].morale < 35) ? 3 : 1;
+      case 'diversion':
+        return battle[other(key)].tactics.length && battle.round >= 1 ? 1.5 : 0;
+    }
+  };
+  let best: TacticId | undefined;
+  let bestScore = 0;
+  for (const id of side.tactics) {
+    const sc = score(id) + (late ? 1 : 0);
+    if (sc > bestScore) {
+      bestScore = sc;
+      best = id;
+    }
+  }
+  if (bestScore >= 2.5) return best;
+  if (bestScore >= 1.5 && rng.chance(0.3)) return best;
+  return undefined;
+}
+
+function mainCommander(side: BattleSide): Commander | undefined {
+  return side.mainCommanderId
+    ? side.commanders.find((c) => c.id === side.mainCommanderId)
+    : undefined;
+}
+
+/** Score de duel d'un commandant (sans l'aléa). */
+export function duelPower(c: Commander): number {
+  let v = c.guerre + (c.duel ?? 0);
+  if (c.traits.includes('fort')) v += 3;
+  if (c.traits.includes('courageux')) v += 2;
+  if (c.traits.includes('heros')) v += 2;
+  if (c.traits.includes('blesse')) v -= 4;
+  if (c.traits.includes('faible')) v -= 3;
+  return v;
+}
+
+/** L'IA accepte-t-elle un défi ? */
+function aiAcceptsDuel(target: Commander, challenger: Commander): boolean {
+  if (target.traits.includes('lache')) return false;
+  if (target.traits.includes('courageux') || target.traits.includes('impetueux')) return true;
+  return duelPower(target) >= duelPower(challenger) - 2;
+}
+
+/** Au début de la bataille, un commandant peut lancer un défi. */
+function maybeDuel(battle: BattleState, rng: Rng): void {
+  const a = mainCommander(battle.attacker);
+  const d = mainCommander(battle.defender);
+  if (!a || !d || !rng.chance(B.duel.chance)) return;
+  const challenger: SideKey =
+    duelPower(a) + (a.traits.includes('impetueux') ? 3 : 0) >=
+    duelPower(d) + (d.traits.includes('impetueux') ? 3 : 0)
+      ? 'attacker'
+      : 'defender';
+  if (battle[challenger].isPlayer) return; // Le joueur lance lui-même ses défis.
+  proposeDuel(battle, challenger, rng);
+}
+
+/** Un camp défie l'autre ; si la cible est le joueur, il doit répondre. */
+export function proposeDuel(battle: BattleState, challenger: SideKey, rng: Rng): boolean {
+  const ck = battle[challenger];
+  const tk = battle[other(challenger)];
+  const c = mainCommander(ck);
+  const t = mainCommander(tk);
+  if (!c || !t || ck.challenged || battle.duel || battle.phase === 'fin') return false;
+  ck.challenged = true;
+  battle.duel = { challenger, challengerId: c.id, targetId: t.id, status: 'propose' };
+  if (tk.isPlayer && battle.playerSide) return true;
+  const lines: string[] = [];
+  if (aiAcceptsDuel(t, c)) resolveDuel(battle, rng, lines);
+  else refuseDuel(battle, lines);
+  battle.duel.text = lines.join(' ');
+  return true;
+}
+
+/** Réponse du joueur à un défi. */
+export function answerDuel(battle: BattleState, accept: boolean, rng: Rng): void {
+  if (battle.duel?.status !== 'propose') return;
+  const lines: string[] = [];
+  if (accept) resolveDuel(battle, rng, lines);
+  else refuseDuel(battle, lines);
+  battle.duel.text = lines.join(' ');
+}
+
+function refuseDuel(battle: BattleState, lines: string[]): void {
+  const duel = battle.duel;
+  if (!duel) return;
+  const refuser = battle[other(duel.challenger)];
+  for (const f of FRONTS)
+    if (isActive(refuser.fronts[f])) refuser.fronts[f].morale -= B.duel.refuseMorale;
+  if (totalMen(refuser.reserve) > 0)
+    refuser.reserveMorale = Math.max(0, refuser.reserveMorale - B.duel.refuseMorale);
+  duel.status = 'refuse';
+  lines.push(
+    `Le défi est refusé : les rangs de ${refuser.name} murmurent (−${B.duel.refuseMorale} moral).`,
+  );
+}
+
+function resolveDuel(battle: BattleState, rng: Rng, lines: string[]): void {
+  const duel = battle.duel;
+  if (!duel) return;
+  const ck = duel.challenger;
+  const tk = other(ck);
+  const c = battle[ck].commanders.find((x) => x.id === duel.challengerId)!;
+  const t = battle[tk].commanders.find((x) => x.id === duel.targetId)!;
+  const sc = duelPower(c) + rng.range(0, B.duel.randomMax);
+  const st = duelPower(t) + rng.range(0, B.duel.randomMax);
+  const winKey = sc >= st ? ck : tk;
+  const loseKey = other(winKey);
+  const winner = winKey === ck ? c : t;
+  const loser = winKey === ck ? t : c;
+  duel.status = 'fini';
+  duel.winner = winKey;
+  for (const f of FRONTS) {
+    if (isActive(battle[winKey].fronts[f])) battle[winKey].fronts[f].morale += B.duel.winnerMorale;
+    if (isActive(battle[loseKey].fronts[f])) battle[loseKey].fronts[f].morale -= B.duel.loserMorale;
+  }
+  lines.push(`Duel : ${winner.name} terrasse ${loser.name} devant les deux armées !`);
+  if (rng.chance(B.duel.deathChance)) {
+    battle.casualties.killed.push(loser.id);
+    const side = battle[loseKey];
+    for (const f of FRONTS)
+      if (side.fronts[f].commanderId === loser.id) side.fronts[f].commanderId = undefined;
+    if (side.mainCommanderId === loser.id) side.mainCommanderId = undefined;
+    lines.push(`${loser.name} ne se relève pas.`);
+  } else if (rng.chance(B.duel.woundChance)) {
+    battle.casualties.wounded.push(loser.id);
+    lines.push(`${loser.name} est emporté, blessé.`);
   }
 }
 
@@ -1121,6 +1500,12 @@ function finishBattle(
     menEngaged: engaged,
     warScore: Math.round(score),
   };
+  const duel = battle.duel;
+  if (duel?.status === 'fini' && duel.winner) {
+    const winnerId = duel.winner === duel.challenger ? duel.challengerId : duel.targetId;
+    const loserId = winnerId === duel.challengerId ? duel.targetId : duel.challengerId;
+    result.duel = { winnerId, loserId, winnerSide: duel.winner };
+  }
   battle.result = result;
   battle.phase = 'fin';
   const lastLog = battle.log[battle.log.length - 1];
