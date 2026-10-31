@@ -22,9 +22,7 @@ import {
 import {
   CharLine,
   CoatOfArms,
-  Opinion,
   Portrait,
-  Sheet,
   Skills,
   Tip,
   Segmented,
@@ -86,6 +84,7 @@ export function CharacterCard({ game, c }: { game: GameState; c: Character }) {
 
 function RulerView({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
+  const inspect = useStore((s) => s.inspect);
   const p = game.characters[game.playerId];
   const dyn = game.dynasties[game.playerDynastyId];
   const heir = heirsOf(game, p)[0];
@@ -97,7 +96,16 @@ function RulerView({ game }: { game: GameState }) {
   return (
     <>
       <div className="card">
-        <CharacterCard game={game} c={p} />
+        <div
+          className="tappable"
+          role="button"
+          onClick={() => inspect({ kind: 'perso', id: p.id })}
+        >
+          <CharacterCard game={game} c={p} />
+          <p className="small muted" style={{ margin: '8px 0 0' }}>
+            Toucher pour la fiche complète ›
+          </p>
+        </div>
       </div>
       <div className="card">
         <h3>Maison {dyn.name}</h3>
@@ -165,7 +173,6 @@ function FamilyView({ game }: { game: GameState }) {
   const fam = closeFamily(game, p);
   const kids = wards(game);
   const educators = councilCandidates(game).concat(p);
-  const [open, setOpen] = useState<Character | null>(null);
   return (
     <>
       <div className="card">
@@ -176,7 +183,6 @@ function FamilyView({ game }: { game: GameState }) {
             key={c.id}
             state={game}
             c={c}
-            onTap={() => setOpen(c)}
             extra={
               <>
                 {c.id === p.spouseId
@@ -248,23 +254,13 @@ function FamilyView({ game }: { game: GameState }) {
           </div>
         ))}
       </div>
-      {open && (
-        <Sheet onClose={() => setOpen(null)}>
-          <CharacterCard game={game} c={open} />
-          <div className="row" style={{ marginTop: 8 }}>
-            <span className="muted">Opinion envers vous</span>
-            <span className="right">
-              <Opinion state={game} from={open.id} to={p.id} />
-            </span>
-          </div>
-        </Sheet>
-      )}
     </>
   );
 }
 
 function CouncilView({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
+  const inspect = useStore((s) => s.inspect);
   const cands = councilCandidates(game);
   const rivals = independentRulers(game).filter((r) => r !== game.playerId);
   const mine = Object.values(game.counties).filter((c) => countyRuler(game, c) === game.playerId);
@@ -298,7 +294,13 @@ function CouncilView({ game }: { game: GameState }) {
         return (
           <div key={post} className="card">
             <div className="row">
-              {h ? <Portrait state={game} c={h} size={44} /> : <div style={{ width: 44 }} />}
+              {h ? (
+                <span className="tappable" onClick={() => inspect({ kind: 'perso', id: h.id })}>
+                  <Portrait state={game} c={h} size={48} />
+                </span>
+              ) : (
+                <div style={{ width: 48 }} />
+              )}
               <div className="grow">
                 <h3 style={{ margin: 0 }}>{info.label}</h3>
                 <div className="small muted">

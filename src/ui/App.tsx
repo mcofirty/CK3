@@ -8,6 +8,7 @@ import { vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
 import { Icon, Logo, Segmented, Sheet, TipLayer, signed } from './components/common';
+import { Inspector } from './components/Inspector';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
 import { ChronicleScreen } from './screens/Chronicle';
@@ -197,6 +198,7 @@ function Game({ game }: { game: GameState }) {
           </div>
         </Sheet>
       )}
+      <Inspector game={game} />
       {!game.tutorialSeen && <Tutorial />}
       {game.phase === 'bataille' && game.battle && <BattleScreen game={game} />}
     </div>

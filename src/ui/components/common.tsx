@@ -3,6 +3,7 @@ import { TRAITS } from '../../data/traits';
 import { ageOf, displayName, opinionOf, skillsOf } from '../../engine/characters';
 import { Rng } from '../../engine/rng';
 import { SKILL_KEYS, SKILL_LABELS, type Character, type GameState } from '../../engine/state';
+import { useStore } from '../store';
 
 // ---------------------------------------------------------------------------
 // Infobulles : appui long (mobile) ou survol (bureau)
@@ -378,9 +379,23 @@ export function CoatOfArms({ seed, size = 40 }: { seed: number; size?: number })
   );
 }
 
-const SKINS = ['#f1d3b8', '#e3b994', '#c99470', '#a8754f', '#7d5236'];
-const HAIRS = ['#2b1d12', '#5a3a1e', '#8a5a2b', '#c08a3e', '#d9c08a', '#6b2d1a'];
+const SKINS = ['#f3d6bd', '#e6bc97', '#cf9a74', '#a87552', '#7d5236'];
+const SKIN_SHADE = ['#e2bb9d', '#d2a27c', '#b9825e', '#8f6143', '#63402a'];
+const HAIRS = ['#241812', '#4a2e18', '#7a4a22', '#a8682e', '#d2b07a', '#6b2416', '#2d2a28'];
+const EYES = ['#3b2a1e', '#4a6a8a', '#4f6b3a', '#6b4a2a'];
+const GARMENTS = ['#7a2018', '#1f3f6b', '#2f5a2f', '#4a2a5b', '#5b4a2a', '#3a3a46'];
 
+function rankOfChar(state: GameState, id: string): 'roi' | 'duc' | 'comte' | null {
+  if (Object.values(state.kingdoms).some((k) => k.holderId === id)) return 'roi';
+  if (Object.values(state.duchies).some((d) => d.holderId === id)) return 'duc';
+  if (Object.values(state.counties).some((k) => k.holderId === id)) return 'comte';
+  return null;
+}
+
+/**
+ * Portrait stylisé généré depuis la graine du personnage : rang (couronne), âge (cheveux,
+ * rides), sexe, dynastie (fond et vêtements), état (malade, blessé, prisonnier, mort).
+ */
 export function Portrait({
   state,
   c,
@@ -391,54 +406,239 @@ export function Portrait({
   size?: number;
 }) {
   const r = new Rng(c.seed);
-  const skin = r.pick(SKINS);
-  let hair = r.pick(HAIRS);
+  const skinI = r.int(0, SKINS.length - 1);
+  let skin = SKINS[skinI];
+  const shade = SKIN_SHADE[skinI];
   const age = ageOf(state, c);
-  if (age > 55) hair = '#bdb6aa';
-  else if (age > 45 && r.chance(0.5)) hair = '#8c847a';
+  let hair = r.pick(HAIRS);
+  if (age > 58) hair = '#cfc8bd';
+  else if (age > 46 && r.chance(0.6)) hair = '#8f877c';
+  const eye = r.pick(EYES);
   const dyn = c.dynastyId ? state.dynasties[c.dynastyId] : undefined;
-  const bg = dyn ? TINCTURES[new Rng(dyn.seed).int(0, 5)] : '#7a6a58';
-  const clothes = r.pick(['#6b1f1a', '#1f3f6b', '#2f5a2f', '#4a2a5b', '#5b4a2a']);
-  const ruler = Object.values(state.counties).some((k) => k.holderId === c.id);
+  const dynI = dyn ? new Rng(dyn.seed).int(0, 5) : 6;
+  const bg = dyn ? TINCTURES[dynI] : '#6f6458';
+  const garment = dyn ? GARMENTS[dynI % GARMENTS.length] : r.pick(GARMENTS);
+  const rank = rankOfChar(state, c.id);
   const child = age < 16;
-  const scale = child ? 0.82 : 1;
-  const beard = !c.female && age >= 18 && r.chance(0.55);
+  const sick = c.traits.includes('malade');
+  const wounded = c.traits.includes('blesse');
+  if (sick) skin = '#d9d4b8';
+  const female = c.female;
+  const hairStyle = r.int(0, 3);
+  const beard = !female && age >= 18 ? r.int(0, 3) : 0; // 0 rasé, 1 barbe, 2 bouc, 3 moustache
+  const bald = !female && age > 40 && r.chance(0.3);
+  const veil = female && !child && r.chance(0.35);
+  const s = child ? 0.84 : 1;
+  const uid = `p${c.id}`;
+  const fur = rank !== null;
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 64 64"
-      style={{ borderRadius: 12, flexShrink: 0, opacity: c.alive ? 1 : 0.55 }}
+      style={{
+        borderRadius: size > 60 ? 18 : 12,
+        flexShrink: 0,
+        filter: c.alive ? undefined : 'grayscale(1) contrast(0.9)',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.25)',
+      }}
       aria-hidden
     >
-      <rect width="64" height="64" fill={bg} opacity="0.85" />
-      <g transform={`translate(${32 - 32 * scale} ${64 - 64 * scale}) scale(${scale})`}>
-        <path d="M10 64 C12 46 22 42 32 42 C42 42 52 46 54 64 Z" fill={clothes} />
-        {c.female && <path d="M17 44 C14 30 16 14 32 13 C48 14 50 30 47 44 Z" fill={hair} />}
-        <ellipse cx="32" cy="30" rx="11" ry="13" fill={skin} />
+      <defs>
+        <radialGradient id={`${uid}bg`} cx="50%" cy="35%" r="75%">
+          <stop offset="0%" stopColor={bg} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={bg} stopOpacity="1" />
+        </radialGradient>
+        <linearGradient id={`${uid}cl`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={garment} />
+          <stop offset="100%" stopColor="#000" stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" fill={`url(#${uid}bg)`} />
+      <rect width="64" height="64" fill={garment} opacity="0.12" />
+      <g transform={`translate(${32 - 32 * s} ${64 - 64 * s}) scale(${s})`}>
+        {/* Cheveux longs derrière */}
+        {female && !veil && hairStyle !== 3 && (
+          <path d="M18 46 C13 32 15 13 32 12 C49 13 51 32 46 46 Z" fill={hair} />
+        )}
+        {female && !veil && hairStyle === 3 && <circle cx="32" cy="11" r="7" fill={hair} />}
+        {veil && <path d="M15 52 C14 30 18 11 32 10 C46 11 50 30 49 52 Z" fill="#efe7da" />}
+        {/* Buste */}
+        <path d="M8 64 C9 50 20 45 32 45 C44 45 55 50 56 64 Z" fill={`url(#${uid}cl)`} />
+        {fur && (
+          <path
+            d="M14 54 C18 47 25 45 32 46 C39 45 46 47 50 54 C44 50 38 52 32 52 C26 52 20 50 14 54 Z"
+            fill="#f1ece2"
+          />
+        )}
+        {fur && (
+          <g fill="#2a2420">
+            <circle cx="22" cy="51" r="0.9" />
+            <circle cx="30" cy="50.5" r="0.9" />
+            <circle cx="38" cy="50.6" r="0.9" />
+            <circle cx="44" cy="51.5" r="0.9" />
+          </g>
+        )}
+        {!fur && <path d="M27 46 L32 53 L37 46" fill="none" stroke="#e0b443" strokeWidth="1.2" />}
+        {/* Cou */}
+        <path d="M27 38 h10 v8 c-3 2 -7 2 -10 0 z" fill={shade} />
+        {/* Oreilles et visage */}
+        <ellipse cx="20.5" cy="30" rx="2.3" ry="3.4" fill={shade} />
+        <ellipse cx="43.5" cy="30" rx="2.3" ry="3.4" fill={shade} />
         <path
           d={
-            c.female
-              ? 'M21 28 C21 17 26 14 32 14 C38 14 43 17 43 28 C40 22 36 20 32 20 C28 20 24 22 21 28 Z'
-              : 'M21 27 C20 18 25 15 32 15 C39 15 44 18 43 27 C41 21 37 20 32 20 C27 20 23 21 21 27 Z'
+            female || child
+              ? 'M21 27 C21 18 26 15 32 15 C38 15 43 18 43 27 C43 36 38 42 32 42 C26 42 21 36 21 27 Z'
+              : 'M21 27 C21 18 26 15 32 15 C38 15 43 18 43 27 C43 34 41 40 36 42 C34 43 30 43 28 42 C23 40 21 34 21 27 Z'
           }
-          fill={hair}
+          fill={skin}
         />
-        {beard && (
-          <path d="M22 32 C23 43 28 46 32 46 C36 46 41 43 42 32 C39 38 25 38 22 32 Z" fill={hair} />
+        {/* Joues, rides */}
+        {(female || child) && (
+          <g fill="#e07a6a" opacity="0.18">
+            <circle cx="25.5" cy="32" r="2.6" />
+            <circle cx="38.5" cy="32" r="2.6" />
+          </g>
         )}
-        <circle cx="28" cy="30" r="1.3" fill="#2a2118" />
-        <circle cx="36" cy="30" r="1.3" fill="#2a2118" />
-        {ruler && (
+        {age > 50 && (
+          <g stroke={shade} strokeWidth="0.8" fill="none" strokeLinecap="round">
+            <path d="M23.5 28.5 q1.5 1 3 0.4" />
+            <path d="M37.5 28.9 q1.5 0.6 3 -0.4" />
+            <path d="M27 21 q5 -1.5 10 0" />
+          </g>
+        )}
+        {/* Yeux, sourcils, nez, bouche */}
+        <g>
+          <ellipse cx="27.5" cy="27.5" rx="2.1" ry="1.3" fill="#fbf7f0" />
+          <ellipse cx="36.5" cy="27.5" rx="2.1" ry="1.3" fill="#fbf7f0" />
+          <circle cx="27.7" cy="27.5" r="1.05" fill={eye} />
+          <circle cx="36.3" cy="27.5" r="1.05" fill={eye} />
           <path
-            d="M22 14 L24 6 L28 11 L32 4 L36 11 L40 6 L42 14 Z"
-            fill="#e0b443"
-            stroke="#8a6a14"
+            d={
+              female
+                ? 'M25 24.6 q2.5 -1.4 5 -0.2 M34 24.4 q2.5 -1.2 5 0.2'
+                : 'M24.6 24.6 q2.8 -1.3 5.6 -0.4 M33.8 24.2 q2.8 -0.9 5.6 0.4'
+            }
+            stroke={age > 58 ? '#9a9288' : hair}
+            strokeWidth={female ? 0.9 : 1.4}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M32 28.5 L30.8 33 Q32 33.8 33.3 33"
+            fill="none"
+            stroke={shade}
             strokeWidth="1"
+            strokeLinejoin="round"
+          />
+          <path
+            d={
+              beard === 3 || beard === 1 ? 'M29.2 36.6 q2.8 1.1 5.6 0' : 'M29.4 36.4 q2.6 1.4 5.2 0'
+            }
+            fill="none"
+            stroke={female ? '#a8473a' : '#7a4a3a'}
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
+        </g>
+        {/* Barbe */}
+        {beard === 1 && (
+          <path
+            d="M21.5 29 C22 40 27 44 32 44 C37 44 42 40 42.5 29 C40 36 36 37.5 32 37.5 C28 37.5 24 36 21.5 29 Z"
+            fill={hair}
+          />
+        )}
+        {beard === 2 && (
+          <path
+            d="M28.5 38.5 C29 42.5 31 44 32 44 C33 44 35 42.5 35.5 38.5 C33.5 39.5 30.5 39.5 28.5 38.5 Z"
+            fill={hair}
+          />
+        )}
+        {(beard === 1 || beard === 3) && (
+          <path
+            d="M27.5 35.6 C29.5 34 31 34.6 32 35 C33 34.6 34.5 34 36.5 35.6 C34.5 35.4 33 36 32 35.9 C31 36 29.5 35.4 27.5 35.6 Z"
+            fill={hair}
+          />
+        )}
+        {/* Coiffure */}
+        {!veil && !bald && (
+          <path
+            d={
+              female
+                ? 'M21 26 C20 16 26 12.5 32 12.5 C38 12.5 44 16 43 26 C41 20 37 18.5 32 18.5 C27 18.5 23 20 21 26 Z'
+                : hairStyle === 0
+                  ? 'M21 25 C20 16 26 13 32 13 C38 13 44 16 43 25 C41 20 37 18.6 32 18.6 C27 18.6 23 20 21 25 Z'
+                  : hairStyle === 1
+                    ? 'M20.5 30 C19 16 25.5 12.5 32 12.5 C38.5 12.5 45 16 43.5 30 C42.5 22 40 19 32 19.5 C24 19 21.5 22 20.5 30 Z'
+                    : 'M21 24 C21.5 15.5 26 13.2 32 13.2 C38 13.2 42.5 15.5 43 24 C40 21.5 36 20.5 32 21.5 C28 19.8 24 21 21 24 Z'
+            }
+            fill={hair}
+          />
+        )}
+        {bald && (
+          <path
+            d="M21 27 C20.5 23 21.5 21 22.5 20.5 L23 25 Z M43 27 C43.5 23 42.5 21 41.5 20.5 L41 25 Z"
+            fill={hair}
+          />
+        )}
+        {female && !veil && hairStyle === 2 && (
+          <g fill={hair}>
+            <path d="M20 30 C18 40 19 48 22 52 C24 48 23 40 22.5 31 Z" />
+            <path d="M44 30 C46 40 45 48 42 52 C40 48 41 40 41.5 31 Z" />
+          </g>
+        )}
+        {veil && (
+          <path
+            d="M20.5 25 C20.5 15 26 12.3 32 12.3 C38 12.3 43.5 15 43.5 25 C40 19.5 36 18.2 32 18.2 C28 18.2 24 19.5 20.5 25 Z"
+            fill="#f6f0e6"
+          />
+        )}
+        {/* Blessure */}
+        {wounded && (
+          <path d="M37 22 L41 33" stroke="#9a2c22" strokeWidth="1.2" strokeLinecap="round" />
+        )}
+        {/* Couronnes selon le rang */}
+        {rank === 'roi' && (
+          <g>
+            <path
+              d="M20.5 15 L22 5 L26.5 10 L32 3 L37.5 10 L42 5 L43.5 15 Z"
+              fill="#e0b443"
+              stroke="#8a6a14"
+              strokeWidth="0.9"
+              strokeLinejoin="round"
+            />
+            <circle cx="32" cy="12" r="1.5" fill="#b4473a" />
+            <circle cx="26" cy="13" r="1" fill="#3a6593" />
+            <circle cx="38" cy="13" r="1" fill="#3a6593" />
+          </g>
+        )}
+        {rank === 'duc' && (
+          <g>
+            <path
+              d="M21.5 15.5 L22.5 10.5 L25.5 13 L28.5 9 L32 12 L35.5 9 L38.5 13 L41.5 10.5 L42.5 15.5 Z"
+              fill="#e0b443"
+              stroke="#8a6a14"
+              strokeWidth="0.9"
+              strokeLinejoin="round"
+            />
+            <circle cx="32" cy="14" r="1.1" fill="#b4473a" />
+          </g>
+        )}
+        {rank === 'comte' && (
+          <path
+            d="M21.5 15.8 Q32 12.5 42.5 15.8 L42.5 17.6 Q32 14.5 21.5 17.6 Z"
+            fill="#d8c9a0"
+            stroke="#8a7a50"
+            strokeWidth="0.7"
           />
         )}
       </g>
-      {!c.alive && <line x1="4" y1="60" x2="60" y2="4" stroke="rgba(0,0,0,0.5)" strokeWidth="3" />}
+      {c.imprisonedBy && (
+        <g stroke="#1c1813" strokeWidth="2.4" opacity="0.75">
+          <path d="M14 0 V64 M26 0 V64 M38 0 V64 M50 0 V64" />
+        </g>
+      )}
+      <rect width="64" height="64" fill="none" stroke="rgba(0,0,0,0.12)" />
     </svg>
   );
 }
@@ -452,11 +652,14 @@ export function CharLine({
   state: GameState;
   c: Character;
   extra?: ReactNode;
+  /** Par défaut : ouvre la fiche du personnage. */
   onTap?: () => void;
 }) {
+  const inspect = useStore((st) => st.inspect);
+  const tap = onTap ?? (() => inspect({ kind: 'perso', id: c.id }));
   return (
-    <div className="list-item" onClick={onTap} style={{ cursor: onTap ? 'pointer' : undefined }}>
-      <Portrait state={state} c={c} size={44} />
+    <div className="list-item tappable" onClick={tap} role="button">
+      <Portrait state={state} c={c} size={46} />
       <div className="grow">
         <div className="ellipsis" style={{ fontWeight: 600 }}>
           {displayName(state, c)}
@@ -466,7 +669,34 @@ export function CharLine({
           {extra ? <> · {extra}</> : null}
         </div>
       </div>
+      <span className="chev" aria-hidden>
+        ›
+      </span>
     </div>
+  );
+}
+
+/** Lien vers la fiche d'un personnage. */
+export function CharLink({ state, id }: { state: GameState; id?: string }) {
+  const inspect = useStore((st) => st.inspect);
+  const c = id ? state.characters[id] : undefined;
+  if (!c) return <span className="muted">—</span>;
+  return (
+    <button className="link" onClick={() => inspect({ kind: 'perso', id: c.id })}>
+      {c.name}
+    </button>
+  );
+}
+
+/** Lien vers la fiche d'un comté. */
+export function CountyLink({ state, id }: { state: GameState; id?: string }) {
+  const inspect = useStore((st) => st.inspect);
+  const c = id ? state.counties[id] : undefined;
+  if (!c) return <span className="muted">—</span>;
+  return (
+    <button className="link" onClick={() => inspect({ kind: 'comte', id: c.id })}>
+      {c.name}
+    </button>
   );
 }
 

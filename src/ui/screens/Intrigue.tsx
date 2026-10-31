@@ -109,6 +109,7 @@ function Diplomacy({ game }: { game: GameState }) {
 
 function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClose: () => void }) {
   const dispatch = useStore((s) => s.dispatch);
+  const inspect = useStore((s) => s.inspect);
   const pl = game.playerId;
   const c = game.characters[id];
   const alliance = allianceAcceptance(game, pl, id);
@@ -126,6 +127,13 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         </div>
         <Opinion state={game} from={id} to={pl} />
       </div>
+      <button
+        className="btn block ghost"
+        style={{ marginTop: 10 }}
+        onClick={() => inspect({ kind: 'perso', id })}
+      >
+        Fiche détaillée (traits, famille, terres) ›
+      </button>
       <div className="card" style={{ marginTop: 12 }}>
         <b>Envoyer un cadeau ({gift} or)</b>
         <p className="small muted">+{BALANCE.economy.giftOpinion} d’opinion pendant 4 ans.</p>
