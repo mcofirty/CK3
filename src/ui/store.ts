@@ -4,7 +4,14 @@ import { applyAction, type Action } from '../engine/actions';
 import type { GameState } from '../engine/state';
 import { newGame, type NewGameOptions } from '../engine/world';
 import { importJson, lastSlot, loadGame, saveGame, type Slot } from '../save/storage';
-import { loadSettings, play, saveSettings, type Settings, type SoundId } from './sound';
+import {
+  applySettings,
+  loadSettings,
+  play,
+  saveSettings,
+  type Settings,
+  type SoundId,
+} from './sound';
 
 const ACH_KEY = 'highborn-succes';
 function loadAchievements(): string[] {
@@ -51,6 +58,9 @@ interface Store {
   /** Son et vibrations. */
   settings: Settings;
   setSettings: (s: Partial<Settings>) => void;
+  /** Fenêtre des paramètres ouverte. */
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
   sound: (id: SoundId) => void;
   /** Succès débloqués sur cet appareil, toutes parties confondues. */
   globalAchievements: string[];
@@ -87,8 +97,11 @@ export const useStore = create<Store>((set, get) => ({
   setSettings: (p) => {
     const settings = { ...get().settings, ...p };
     saveSettings(settings);
+    applySettings(settings);
     set({ settings });
   },
+  settingsOpen: false,
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   sound: (id) => play(id, get().settings),
   slot: 1,
   tab: 'cour',
@@ -208,6 +221,8 @@ export const useStore = create<Store>((set, get) => ({
     return !!get().game;
   },
 }));
+
+applySettings(useStore.getState().settings);
 
 // Sauvegarde quand l'application passe en arrière-plan.
 if (typeof document !== 'undefined') {

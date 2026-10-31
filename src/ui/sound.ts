@@ -8,18 +8,53 @@ export type SoundId =
 export interface Settings {
   son: boolean;
   vibrations: boolean;
+  /** Thème : suivre l'appareil, ou forcer clair / sombre. */
+  theme: 'auto' | 'clair' | 'sombre';
+  /** Animations réduites. */
+  reduceMotion: boolean;
+  /** Résumé des points d'attention avant de finir la saison. */
+  confirmEnd: boolean;
 }
 
 const KEY = 'highborn-reglages';
+export const DEFAULT_SETTINGS: Settings = {
+  son: true,
+  vibrations: true,
+  theme: 'auto',
+  reduceMotion: false,
+  confirmEnd: true,
+};
 
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { son: true, vibrations: true, ...(JSON.parse(raw) as Partial<Settings>) };
+    if (raw) return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) };
   } catch {
     /* stockage indisponible */
   }
-  return { son: true, vibrations: true };
+  return { ...DEFAULT_SETTINGS };
+}
+
+/** Applique thème et animations au document. */
+export function applySettings(s: Settings): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.classList.toggle('theme-light', s.theme === 'clair');
+  root.classList.toggle('theme-dark', s.theme === 'sombre');
+  root.classList.toggle('reduce-motion', s.reduceMotion);
+  root.style.colorScheme = s.theme === 'clair' ? 'light' : s.theme === 'sombre' ? 'dark' : '';
+  // Couleur de la barre d'état.
+  for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    const light = m.media.includes('light');
+    m.content =
+      s.theme === 'clair'
+        ? '#f1e9d8'
+        : s.theme === 'sombre'
+          ? '#15110e'
+          : light
+            ? '#f1e9d8'
+            : '#15110e';
+  }
 }
 
 export function saveSettings(s: Settings): void {

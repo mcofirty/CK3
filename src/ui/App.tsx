@@ -18,6 +18,7 @@ import {
 } from './components/common';
 import { AchievementList, DynastyBook, EndingBanner } from './components/Book';
 import { Inspector } from './components/Inspector';
+import { SettingsButton, SettingsSheet } from './components/Settings';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
@@ -34,6 +35,7 @@ export function App() {
     <>
       {game ? <Game game={game} /> : <TitleScreen />}
       {error && <div className="toast glass">{error}</div>}
+      <SettingsSheet />
       <TipLayer />
     </>
   );
@@ -53,8 +55,7 @@ function TitleScreen() {
   const importSlot = useRef<Slot>(1);
   const [showAch, setShowAch] = useState(false);
   const globalAch = useStore((s) => s.globalAchievements);
-  const settings = useStore((s) => s.settings);
-  const setSettings = useStore((s) => s.setSettings);
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   useEffect(() => {
     void listSlots().then(setSlots);
   }, []);
@@ -65,6 +66,9 @@ function TitleScreen() {
       (navigator as Navigator & { standalone?: boolean }).standalone === true);
   return (
     <div className="title-screen">
+      <div className="title-gear">
+        <SettingsButton />
+      </div>
       <Logo size={120} className="logo" />
       <h1 className="brand">Highborn</h1>
       <p className="center muted" style={{ marginBottom: 24 }}>
@@ -133,12 +137,8 @@ function TitleScreen() {
         <button className="btn grow" onClick={() => setShowAch(true)}>
           🏆 Succès ({globalAch.length}/{ACHIEVEMENTS.length})
         </button>
-        <button
-          className="btn"
-          aria-label={settings.son ? 'Couper le son' : 'Activer le son'}
-          onClick={() => setSettings({ son: !settings.son })}
-        >
-          {settings.son ? '🔊' : '🔇'}
+        <button className="btn grow" onClick={() => setSettingsOpen(true)}>
+          ⚙︎ Paramètres
         </button>
       </div>
       {showAch && (
@@ -197,9 +197,10 @@ function Game({ game }: { game: GameState }) {
   const tabDir = useStore((s) => s.tabDir);
   const [summary, setSummary] = useState<string[] | null>(null);
   const dispatch = useStore((s) => s.dispatch);
+  const confirmEnd = useStore((s) => s.settings.confirmEnd);
   if (game.gameOver) return <EndScreen game={game} />;
   const endSeason = () => {
-    const items = attention(game);
+    const items = confirmEnd ? attention(game) : [];
     if (items.length) setSummary(items);
     else dispatch({ type: 'endSeason' });
   };
@@ -414,6 +415,7 @@ function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => voi
   return (
     <>
       <header className="topbar glass">
+        <SettingsButton onLong={() => setDebug(true)} />
         <span className="title" aria-label="Highborn" onContextMenu={(e) => e.preventDefault()}>
           <LongPressTitle onLong={() => setDebug(true)} />
         </span>

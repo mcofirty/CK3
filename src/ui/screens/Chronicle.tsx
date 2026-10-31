@@ -23,8 +23,7 @@ const CHRONICLE_VIEWS = ['chronique', 'livre', 'nouvelles', 'succes'] as const;
 
 export function ChronicleScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<(typeof CHRONICLE_VIEWS)[number]>('chronique');
-  const settings = useStore((s) => s.settings);
-  const setSettings = useStore((s) => s.setSettings);
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const globalAch = useStore((s) => s.globalAchievements);
   const dir = usePager(CHRONICLE_VIEWS, view, setView);
   const quit = useStore((s) => s.quit);
@@ -96,20 +95,13 @@ export function ChronicleScreen({ game }: { game: GameState }) {
           Sauvegarde automatique à chaque fin de saison. Exportez régulièrement pour ne jamais
           perdre votre lignée.
         </p>
-        <div className="row wrap" style={{ marginBottom: 10 }}>
-          <button
-            className={`btn small${settings.son ? ' primary' : ''}`}
-            onClick={() => setSettings({ son: !settings.son })}
-          >
-            {settings.son ? '🔊 Son activé' : '🔇 Son coupé'}
-          </button>
-          <button
-            className={`btn small${settings.vibrations ? ' primary' : ''}`}
-            onClick={() => setSettings({ vibrations: !settings.vibrations })}
-          >
-            {settings.vibrations ? '📳 Vibrations' : '📴 Sans vibrations'}
-          </button>
-        </div>
+        <button
+          className="btn block"
+          style={{ marginBottom: 10 }}
+          onClick={() => setSettingsOpen(true)}
+        >
+          ⚙︎ Paramètres (thème, son, sauvegarde…)
+        </button>
         <div className="row wrap">
           <button className="btn" onClick={() => downloadExport(game)}>
             Exporter (JSON)
