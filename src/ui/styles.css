@@ -733,7 +733,8 @@ strong {
 .sheet.closing {
   animation: sheet-down 230ms var(--ease-in) both;
 }
-.sheet.dragging {
+.sheet.dragging,
+.sheet.closing.dragged {
   animation: none;
 }
 .sheet.settle {
@@ -1179,7 +1180,8 @@ strong {
    ========================================================================= */
 .map-wrap {
   height: calc(
-    100svh - var(--safe-top) - var(--safe-bottom) - var(--topbar-h) - var(--tabbar-h) - 64px
+    100svh + var(--vh-gap) - var(--safe-top) - var(--safe-bottom) - var(--topbar-h) -
+      var(--tabbar-h) - 64px
   );
   min-height: 420px;
 }
@@ -1440,7 +1442,32 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  height: 100dvh;
+}
+
+/*
+ * iPhone en mode « écran d'accueil » (barre d'état translucide) : la hauteur de fenêtre
+ * annoncée par iOS oublie parfois la barre d'état. main.tsx mesure l'écart (--vh-gap) et
+ * on prolonge jusqu'au bas réel de l'écran tout ce qui est ancré en bas.
+ */
+:root {
+  --vh-gap: 0px;
+}
+html {
+  min-height: calc(100% + var(--vh-gap));
+}
+body,
+.overlay,
+.battle {
+  bottom: calc(0px - var(--vh-gap));
+}
+body {
+  height: auto;
+}
+.tabbar {
+  bottom: calc(var(--safe-bottom) + 8px - var(--vh-gap));
+}
+.fab {
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px - var(--vh-gap));
 }
 .screen {
   touch-action: pan-y;

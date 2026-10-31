@@ -90,64 +90,149 @@ export function Sheet({
   swapKey?: string;
 }) {
   const [closing, setClosing] = useState(false);
-  const [drag, setDrag] = useState<number | null>(null);
-  const [settle, setSettle] = useState(false);
-  const startY = useRef(0);
-  const close = () => {
+  const [dragged, setDragged] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<() => void>(() => {});
+  const close = (fromDrag = false) => {
     if (!onClose || closing) return;
+    setDragged(fromDrag);
     setClosing(true);
     setTimeout(onClose, 220);
   };
-  const onDown = (e: React.PointerEvent) => {
-    if (!onClose) return;
-    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    startY.current = e.clientY;
-    setSettle(false);
-    setDrag(0);
-  };
-  const onMove = (e: React.PointerEvent) => {
-    if (drag === null) return;
-    const d = e.clientY - startY.current;
-    // Résistance vers le haut, suivi direct vers le bas.
-    setDrag(d > 0 ? d : d / 4);
-  };
-  const onUp = () => {
-    if (drag === null) return;
-    if (drag > 90) close();
-    else setSettle(true);
-    setDrag(null);
-  };
-  const cls = [
-    'sheet',
-    'glass',
-    closing ? 'closing' : '',
-    drag !== null ? 'dragging' : '',
-    settle ? 'settle' : '',
-  ]
+  closeRef.current = () => close(true);
+  const closable = !!onClose;
+
+  // Glisser vers le bas pour fermer : depuis la poignée, ou depuis n'importe où dans la
+  // fenêtre quand son contenu est déjà en haut (comme les fiches natives d'iOS).
+  useEffect(() => {
+    const el = sheetRef.current;
+    if (!el || !closable) return;
+    let g: {
+      x: number;
+      y: number;
+      active: boolean;
+      blocked: boolean;
+      fromHandle: boolean;
+      lastY: number;
+      lastT: number;
+      v: number;
+    } | null = null;
+    /** Un ascendant défilant (dans la fenêtre) n'est pas en haut ? */
+    const scrolledInside = (t: HTMLElement | null): boolean => {
+      for (let n = t; n && n !== el.parentElement; n = n.parentElement)
+        if (n.scrollTop > 0 && n.scrollHeight > n.clientHeight) return true;
+      return false;
+    };
+    const setY = (d: number) => {
+      el.style.transform = d ? `translateY(${d}px)` : '';
+      const ov = overlayRef.current;
+      if (ov)
+        ov.style.backgroundColor =
+          d > 0 ? `rgba(25, 12, 6, ${0.36 * Math.max(0, 1 - d / 500)})` : '';
+    };
+    const begin = (x: number, y: number, target: EventTarget | null) => {
+      const t = target as HTMLElement | null;
+      const fromHandle = !!t?.closest('.handle-zone');
+      const blocked =
+        !fromHandle &&
+        (scrolledInside(t) || !!t?.closest('[data-noswipe], input, textarea, select'));
+      g = { x, y, active: false, blocked, fromHandle, lastY: y, lastT: performance.now(), v: 0 };
+    };
+    const move = (x: number, y: number, e: Event) => {
+      if (!g || g.blocked) return;
+      const dy = y - g.y;
+      const dx = x - g.x;
+      if (!g.active) {
+        if (
+          dy > 8 &&
+          dy > Math.abs(dx) * 1.2 &&
+          (g.fromHandle || !scrolledInside(e.target as HTMLElement))
+        ) {
+          g.active = true;
+          el.classList.add('dragging');
+          el.classList.remove('settle');
+        } else if (Math.abs(dx) > 10 || dy < -8) {
+          // Défilement normal ou geste horizontal : on laisse faire.
+          g.blocked = !g.fromHandle;
+          return;
+        } else return;
+      }
+      if (e.cancelable) e.preventDefault();
+      const now = performance.now();
+      g.v = (y - g.lastY) / Math.max(1, now - g.lastT);
+      g.lastY = y;
+      g.lastT = now;
+      setY(dy > 0 ? dy - 8 : dy / 4);
+    };
+    const end = (y: number) => {
+      const s = g;
+      g = null;
+      if (!s?.active) return;
+      el.classList.remove('dragging');
+      const dy = y - s.y;
+      if (dy > 110 || (dy > 30 && s.v > 0.45)) {
+        el.style.transition = 'transform 220ms cubic-bezier(0.4, 0, 1, 1)';
+        el.style.transform = 'translateY(110%)';
+        closeRef.current();
+      } else {
+        el.classList.add('settle');
+        setY(0);
+      }
+    };
+    const ts = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        g = null;
+        return;
+      }
+      begin(e.touches[0].clientX, e.touches[0].clientY, e.target);
+    };
+    const tm = (e: TouchEvent) => move(e.touches[0].clientX, e.touches[0].clientY, e);
+    const te = (e: TouchEvent) => end(e.changedTouches[0]?.clientY ?? 0);
+    // Souris (ordinateur) : seulement depuis la poignée.
+    let mouse = false;
+    const md = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || !(e.target as HTMLElement).closest('.handle-zone')) return;
+      mouse = true;
+      begin(e.clientX, e.clientY, e.target);
+    };
+    const mm = (e: PointerEvent) => mouse && move(e.clientX, e.clientY, e);
+    const mu = (e: PointerEvent) => {
+      if (!mouse) return;
+      mouse = false;
+      end(e.clientY);
+    };
+    el.addEventListener('touchstart', ts, { passive: true });
+    el.addEventListener('touchmove', tm, { passive: false });
+    el.addEventListener('touchend', te);
+    el.addEventListener('touchcancel', te);
+    el.addEventListener('pointerdown', md);
+    window.addEventListener('pointermove', mm);
+    window.addEventListener('pointerup', mu);
+    return () => {
+      el.removeEventListener('touchstart', ts);
+      el.removeEventListener('touchmove', tm);
+      el.removeEventListener('touchend', te);
+      el.removeEventListener('touchcancel', te);
+      el.removeEventListener('pointerdown', md);
+      window.removeEventListener('pointermove', mm);
+      window.removeEventListener('pointerup', mu);
+    };
+  }, [closable]);
+
+  const cls = ['sheet', 'glass', closing ? (dragged ? 'closing dragged' : 'closing') : '']
     .filter(Boolean)
     .join(' ');
   return (
-    <div className={`overlay${closing ? ' closing' : ''}`} onClick={close}>
+    <div ref={overlayRef} className={`overlay${closing ? ' closing' : ''}`} onClick={() => close()}>
       <div
+        ref={sheetRef}
         className={cls}
-        style={
-          drag !== null
-            ? { transform: `translateY(${drag}px)` }
-            : settle
-              ? { transform: 'translateY(0)' }
-              : undefined
-        }
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div
-          className="handle-zone"
-          onPointerDown={onDown}
-          onPointerMove={onMove}
-          onPointerUp={onUp}
-          onPointerCancel={onUp}
-        >
+        <div className="handle-zone">
           <div className="handle" />
         </div>
         <div key={swapKey} className={swapKey ? 'swap' : undefined}>
