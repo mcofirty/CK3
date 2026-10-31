@@ -27,6 +27,7 @@ import {
 import { killCharacter } from './characters/lifecycle';
 import { offerAmbition } from './court';
 import { takeDecision } from './decisions';
+import { hireMercenaries } from './war/campaignExtras';
 import { addMemory } from './relations';
 import { addStress, stressFromSpec } from './stress';
 import { chronicle, type Ctx, newId, notify } from './context';
@@ -87,6 +88,8 @@ export type Action =
   | { type: 'peace'; warId: string; kind: 'exiger' | 'blanche' | 'capituler' }
   | { type: 'ransom'; characterId: string; kind: 'or' | 'comte' | 'liberer' | 'otage' | 'executer' }
   | { type: 'takeDecision'; id: string }
+  | { type: 'siegeMode'; armyId: string; mode?: 'blocus' | 'negocier' }
+  | { type: 'hireMercenaries'; id: string }
   | { type: 'offerAmbition' }
   | { type: 'abandonAmbition' }
   | { type: 'proposeMarriage'; aId: string; bId: string }
@@ -360,6 +363,15 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'dismissTutorial':
       state.tutorialSeen = true;
+      break;
+    case 'siegeMode': {
+      const army = state.armies[a.armyId];
+      if (army?.ownerId === pl && !(a.mode === 'negocier' && army.negotiated === army.location))
+        army.siegeMode = a.mode;
+      break;
+    }
+    case 'hireMercenaries':
+      hireMercenaries(ctx, pl, a.id);
       break;
     case 'takeDecision':
       takeDecision(ctx, a.id);

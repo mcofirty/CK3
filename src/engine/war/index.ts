@@ -22,6 +22,7 @@ import {
 import type { TacticId } from '../../data/tactics';
 import { TRAITS } from '../../data/traits';
 import { gainXp, record } from '../progression';
+import { seasonMercenaries, tryNegotiate } from './campaignExtras';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, clamp, newId, notify, seasonOf, type Ctx } from '../context';
 import {
@@ -601,7 +602,9 @@ export function seasonCampaign(ctx: Ctx): void {
     if (besiegeable) {
       if (!c.siege || c.siege.armyId !== a.id) c.siege = { armyId: a.id, progress: 0 };
       const required = W.siegeBase + fortLevel(c);
-      if (a.assault) {
+      if (tryNegotiate(ctx, a.id)) {
+        c.siege.progress = required;
+      } else if (a.assault) {
         const loss = W.assaultLosses + W.assaultLossesPerFort * fortLevel(c);
         for (const u of UNIT_TYPES) a.men[u] = Math.round(a.men[u] * (1 - loss));
         c.siege.progress = required;
@@ -635,6 +638,9 @@ export function seasonCampaign(ctx: Ctx): void {
     if (a.supply <= 0) rate *= W.attritionNoSupply;
     if (marshalTrainingActive(state, a.ownerId)) rate *= 0.75;
     rate *= Math.max(0.2, 1 + perkBonus(state, state.characters[a.ownerId], 'attrition'));
+    // Blocus : l'armée se retranche autour de la place.
+    if (a.siegeMode === 'blocus' && c.siege?.armyId === a.id)
+      rate *= BALANCE.siege.blockadeAttrition;
     const lost = a.baseMen * rate;
     const tot = totalMen(a.men);
     if (tot > 0)
@@ -644,6 +650,7 @@ export function seasonCampaign(ctx: Ctx): void {
     for (const u of UNIT_TYPES) a.men[u] = Math.round(a.men[u]);
     if (totalMen(a.men) < 50) disbandArmy(ctx, a.id);
   }
+  seasonMercenaries(state);
   // Objectifs tenus.
   for (const w of Object.values(state.wars)) {
     if (!w.targetCountyId) continue;
