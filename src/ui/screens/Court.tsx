@@ -27,6 +27,7 @@ import {
   Sheet,
   Skills,
   Tip,
+  Segmented,
   TraitChips,
 } from '../components/common';
 import { useStore } from '../store';
@@ -35,17 +36,23 @@ export function CourtScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<'souverain' | 'famille' | 'conseil' | 'arbre'>('souverain');
   return (
     <>
-      <div className="segmented" style={{ marginBottom: 12 }}>
-        {(['souverain', 'famille', 'conseil', 'arbre'] as const).map((v) => (
-          <button key={v} className={view === v ? 'active' : ''} onClick={() => setView(v)}>
-            {{ souverain: 'Souverain', famille: 'Famille', conseil: 'Conseil', arbre: 'Arbre' }[v]}
-          </button>
-        ))}
+      <Segmented
+        style={{ marginBottom: 12 }}
+        options={[
+          { value: 'souverain', label: 'Souverain' },
+          { value: 'famille', label: 'Famille' },
+          { value: 'conseil', label: 'Conseil' },
+          { value: 'arbre', label: 'Arbre' },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+      <div className="view" key={view}>
+        {view === 'souverain' && <RulerView game={game} />}
+        {view === 'famille' && <FamilyView game={game} />}
+        {view === 'conseil' && <CouncilView game={game} />}
+        {view === 'arbre' && <TreeView game={game} />}
       </div>
-      {view === 'souverain' && <RulerView game={game} />}
-      {view === 'famille' && <FamilyView game={game} />}
-      {view === 'conseil' && <CouncilView game={game} />}
-      {view === 'arbre' && <TreeView game={game} />}
     </>
   );
 }
@@ -314,17 +321,11 @@ function CouncilView({ game }: { game: GameState }) {
                     </option>
                   ))}
               </select>
-              <div className="segmented">
-                {info.tasks.map((t) => (
-                  <button
-                    key={t.id}
-                    className={task.id === t.id ? 'active' : ''}
-                    onClick={() => set(post, { task: t.id })}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                options={info.tasks.map((t) => ({ value: t.id, label: t.label }))}
+                value={task.id}
+                onChange={(id) => set(post, { task: id })}
+              />
               {task.target && (
                 <select
                   className="select"

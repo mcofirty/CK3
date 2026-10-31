@@ -6,11 +6,14 @@ import { newGame, type NewGameOptions } from '../engine/world';
 import { importJson, lastSlot, loadGame, saveGame, type Slot } from '../save/storage';
 
 export type Tab = 'cour' | 'royaume' | 'armee' | 'intrigues' | 'chronique';
+export const TABS: Tab[] = ['cour', 'royaume', 'armee', 'intrigues', 'chronique'];
 
 interface Store {
   game: GameState | null;
   slot: Slot;
   tab: Tab;
+  /** Sens de la dernière navigation entre onglets (pour la transition). */
+  tabDir: 'left' | 'right' | 'none';
   /** Comté sélectionné sur la carte. */
   selectedCounty?: string;
   error?: string;
@@ -32,6 +35,7 @@ export const useStore = create<Store>((set, get) => ({
   game: null,
   slot: 1,
   tab: 'cour',
+  tabDir: 'none',
   saving: false,
   dispatch: (a) => {
     const g = get().game;
@@ -50,17 +54,30 @@ export const useStore = create<Store>((set, get) => ({
       set({ error: 'Une erreur est survenue ; la partie est intacte.' });
     }
   },
-  setTab: (tab) => set({ tab }),
+  setTab: (tab) => {
+    const cur = TABS.indexOf(get().tab);
+    const next = TABS.indexOf(tab);
+    if (cur === next) return;
+    set({ tab, tabDir: next > cur ? 'right' : 'left' });
+  },
   selectCounty: (selectedCounty) => set({ selectedCounty }),
   start: async (slot, opts) => {
     const game = newGame(opts);
-    set({ game, slot, tab: 'cour', selectedCounty: undefined });
+    set({ game, slot, tab: 'cour', tabDir: 'none', selectedCounty: undefined });
     await saveGame(slot, game);
   },
   load: async (slot) => {
     try {
       const game = await loadGame(slot);
-      if (game) set({ game, slot, tab: 'cour', selectedCounty: undefined, error: undefined });
+      if (game)
+        set({
+          game,
+          slot,
+          tab: 'cour',
+          tabDir: 'none',
+          selectedCounty: undefined,
+          error: undefined,
+        });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Sauvegarde illisible' });
     }
@@ -68,7 +85,7 @@ export const useStore = create<Store>((set, get) => ({
   importText: async (slot, text) => {
     try {
       const game = importJson(text);
-      set({ game, slot, tab: 'cour', error: undefined });
+      set({ game, slot, tab: 'cour', tabDir: 'none', error: undefined });
       await saveGame(slot, game);
     } catch (e) {
       set({ error: e instanceof Error ? `Import impossible : ${e.message}` : 'Import impossible' });

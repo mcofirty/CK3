@@ -24,7 +24,7 @@ import {
   scoreFor,
   warsOf,
 } from '../../engine/war';
-import { Bar, Sheet, signed } from '../components/common';
+import { Bar, Segmented, Sheet, signed } from '../components/common';
 import { useStore } from '../store';
 
 export function ArmyScreen({ game }: { game: GameState }) {
@@ -347,17 +347,15 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
   return (
     <Sheet onClose={onClose}>
       <h2>Déclarer une guerre</h2>
-      <div className="segmented">
-        {(['revendication', 'conquete', 'independance'] as CasusBelliType[]).map((k) => (
-          <button key={k} className={cb === k ? 'active' : ''} onClick={() => setCb(k)}>
-            {k === 'revendication'
-              ? 'Revendication'
-              : k === 'conquete'
-                ? 'Conquête'
-                : 'Indépendance'}
-          </button>
-        ))}
-      </div>
+      <Segmented<CasusBelliType>
+        options={[
+          { value: 'revendication', label: 'Revendication' },
+          { value: 'conquete', label: 'Conquête' },
+          { value: 'independance', label: 'Indépendance' },
+        ]}
+        value={cb}
+        onChange={setCb}
+      />
       <p className="small muted">
         {cb === 'revendication' &&
           'Sur un comté que vous revendiquez (héritée, ou fabriquée par votre chancelier).'}

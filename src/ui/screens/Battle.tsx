@@ -27,7 +27,7 @@ import {
 } from '../../engine/battle/types';
 import type { GameState, UnitType } from '../../engine/state';
 import { totalMen } from '../../engine/units';
-import { Bar } from '../components/common';
+import { Bar, Segmented } from '../components/common';
 import { useStore } from '../store';
 
 const ORDER_HELP: Record<Order, string> = {
@@ -70,7 +70,7 @@ export function BattleScreen({ game }: { game: GameState }) {
 
   return (
     <div className="battle">
-      <div className="battle-head">
+      <div className="battle-head glass">
         <div className="row">
           <h3 style={{ margin: 0 }} className="grow">
             Bataille de {b.countyName}
@@ -195,11 +195,11 @@ export function BattleScreen({ game }: { game: GameState }) {
         {b.phase === 'fin' && b.result && <Report game={game} b={b} />}
       </div>
 
-      <div className="drawer">
+      <div className="drawer glass">
         {b.phase === 'deploiement' && (
           <div className="row">
             <button className="btn ghost" onClick={() => dispatch({ type: 'battleAuto' })}>
-              Résoudre automatiquement
+              Auto
             </button>
             <button className="btn primary grow" onClick={() => dispatch({ type: 'battleStart' })}>
               Engager la bataille
@@ -215,36 +215,29 @@ export function BattleScreen({ game }: { game: GameState }) {
               </span>
             </div>
             {totalMen(mine.reserve) > 0 && (
-              <div className="segmented" style={{ marginBottom: 6 }}>
-                <button className={!reserveTo ? 'active' : ''} onClick={() => setReserveTo(null)}>
-                  Garder
-                </button>
-                {FRONTS.map((f) => (
-                  <button
-                    key={f}
-                    className={reserveTo === f ? 'active' : ''}
-                    onClick={() => setReserveTo(f)}
-                  >
-                    → {FRONT_LABELS[f]}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                style={{ marginBottom: 6 }}
+                options={[
+                  { value: 'garder', label: 'Garder' },
+                  ...FRONTS.map((f) => ({ value: f, label: `→ ${FRONT_LABELS[f]}` })),
+                ]}
+                value={reserveTo ?? 'garder'}
+                onChange={(v) => setReserveTo(v === 'garder' ? null : (v as FrontId))}
+              />
             )}
             {canRally && (
-              <div className="segmented" style={{ marginBottom: 6 }}>
-                <button className={!rally ? 'active' : ''} onClick={() => setRally(null)}>
-                  Pas de ralliement
-                </button>
-                {FRONTS.filter((f) => isActive(mine.fronts[f])).map((f) => (
-                  <button
-                    key={f}
-                    className={rally === f ? 'active' : ''}
-                    onClick={() => setRally(f)}
-                  >
-                    Rallier {FRONT_LABELS[f].toLowerCase()}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                style={{ marginBottom: 6 }}
+                options={[
+                  { value: 'non', label: 'Pas de ralliement' },
+                  ...FRONTS.filter((f) => isActive(mine.fronts[f])).map((f) => ({
+                    value: f,
+                    label: `Rallier ${FRONT_LABELS[f].toLowerCase()}`,
+                  })),
+                ]}
+                value={rally ?? 'non'}
+                onChange={(v) => setRally(v === 'non' ? null : (v as FrontId))}
+              />
             )}
             <div className="row">
               <button className="btn ghost" onClick={() => dispatch({ type: 'battleAuto' })}>

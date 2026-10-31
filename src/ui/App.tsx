@@ -7,14 +7,14 @@ import { checkAll, effectLabels, eventDef, renderText } from '../engine/events/e
 import { vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
-import { Icon, Sheet, TipLayer, signed } from './components/common';
+import { Icon, Logo, Segmented, Sheet, TipLayer, signed } from './components/common';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
 import { ChronicleScreen } from './screens/Chronicle';
 import { CourtScreen } from './screens/Court';
 import { IntrigueScreen } from './screens/Intrigue';
 import { RealmScreen } from './screens/Realm';
-import { useStore, type Tab } from './store';
+import { TABS, useStore, type Tab } from './store';
 
 export function App() {
   const game = useStore((s) => s.game);
@@ -22,7 +22,7 @@ export function App() {
   return (
     <>
       {game ? <Game game={game} /> : <TitleScreen />}
-      {error && <div className="toast">{error}</div>}
+      {error && <div className="toast glass">{error}</div>}
       <TipLayer />
     </>
   );
@@ -46,22 +46,7 @@ function TitleScreen() {
   const anySave = slots.some((s) => !s.empty);
   return (
     <div className="title-screen">
-      <svg
-        viewBox="0 0 256 256"
-        width={120}
-        height={120}
-        style={{ margin: '0 auto 4px', display: 'block', color: 'var(--accent)' }}
-        aria-hidden
-      >
-        <g stroke="currentColor" strokeWidth="22" strokeLinecap="round" fill="none">
-          <path d="M128 178V102M128 178L90 112M128 178L166 112M78 196H178" />
-        </g>
-        <g fill="currentColor">
-          <circle cx="128" cy="70" r="14" />
-          <circle cx="74" cy="84" r="14" />
-          <circle cx="182" cy="84" r="14" />
-        </g>
-      </svg>
+      <Logo size={120} className="logo" />
       <h1 className="brand">Highborn</h1>
       <p className="center muted" style={{ marginBottom: 24 }}>
         Une dynastie, des vassaux, des batailles.
@@ -126,26 +111,24 @@ function TitleScreen() {
               : ''}
           </p>
           <h3 style={{ marginTop: 12 }}>Difficulté</h3>
-          <div className="segmented">
-            {(['facile', 'normal', 'difficile'] as const).map((d) => (
-              <button
-                key={d}
-                className={difficulty === d ? 'active' : ''}
-                onClick={() => setDifficulty(d)}
-              >
-                {d === 'facile' ? 'Facile' : d === 'normal' ? 'Normal' : 'Difficile'}
-              </button>
-            ))}
-          </div>
-          <h3 style={{ marginTop: 12 }}>Souverain</h3>
-          <div className="segmented">
-            <button className={!female ? 'active' : ''} onClick={() => setFemale(false)}>
-              Un duc
-            </button>
-            <button className={female ? 'active' : ''} onClick={() => setFemale(true)}>
-              Une duchesse
-            </button>
-          </div>
+          <Segmented
+            options={[
+              { value: 'facile', label: 'Facile' },
+              { value: 'normal', label: 'Normal' },
+              { value: 'difficile', label: 'Difficile' },
+            ]}
+            value={difficulty}
+            onChange={setDifficulty}
+          />
+          <h3 style={{ marginTop: 14 }}>Souverain</h3>
+          <Segmented
+            options={[
+              { value: 'duc', label: 'Un duc' },
+              { value: 'duchesse', label: 'Une duchesse' },
+            ]}
+            value={female ? 'duchesse' : 'duc'}
+            onChange={(v) => setFemale(v === 'duchesse')}
+          />
           <button
             className="btn primary block"
             style={{ marginTop: 16 }}
@@ -165,6 +148,7 @@ function TitleScreen() {
 
 function Game({ game }: { game: GameState }) {
   const tab = useStore((s) => s.tab);
+  const tabDir = useStore((s) => s.tabDir);
   const [summary, setSummary] = useState<string[] | null>(null);
   const dispatch = useStore((s) => s.dispatch);
   if (game.gameOver) return <EndScreen game={game} />;
@@ -176,13 +160,13 @@ function Game({ game }: { game: GameState }) {
   return (
     <div className="app">
       <TopBar game={game} />
-      <div className="screen" key={tab}>
+      <main className={`screen enter-${tabDir}`} key={tab}>
         {tab === 'cour' && <CourtScreen game={game} />}
         {tab === 'royaume' && <RealmScreen game={game} />}
         {tab === 'armee' && <ArmyScreen game={game} />}
         {tab === 'intrigues' && <IntrigueScreen game={game} />}
         {tab === 'chronique' && <ChronicleScreen game={game} />}
-      </div>
+      </main>
       <button className="fab" onClick={endSeason} disabled={game.pendingEvents.length > 0}>
         Fin de saison
         {game.pendingEvents.length > 0 && (
@@ -249,29 +233,31 @@ function TopBar({ game }: { game: GameState }) {
   const labels = { gold: 'Or', prestige: 'Prestige', piety: 'Piété' };
   return (
     <>
-      <div className="topbar">
-        <span className="title" onContextMenu={(e) => e.preventDefault()}>
+      <header className="topbar glass">
+        <span className="title" aria-label="Highborn" onContextMenu={(e) => e.preventDefault()}>
           <LongPressTitle onLong={() => setDebug(true)} />
         </span>
         <button className="res" onClick={() => setDetail('gold')}>
-          <span className="gold">●</span>
+          <span className="dot" style={{ background: 'var(--gold)' }} />
           {Math.round(p.gold)}
         </button>
         <button className="res" onClick={() => setDetail('prestige')}>
-          <span style={{ color: 'var(--blue)' }}>◆</span>
+          <span
+            className="dot"
+            style={{ background: 'var(--accent)', borderRadius: 3, transform: 'rotate(45deg)' }}
+          />
           {Math.round(p.prestige)}
         </button>
         <button className="res" onClick={() => setDetail('piety')}>
-          <span style={{ color: 'var(--good)' }}>✚</span>
+          <span className="dot" style={{ background: 'var(--good)' }} />
           {Math.round(p.piety)}
         </button>
         <div className="season">
           {SEASON_NAMES[game.turn % 4]}
-          <br />
+          {saving && ' ·'}
           <b>{yearOf(game)}</b>
-          {saving && <span className="muted"> ·</span>}
         </div>
-      </div>
+      </header>
       {detail && (
         <Sheet onClose={() => setDetail(null)}>
           <h2>{labels[detail]} — dernière saison</h2>
@@ -304,7 +290,7 @@ function LongPressTitle({ onLong }: { onLong: () => void }) {
       onPointerUp={() => clearTimeout(t.current)}
       onPointerLeave={() => clearTimeout(t.current)}
     >
-      Highborn
+      <Logo size={30} />
     </span>
   );
 }
@@ -358,17 +344,28 @@ function DebugSheet({ onClose }: { onClose: () => void }) {
 function TabBar() {
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'cour', label: 'Cour' },
-    { id: 'royaume', label: 'Royaume' },
-    { id: 'armee', label: 'Armée' },
-    { id: 'intrigues', label: 'Intrigues' },
-    { id: 'chronique', label: 'Chronique' },
-  ];
+  const labels: Record<Tab, string> = {
+    cour: 'Cour',
+    royaume: 'Royaume',
+    armee: 'Armée',
+    intrigues: 'Intrigues',
+    chronique: 'Chronique',
+  };
+  const tabs: { id: Tab; label: string }[] = TABS.map((id) => ({ id, label: labels[id] }));
   return (
-    <nav className="tabbar">
+    <nav
+      className="tabbar glass"
+      style={{ ['--i' as string]: TABS.indexOf(tab) }}
+      aria-label="Navigation principale"
+    >
+      <span className="indicator" aria-hidden />
       {tabs.map((t) => (
-        <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+        <button
+          key={t.id}
+          className={tab === t.id ? 'active' : ''}
+          aria-current={tab === t.id ? 'page' : undefined}
+          onClick={() => setTab(t.id)}
+        >
           {Icon[t.id]}
           {t.label}
         </button>
@@ -395,7 +392,7 @@ function EventModal({ game }: { game: GameState }) {
     );
   }
   return (
-    <Sheet>
+    <Sheet swapKey={inst.uid}>
       <p className="small muted">
         {game.pendingEvents.length > 1
           ? `Événement 1 sur ${game.pendingEvents.length}`
@@ -453,7 +450,7 @@ function Tutorial() {
   const dispatch = useStore((s) => s.dispatch);
   const c = TUTORIAL[i];
   return (
-    <Sheet>
+    <Sheet swapKey={String(i)}>
       <p className="small muted">
         Premiers pas · {i + 1} / {TUTORIAL.length}
       </p>

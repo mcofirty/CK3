@@ -201,6 +201,9 @@ Multijoueur, serveur, compte, monétisation, App Store ; musique et sons ; relig
 - Symbole : l'arbre-couronne, trois branches qui sont aussi les fleurons d'une couronne (`design/logo/`).
 - Couleur principale : pourpre `#8A2F24`. Encre `#1C1813`, parchemin `#F3ECDC`, or `#C9A227` (accents), sauge `#5D7A4A` (succès).
 - Nom en lettres capitales espacées (Inter SemiBold, vectorisé). Les textes du jeu restent en français.
+- Police de l'interface : **Inter** (licence SIL Open Font License 1.1), embarquée dans l'app en sous-ensemble latin (4 graisses, ~88 Ko) : aucun appel réseau, fonctionne hors ligne.
+- Surfaces « liquid glass » : barre du haut, barre d'onglets, bouton « Fin de saison » et feuilles en verre dépoli flottant ; les cartes imitent le verre sans flou pour rester fluides sur iPhone.
+- Mouvement : les onglets glissent dans le sens de navigation, les sous-vues et cartes apparaissent en cascade, les feuilles montent en ressort et se ferment en glissant vers le bas depuis la poignée, les sélecteurs ont un indicateur coulissant. Le réglage « Réduire les animations » d'iOS est respecté.
 
 ## Licence
 

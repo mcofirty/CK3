@@ -74,14 +74,137 @@ export function Tip({
   );
 }
 
-export function Sheet({ children, onClose }: { children: ReactNode; onClose?: () => void }) {
+/**
+ * Feuille modale en verre : entrée en ressort, sortie animée, glisser vers le bas pour fermer
+ * (depuis la poignée). Sans onClose, la feuille est bloquante (événements, tutoriel).
+ */
+export function Sheet({
+  children,
+  onClose,
+  swapKey,
+}: {
+  children: ReactNode;
+  onClose?: () => void;
+  /** Change à chaque nouveau contenu : le contenu glisse en place. */
+  swapKey?: string;
+}) {
+  const [closing, setClosing] = useState(false);
+  const [drag, setDrag] = useState<number | null>(null);
+  const [settle, setSettle] = useState(false);
+  const startY = useRef(0);
+  const close = () => {
+    if (!onClose || closing) return;
+    setClosing(true);
+    setTimeout(onClose, 220);
+  };
+  const onDown = (e: React.PointerEvent) => {
+    if (!onClose) return;
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    startY.current = e.clientY;
+    setSettle(false);
+    setDrag(0);
+  };
+  const onMove = (e: React.PointerEvent) => {
+    if (drag === null) return;
+    const d = e.clientY - startY.current;
+    // Résistance vers le haut, suivi direct vers le bas.
+    setDrag(d > 0 ? d : d / 4);
+  };
+  const onUp = () => {
+    if (drag === null) return;
+    if (drag > 90) close();
+    else setSettle(true);
+    setDrag(null);
+  };
+  const cls = [
+    'sheet',
+    'glass',
+    closing ? 'closing' : '',
+    drag !== null ? 'dragging' : '',
+    settle ? 'settle' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="handle" />
-        {children}
+    <div className={`overlay${closing ? ' closing' : ''}`} onClick={close}>
+      <div
+        className={cls}
+        style={
+          drag !== null
+            ? { transform: `translateY(${drag}px)` }
+            : settle
+              ? { transform: 'translateY(0)' }
+              : undefined
+        }
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          className="handle-zone"
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+        >
+          <div className="handle" />
+        </div>
+        <div key={swapKey} className={swapKey ? 'swap' : undefined}>
+          {children}
+        </div>
       </div>
     </div>
+  );
+}
+
+/** Sélecteur segmenté avec indicateur coulissant. */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  style,
+}: {
+  options: { value: T; label: ReactNode }[];
+  value: T | null;
+  onChange: (v: T) => void;
+  style?: React.CSSProperties;
+}) {
+  const i = options.findIndex((o) => o.value === value);
+  return (
+    <div
+      className="segmented sliding"
+      style={{ ...style, ['--n' as string]: options.length, ['--i' as string]: Math.max(0, i) }}
+      role="tablist"
+    >
+      {i >= 0 && <span className="seg-indicator" aria-hidden />}
+      {options.map((o) => (
+        <button
+          key={o.value}
+          role="tab"
+          aria-selected={o.value === value}
+          className={o.value === value ? 'active' : ''}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Symbole Highborn (arbre-couronne), à la couleur du texte courant. */
+export function Logo({ size = 32, className }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 256 256" width={size} height={size} className={className} aria-hidden>
+      <g stroke="currentColor" strokeWidth="22" strokeLinecap="round" fill="none">
+        <path d="M128 178V102M128 178L90 112M128 178L166 112M78 196H178" />
+      </g>
+      <g fill="currentColor">
+        <circle cx="128" cy="70" r="14" />
+        <circle cx="74" cy="84" r="14" />
+        <circle cx="182" cy="84" r="14" />
+      </g>
+    </svg>
   );
 }
 

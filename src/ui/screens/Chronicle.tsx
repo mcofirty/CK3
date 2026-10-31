@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { yearOf } from '../../engine/context';
 import type { GameState } from '../../engine/state';
 import { downloadExport } from '../../save/storage';
+import { Segmented } from '../components/common';
 import { useStore } from '../store';
 
 const KIND_ICON: Record<string, string> = {
@@ -28,41 +29,38 @@ export function ChronicleScreen({ game }: { game: GameState }) {
   }
   return (
     <>
-      <div className="segmented" style={{ marginBottom: 12 }}>
-        <button
-          className={view === 'chronique' ? 'active' : ''}
-          onClick={() => setView('chronique')}
-        >
-          Chronique
-        </button>
-        <button
-          className={view === 'nouvelles' ? 'active' : ''}
-          onClick={() => setView('nouvelles')}
-        >
-          Nouvelles
-        </button>
-      </div>
-      {view === 'chronique' &&
-        [...byYear.entries()].map(([y, list]) => (
-          <div key={y} className="card">
-            <h3>{y}</h3>
-            {list.map((e, i) => (
-              <p key={i}>
-                <span className="muted">{KIND_ICON[e.kind]}</span> {e.text}
+      <Segmented
+        style={{ marginBottom: 12 }}
+        options={[
+          { value: 'chronique', label: 'Chronique' },
+          { value: 'nouvelles', label: 'Nouvelles' },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+      <div className="view" key={view}>
+        {view === 'chronique' &&
+          [...byYear.entries()].map(([y, list]) => (
+            <div key={y} className="card">
+              <h3>{y}</h3>
+              {list.map((e, i) => (
+                <p key={i}>
+                  <span className="muted">{KIND_ICON[e.kind]}</span> {e.text}
+                </p>
+              ))}
+            </div>
+          ))}
+        {view === 'nouvelles' && (
+          <div className="card">
+            {game.notifications.length === 0 && <p className="muted">Rien de neuf.</p>}
+            {[...game.notifications].reverse().map((n, i) => (
+              <p key={i} className="small">
+                <b>{yearOf(game, n.turn)}</b> — {n.text}
               </p>
             ))}
           </div>
-        ))}
-      {view === 'nouvelles' && (
-        <div className="card">
-          {game.notifications.length === 0 && <p className="muted">Rien de neuf.</p>}
-          {[...game.notifications].reverse().map((n, i) => (
-            <p key={i} className="small">
-              <b>{yearOf(game, n.turn)}</b> — {n.text}
-            </p>
-          ))}
-        </div>
-      )}
+        )}
+      </div>
       {game.lastBattleReport && (
         <div className="card">
           <h3>Dernière bataille : {game.lastBattleReport.countyName}</h3>

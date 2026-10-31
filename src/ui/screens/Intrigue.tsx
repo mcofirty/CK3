@@ -19,7 +19,7 @@ import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
 import { independentRulers, realmCounties, realmName, vassalsOf } from '../../engine/realm';
 import type { Character, GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
-import { CharLine, Opinion, Portrait, Sheet, signed } from '../components/common';
+import { CharLine, Opinion, Portrait, Segmented, Sheet, signed } from '../components/common';
 import { useStore } from '../store';
 
 function AcceptanceView({ acc }: { acc: Acceptance }) {
@@ -47,18 +47,18 @@ export function IntrigueScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<'diplomatie' | 'complots'>('diplomatie');
   return (
     <>
-      <div className="segmented" style={{ marginBottom: 12 }}>
-        <button
-          className={view === 'diplomatie' ? 'active' : ''}
-          onClick={() => setView('diplomatie')}
-        >
-          Diplomatie
-        </button>
-        <button className={view === 'complots' ? 'active' : ''} onClick={() => setView('complots')}>
-          Complots
-        </button>
+      <Segmented
+        style={{ marginBottom: 12 }}
+        options={[
+          { value: 'diplomatie', label: 'Diplomatie' },
+          { value: 'complots', label: 'Complots' },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+      <div className="view" key={view}>
+        {view === 'diplomatie' ? <Diplomacy game={game} /> : <Plots game={game} />}
       </div>
-      {view === 'diplomatie' ? <Diplomacy game={game} /> : <Plots game={game} />}
     </>
   );
 }
@@ -304,20 +304,17 @@ function Plots({ game }: { game: GameState }) {
       {!mine && (
         <div className="card">
           <h3>Ourdir un complot</h3>
-          <div className="segmented">
-            {(Object.keys(PLOT_INFO) as PlotType[]).map((t) => (
-              <button
-                key={t}
-                className={type === t ? 'active' : ''}
-                onClick={() => {
-                  setType(t);
-                  setTargetId('');
-                }}
-              >
-                {PLOT_INFO[t].label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            options={(Object.keys(PLOT_INFO) as PlotType[]).map((t) => ({
+              value: t,
+              label: PLOT_INFO[t].label,
+            }))}
+            value={type}
+            onChange={(t) => {
+              setType(t);
+              setTargetId('');
+            }}
+          />
           <p className="small muted">{PLOT_INFO[type].description}</p>
           <select
             className="select"
