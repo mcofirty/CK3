@@ -171,6 +171,10 @@ export function SettingsSheet() {
           <p className="small muted center" style={{ margin: '16px 0 4px' }}>
             Highborn {pkg.version} · fonctionne hors ligne
           </p>
+          <p className="tiny muted center" style={{ margin: 0 }}>
+            Écran {Math.round(screen.height)} · fenêtre {Math.round(window.innerHeight)} · app{' '}
+            {Math.round(document.getElementById('root')?.clientHeight ?? 0)}
+          </p>
         </>
       )}
     </Sheet>

@@ -1467,9 +1467,20 @@ html {
   background: var(--bg);
   height: 100%;
 }
+/*
+ * Le body lui-même prend la hauteur réelle de l'écran (--app-h, posée par main.tsx) :
+ * sur iPhone, un body calé sur la fenêtre annoncée (parfois trop courte) découpait l'app.
+ */
+html {
+  min-height: var(--app-h, 100%);
+}
 body {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  height: var(--app-h, 100%);
   overflow: hidden;
 }
 
@@ -1481,12 +1492,9 @@ body {
  * bataille) : ils se calent sur ce cadre et jamais sur une fenêtre mal mesurée.
  */
 #root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: auto;
-  height: var(--app-h, 100%);
+  position: absolute;
+  inset: 0;
+  height: auto;
   overflow: hidden;
   overflow: clip;
   background: var(--bg);
@@ -2232,4 +2240,7 @@ body {
 }
 .warn {
   color: #d9822b;
+}
+.tiny {
+  font-size: 12px;
 }
