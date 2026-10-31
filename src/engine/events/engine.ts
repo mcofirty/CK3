@@ -28,9 +28,14 @@ import { SKILL_LABELS, type GameState } from '../state';
 import { armyOf, courtiersOf, declareWar, endWar, joinWar, warBetween } from '../war';
 import type { Condition, Effect, EventDef, Role } from './types';
 
-export const EVENTS: Record<string, EventDef> = Object.fromEntries(ALL_EVENTS.map((e) => [e.id, e]));
+export const EVENTS: Record<string, EventDef> = Object.fromEntries(
+  ALL_EVENTS.map((e) => [e.id, e]),
+);
 
-export function eventDef(_state: GameState, inst: { eventId: string; inline?: EventDef }): EventDef | undefined {
+export function eventDef(
+  _state: GameState,
+  inst: { eventId: string; inline?: EventDef },
+): EventDef | undefined {
   return inst.inline ?? EVENTS[inst.eventId];
 }
 
@@ -57,7 +62,9 @@ export function rolesOf(def: EventDef): Role[] {
   const cached = roleCache.get(def.id);
   if (cached && !def.id.startsWith('sys_')) return cached;
   const json = JSON.stringify({ t: def.texte, c: def.conditions, ch: def.choix });
-  const roles = (Object.keys(ROLE_PATTERNS) as Role[]).filter((r) => r !== 'souverain' && ROLE_PATTERNS[r].test(json));
+  const roles = (Object.keys(ROLE_PATTERNS) as Role[]).filter(
+    (r) => r !== 'souverain' && ROLE_PATTERNS[r].test(json),
+  );
   roleCache.set(def.id, roles);
   return roles;
 }
@@ -85,11 +92,18 @@ function candidates(ctx: Ctx, role: Role): string[] {
         .filter((c) => isAdult(state, c) && c.dynastyId !== p.dynastyId && c.id !== p.spouseId)
         .map((c) => c.id);
     case 'comte':
-      return Object.values(state.counties).filter((c) => c.holderId === p.id).map((c) => c.id);
+      return Object.values(state.counties)
+        .filter((c) => c.holderId === p.id)
+        .map((c) => c.id);
     case 'comte_rival': {
       const mine = new Set(realmCounties(state, p.id).map((c) => c.id));
       return Object.values(state.counties)
-        .filter((c) => !mine.has(c.id) && c.adjacent.some((n) => mine.has(n)) && countyRuler(state, c) !== p.id)
+        .filter(
+          (c) =>
+            !mine.has(c.id) &&
+            c.adjacent.some((n) => mine.has(n)) &&
+            countyRuler(state, c) !== p.id,
+        )
         .map((c) => c.id);
     }
     default:
@@ -101,52 +115,156 @@ function candidates(ctx: Ctx, role: Role): string[] {
 // Conditions
 // ---------------------------------------------------------------------------
 
-export function checkCondition(state: GameState, cond: Condition, scope: Record<string, string>): boolean {
+export function checkCondition(
+  state: GameState,
+  cond: Condition,
+  scope: Record<string, string>,
+): boolean {
   const p = player(state);
   const sc = (r: string) => (scope[r] ? state.characters[scope[r]] : undefined);
   for (const [k, v] of Object.entries(cond)) {
     switch (k) {
-      case 'or_min': if (p.gold < (v as number)) return false; break;
-      case 'or_max': if (p.gold > (v as number)) return false; break;
-      case 'prestige_min': if (p.prestige < (v as number)) return false; break;
-      case 'piete_min': if (p.piety < (v as number)) return false; break;
-      case 'piete_max': if (p.piety > (v as number)) return false; break;
-      case 'sante_max': if (healthOf(p) > (v as number)) return false; break;
-      case 'age_min': if (ageOf(state, p) < (v as number)) return false; break;
-      case 'age_max': if (ageOf(state, p) > (v as number)) return false; break;
-      case 'trait': if (!hasTrait(p, v as string)) return false; break;
-      case 'pas_trait': if (hasTrait(p, v as string)) return false; break;
-      case 'en_guerre': if (Object.values(state.wars).some((w) => [w.attackerId, w.defenderId, ...w.attackerAllies, ...w.defenderAllies].includes(p.id)) !== v) return false; break;
-      case 'a_conjoint': if (!!(p.spouseId && state.characters[p.spouseId]?.alive) !== v) return false; break;
-      case 'comtes_min': if (realmCounties(state, p.id).length < (v as number)) return false; break;
-      case 'competence_min': { const c = v as { competence: keyof typeof SKILL_LABELS; valeur: number }; if (skill(p, c.competence) < c.valeur) return false; break; }
-      case 'competence_max': { const c = v as { competence: keyof typeof SKILL_LABELS; valeur: number }; if (skill(p, c.competence) > c.valeur) return false; break; }
-      case 'opinion_vassal_max': { const x = sc('vassal'); if (!x || opinion(state, x.id, p.id) > (v as number)) return false; break; }
-      case 'opinion_vassal_min': { const x = sc('vassal'); if (!x || opinion(state, x.id, p.id) < (v as number)) return false; break; }
-      case 'vassal_trait': { const x = sc('vassal'); if (!x || !hasTrait(x, v as string)) return false; break; }
-      case 'enfant_age_min': { const x = sc('enfant'); if (!x || ageOf(state, x) < (v as number)) return false; break; }
-      case 'enfant_age_max': { const x = sc('enfant'); if (!x || ageOf(state, x) > (v as number)) return false; break; }
-      case 'heritier_age_min': { const x = sc('heritier'); if (!x || ageOf(state, x) < (v as number)) return false; break; }
-      case 'heritier_age_max': { const x = sc('heritier'); if (!x || ageOf(state, x) > (v as number)) return false; break; }
-      case 'conjoint_trait': { const x = sc('conjoint'); if (!x || !hasTrait(x, v as string)) return false; break; }
-      case 'courtisan_trait': { const x = sc('courtisan'); if (!x || !hasTrait(x, v as string)) return false; break; }
-      case 'rival_opinion_max': { const x = sc('rival'); if (!x || opinion(state, x.id, p.id) > (v as number)) return false; break; }
-      case 'comte_developpement_max': { const c = scope.comte ? state.counties[scope.comte] : undefined; if (!c || c.development > (v as number)) return false; break; }
-      case 'comte_developpement_min': { const c = scope.comte ? state.counties[scope.comte] : undefined; if (!c || c.development < (v as number)) return false; break; }
-      case 'armee_levee': if (!!armyOf(state, p.id) !== v) return false; break;
-      case 'annee_min': if (state.turn / 4 < (v as number)) return false; break;
-      default: break;
+      case 'or_min':
+        if (p.gold < (v as number)) return false;
+        break;
+      case 'or_max':
+        if (p.gold > (v as number)) return false;
+        break;
+      case 'prestige_min':
+        if (p.prestige < (v as number)) return false;
+        break;
+      case 'piete_min':
+        if (p.piety < (v as number)) return false;
+        break;
+      case 'piete_max':
+        if (p.piety > (v as number)) return false;
+        break;
+      case 'sante_max':
+        if (healthOf(p) > (v as number)) return false;
+        break;
+      case 'age_min':
+        if (ageOf(state, p) < (v as number)) return false;
+        break;
+      case 'age_max':
+        if (ageOf(state, p) > (v as number)) return false;
+        break;
+      case 'trait':
+        if (!hasTrait(p, v as string)) return false;
+        break;
+      case 'pas_trait':
+        if (hasTrait(p, v as string)) return false;
+        break;
+      case 'en_guerre':
+        if (
+          Object.values(state.wars).some((w) =>
+            [w.attackerId, w.defenderId, ...w.attackerAllies, ...w.defenderAllies].includes(p.id),
+          ) !== v
+        )
+          return false;
+        break;
+      case 'a_conjoint':
+        if (!!(p.spouseId && state.characters[p.spouseId]?.alive) !== v) return false;
+        break;
+      case 'comtes_min':
+        if (realmCounties(state, p.id).length < (v as number)) return false;
+        break;
+      case 'competence_min': {
+        const c = v as { competence: keyof typeof SKILL_LABELS; valeur: number };
+        if (skill(p, c.competence) < c.valeur) return false;
+        break;
+      }
+      case 'competence_max': {
+        const c = v as { competence: keyof typeof SKILL_LABELS; valeur: number };
+        if (skill(p, c.competence) > c.valeur) return false;
+        break;
+      }
+      case 'opinion_vassal_max': {
+        const x = sc('vassal');
+        if (!x || opinion(state, x.id, p.id) > (v as number)) return false;
+        break;
+      }
+      case 'opinion_vassal_min': {
+        const x = sc('vassal');
+        if (!x || opinion(state, x.id, p.id) < (v as number)) return false;
+        break;
+      }
+      case 'vassal_trait': {
+        const x = sc('vassal');
+        if (!x || !hasTrait(x, v as string)) return false;
+        break;
+      }
+      case 'enfant_age_min': {
+        const x = sc('enfant');
+        if (!x || ageOf(state, x) < (v as number)) return false;
+        break;
+      }
+      case 'enfant_age_max': {
+        const x = sc('enfant');
+        if (!x || ageOf(state, x) > (v as number)) return false;
+        break;
+      }
+      case 'heritier_age_min': {
+        const x = sc('heritier');
+        if (!x || ageOf(state, x) < (v as number)) return false;
+        break;
+      }
+      case 'heritier_age_max': {
+        const x = sc('heritier');
+        if (!x || ageOf(state, x) > (v as number)) return false;
+        break;
+      }
+      case 'conjoint_trait': {
+        const x = sc('conjoint');
+        if (!x || !hasTrait(x, v as string)) return false;
+        break;
+      }
+      case 'courtisan_trait': {
+        const x = sc('courtisan');
+        if (!x || !hasTrait(x, v as string)) return false;
+        break;
+      }
+      case 'rival_opinion_max': {
+        const x = sc('rival');
+        if (!x || opinion(state, x.id, p.id) > (v as number)) return false;
+        break;
+      }
+      case 'comte_developpement_max': {
+        const c = scope.comte ? state.counties[scope.comte] : undefined;
+        if (!c || c.development > (v as number)) return false;
+        break;
+      }
+      case 'comte_developpement_min': {
+        const c = scope.comte ? state.counties[scope.comte] : undefined;
+        if (!c || c.development < (v as number)) return false;
+        break;
+      }
+      case 'armee_levee':
+        if (!!armyOf(state, p.id) !== v) return false;
+        break;
+      case 'annee_min':
+        if (state.turn / 4 < (v as number)) return false;
+        break;
+      default:
+        break;
     }
   }
   return true;
 }
 
-export function checkAll(state: GameState, conds: Condition[] | undefined, scope: Record<string, string>): boolean {
+export function checkAll(
+  state: GameState,
+  conds: Condition[] | undefined,
+  scope: Record<string, string>,
+): boolean {
   return (conds ?? []).every((c) => checkCondition(state, c, scope));
 }
 
 /** Construit un contexte de rôles satisfaisant les conditions, ou null. */
-export function buildScope(ctx: Ctx, def: EventDef, preset: Record<string, string> = {}): Record<string, string> | null {
+export function buildScope(
+  ctx: Ctx,
+  def: EventDef,
+  preset: Record<string, string> = {},
+): Record<string, string> | null {
   const scope: Record<string, string> = { souverain: ctx.state.playerId, ...preset };
   const roles = rolesOf(def).filter((r) => !scope[r]);
   // Tirage de candidats ; plusieurs essais pour satisfaire les conditions.
@@ -173,30 +291,38 @@ export function buildScope(ctx: Ctx, def: EventDef, preset: Record<string, strin
 // ---------------------------------------------------------------------------
 
 export function renderText(state: GameState, text: string, scope: Record<string, string>): string {
-  return text.replace(/\{(\w+)\.(\w+)\}|\{(annee|saison)\}/g, (m, role: string, field: string, special: string) => {
-    if (special === 'annee') return String(yearOf(state));
-    if (special === 'saison') return ['printemps', 'été', 'automne', 'hiver'][seasonOf(state.turn)];
-    const id = scope[role];
-    if (!id) return m;
-    if (state.counties[id]) return field === 'nom' ? state.counties[id].name : m;
-    const c = state.characters[id];
-    if (!c) return '—';
-    if (field === 'nom') return c.name;
-    if (field === 'nom_complet') return displayName(state, c);
-    if (field === 'age') return String(ageOf(state, c));
-    if (field === 'il') return c.female ? 'elle' : 'il';
-    if (field === 'Il') return c.female ? 'Elle' : 'Il';
-    if (field === 'le') return c.female ? 'la' : 'le';
-    if (field === 'fils') return c.female ? 'fille' : 'fils';
-    if (field === 'e') return c.female ? 'e' : '';
-    return m;
-  });
+  return text.replace(
+    /\{(\w+)\.(\w+)\}|\{(annee|saison)\}/g,
+    (m, role: string, field: string, special: string) => {
+      if (special === 'annee') return String(yearOf(state));
+      if (special === 'saison')
+        return ['printemps', 'été', 'automne', 'hiver'][seasonOf(state.turn)];
+      const id = scope[role];
+      if (!id) return m;
+      if (state.counties[id]) return field === 'nom' ? state.counties[id].name : m;
+      const c = state.characters[id];
+      if (!c) return '—';
+      if (field === 'nom') return c.name;
+      if (field === 'nom_complet') return displayName(state, c);
+      if (field === 'age') return String(ageOf(state, c));
+      if (field === 'il') return c.female ? 'elle' : 'il';
+      if (field === 'Il') return c.female ? 'Elle' : 'Il';
+      if (field === 'le') return c.female ? 'la' : 'le';
+      if (field === 'fils') return c.female ? 'fille' : 'fils';
+      if (field === 'e') return c.female ? 'e' : '';
+      return m;
+    },
+  );
 }
 
 const sign = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 
 /** Effets connus d'un choix, affichés avant validation. */
-export function effectLabels(state: GameState, effects: Effect[], scope: Record<string, string>): string[] {
+export function effectLabels(
+  state: GameState,
+  effects: Effect[],
+  scope: Record<string, string>,
+): string[] {
   const name = (r: string) => {
     const id = scope[r];
     if (!id) return r;
@@ -211,20 +337,38 @@ export function effectLabels(state: GameState, effects: Effect[], scope: Record<
     if (e.opinion) out.push(`Opinion de ${name(e.opinion.cible)} : ${sign(e.opinion.valeur)}`);
     if (e.opinion_vassaux) out.push(`Opinion des vassaux : ${sign(e.opinion_vassaux)}`);
     if (e.trait_ajout) {
-      const t = typeof e.trait_ajout === 'string' ? { cible: 'souverain', trait: e.trait_ajout } : e.trait_ajout;
-      out.push(`${t.cible === 'souverain' ? 'Vous gagnez' : `${name(t.cible)} gagne`} le trait ${TRAITS[t.trait]?.name ?? t.trait}`);
+      const t =
+        typeof e.trait_ajout === 'string'
+          ? { cible: 'souverain', trait: e.trait_ajout }
+          : e.trait_ajout;
+      out.push(
+        `${t.cible === 'souverain' ? 'Vous gagnez' : `${name(t.cible)} gagne`} le trait ${TRAITS[t.trait]?.name ?? t.trait}`,
+      );
     }
     if (e.trait_retrait) {
-      const t = typeof e.trait_retrait === 'string' ? { cible: 'souverain', trait: e.trait_retrait } : e.trait_retrait;
-      out.push(`${t.cible === 'souverain' ? 'Vous perdez' : `${name(t.cible)} perd`} le trait ${TRAITS[t.trait]?.name ?? t.trait}`);
+      const t =
+        typeof e.trait_retrait === 'string'
+          ? { cible: 'souverain', trait: e.trait_retrait }
+          : e.trait_retrait;
+      out.push(
+        `${t.cible === 'souverain' ? 'Vous perdez' : `${name(t.cible)} perd`} le trait ${TRAITS[t.trait]?.name ?? t.trait}`,
+      );
     }
     if (e.sante !== undefined) {
       const s = typeof e.sante === 'number' ? { cible: 'souverain', valeur: e.sante } : e.sante;
       out.push(`Santé${s.cible === 'souverain' ? '' : ` de ${name(s.cible)}`} : ${sign(s.valeur)}`);
     }
-    if (e.competence) out.push(`${SKILL_LABELS[e.competence.competence]}${e.competence.cible && e.competence.cible !== 'souverain' ? ` de ${name(e.competence.cible)}` : ''} : ${sign(e.competence.valeur)}`);
+    if (e.competence)
+      out.push(
+        `${SKILL_LABELS[e.competence.competence]}${e.competence.cible && e.competence.cible !== 'souverain' ? ` de ${name(e.competence.cible)}` : ''} : ${sign(e.competence.valeur)}`,
+      );
     if (e.revendication) out.push(`Revendication sur ${name(e.revendication)}`);
-    if (e.guerre) out.push(e.guerre.attaquant === 'rival' ? `${name('rival')} vous déclare la guerre` : `Guerre contre ${name('rival')}`);
+    if (e.guerre)
+      out.push(
+        e.guerre.attaquant === 'rival'
+          ? `${name('rival')} vous déclare la guerre`
+          : `Guerre contre ${name('rival')}`,
+      );
     if (e.complot) out.push(`Complot contre ${name(e.complot.cible)}`);
     if (e.naissance) out.push('Un enfant pourrait naître');
     if (e.deces) out.push(`Mort de ${name(e.deces)}`);
@@ -236,11 +380,15 @@ export function effectLabels(state: GameState, effects: Effect[], scope: Record<
     if (e.emprisonner) out.push(`${name(e.emprisonner)} est emprisonné`);
     if (e.liberer) out.push(`${name(e.liberer)} est libéré`);
     if (e.exiler) out.push(`${name(e.exiler)} quitte la cour`);
-    if (e.mariage) out.push(`Mariage de ${state.characters[e.mariage.a]?.name} et ${state.characters[e.mariage.b]?.name}`);
+    if (e.mariage)
+      out.push(
+        `Mariage de ${state.characters[e.mariage.a]?.name} et ${state.characters[e.mariage.b]?.name}`,
+      );
     if (e.alliance) out.push(`Alliance avec ${state.characters[e.alliance]?.name}`);
     if (e.paix) out.push(e.paix.issue === 'blanche' ? 'Paix blanche' : 'Fin de la guerre');
     if (e.rejoindre_guerre) out.push('Vous entrez en guerre');
-    if (e.tribut) out.push(`${e.tribut.de === state.playerId ? '-' : '+'}${e.tribut.montant} or (tribut)`);
+    if (e.tribut)
+      out.push(`${e.tribut.de === state.playerId ? '-' : '+'}${e.tribut.montant} or (tribut)`);
   }
   return out;
 }
@@ -262,14 +410,22 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       const c = who(e.opinion.cible);
       if (c) addOpinion(state, c.id, p.id, e.opinion.raison ?? 'Événement', e.opinion.valeur, 24);
     }
-    if (e.opinion_vassaux) for (const v of vassalsOf(state, p.id)) addOpinion(state, v, p.id, 'Événement', e.opinion_vassaux, 24);
+    if (e.opinion_vassaux)
+      for (const v of vassalsOf(state, p.id))
+        addOpinion(state, v, p.id, 'Événement', e.opinion_vassaux, 24);
     if (e.trait_ajout) {
-      const t = typeof e.trait_ajout === 'string' ? { cible: 'souverain', trait: e.trait_ajout } : e.trait_ajout;
+      const t =
+        typeof e.trait_ajout === 'string'
+          ? { cible: 'souverain', trait: e.trait_ajout }
+          : e.trait_ajout;
       const c = who(t.cible);
       if (c) addTrait(c, t.trait);
     }
     if (e.trait_retrait) {
-      const t = typeof e.trait_retrait === 'string' ? { cible: 'souverain', trait: e.trait_retrait } : e.trait_retrait;
+      const t =
+        typeof e.trait_retrait === 'string'
+          ? { cible: 'souverain', trait: e.trait_retrait }
+          : e.trait_retrait;
       const c = who(t.cible);
       if (c) removeTrait(c, t.trait);
     }
@@ -280,7 +436,12 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     }
     if (e.competence) {
       const c = who(e.competence.cible ?? 'souverain');
-      if (c) c.skills[e.competence.competence] = clamp(c.skills[e.competence.competence] + e.competence.valeur, 0, 20);
+      if (c)
+        c.skills[e.competence.competence] = clamp(
+          c.skills[e.competence.competence] + e.competence.valeur,
+          0,
+          20,
+        );
     }
     if (e.revendication) {
       const cid = scope[e.revendication];
@@ -291,9 +452,12 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       if (rival) {
         const attackerIsRival = e.guerre.attaquant === 'rival';
         const [a, d] = attackerIsRival ? [rival.id, p.id] : [p.id, rival.id];
-        const target = Object.values(state.counties).find(
-          (c) => countyRuler(state, c) === d && c.adjacent.some((n) => countyRuler(state, state.counties[n]) === a),
-        ) ?? realmCounties(state, d)[0];
+        const target =
+          Object.values(state.counties).find(
+            (c) =>
+              countyRuler(state, c) === d &&
+              c.adjacent.some((n) => countyRuler(state, state.counties[n]) === a),
+          ) ?? realmCounties(state, d)[0];
         if (target) {
           const att = state.characters[a];
           if (!att.claims.includes(target.id)) att.claims.push(target.id);
@@ -317,7 +481,9 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       if (c) killCharacter(ctx, c.id, 'tragiquement');
     }
     if (e.developpement) {
-      const cid = scope.comte ?? rng.pick(Object.values(state.counties).filter((c) => c.holderId === p.id)).id;
+      const cid =
+        scope.comte ??
+        rng.pick(Object.values(state.counties).filter((c) => c.holderId === p.id)).id;
       const c = state.counties[cid];
       if (c) c.development = clamp(c.development + e.developpement, 1, 10);
     }
@@ -327,7 +493,8 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     }
     if (e.levees) {
       const own = Object.values(state.counties).filter((c) => c.holderId === p.id);
-      for (const c of own) c.levyPool = Math.max(0, c.levyPool + e.levees / Math.max(1, own.length));
+      for (const c of own)
+        c.levyPool = Math.max(0, c.levyPool + e.levees / Math.max(1, own.length));
     }
     if (e.ami) {
       const c = who(e.ami);
@@ -361,7 +528,8 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
         const dest = rng.pick(independentRulers(state).filter((r) => r !== p.id));
         c.courtId = dest;
         c.imprisonedBy = undefined;
-        for (const seat of Object.values(state.council)) if (seat.holderId === c.id) seat.holderId = undefined;
+        for (const seat of Object.values(state.council))
+          if (seat.holderId === c.id) seat.holderId = undefined;
       }
     }
     // Effets internes.
@@ -369,7 +537,12 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     if (e.alliance) makeAlliance(state, p.id, e.alliance);
     if (e.paix && state.wars[e.paix.warId]) endWar(ctx, e.paix.warId, e.paix.issue);
     if (e.rejoindre_guerre && state.wars[e.rejoindre_guerre.warId]) {
-      joinWar(state, e.rejoindre_guerre.warId, p.id, e.rejoindre_guerre.camp === 'attaquant' ? 'attacker' : 'defender');
+      joinWar(
+        state,
+        e.rejoindre_guerre.warId,
+        p.id,
+        e.rejoindre_guerre.camp === 'attaquant' ? 'attacker' : 'defender',
+      );
     }
     if (e.tribut) {
       const from = state.characters[e.tribut.de];
@@ -400,9 +573,19 @@ function weightOf(state: GameState, def: EventDef): number {
   return w;
 }
 
-export function queueEvent(ctx: Ctx, def: EventDef, scope: Record<string, string>, inline = false): void {
+export function queueEvent(
+  ctx: Ctx,
+  def: EventDef,
+  scope: Record<string, string>,
+  inline = false,
+): void {
   const { state } = ctx;
-  state.pendingEvents.push({ uid: newId(state, 'e'), eventId: def.id, scope, inline: inline ? def : undefined });
+  state.pendingEvents.push({
+    uid: newId(state, 'e'),
+    eventId: def.id,
+    scope,
+    inline: inline ? def : undefined,
+  });
   state.eventCooldowns[def.id] = state.turn;
   if (def.unique === 'partie') state.eventOnce[def.id] = true;
   if (def.unique === 'personnage') state.eventOnce[`${def.id}:${state.playerId}`] = true;
@@ -466,7 +649,8 @@ export function chooseEvent(ctx: Ctx, uid: string, index: number): boolean {
   applyEffects(ctx, choice.effets, inst.scope);
   if (def.categorie && def.categorie !== 'systeme' && def.declencheur.type !== 'suite') {
     const text = renderText(state, def.titre, inst.scope);
-    if ((def.poids ?? 10) <= 6 || def.unique) chronicle(state, `${text} — ${choice.libelle}.`, 'evenement');
+    if ((def.poids ?? 10) <= 6 || def.unique)
+      chronicle(state, `${text} — ${choice.libelle}.`, 'evenement');
   }
   if (choice.suite) {
     const next = EVENTS[choice.suite];

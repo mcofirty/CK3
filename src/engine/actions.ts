@@ -120,7 +120,9 @@ function dispatch(ctx: Ctx, a: Action): void {
     case 'setCouncil': {
       const seat = state.council[a.post];
       // Un même personnage ne siège qu'à un poste.
-      if (a.holderId) for (const s of Object.values(state.council)) if (s.holderId === a.holderId) s.holderId = undefined;
+      if (a.holderId)
+        for (const s of Object.values(state.council))
+          if (s.holderId === a.holderId) s.holderId = undefined;
       seat.holderId = a.holderId;
       seat.task = a.task;
       seat.targetId = a.targetId;
@@ -155,7 +157,8 @@ function dispatch(ctx: Ctx, a: Action): void {
       }
       if (a.commanderId) {
         if (a.slot !== 'main' && army.commanderId === a.commanderId) army.commanderId = ids[0];
-        if (a.slot === 'main') army.frontCommanders = army.frontCommanders.filter((x) => x !== a.commanderId);
+        if (a.slot === 'main')
+          army.frontCommanders = army.frontCommanders.filter((x) => x !== a.commanderId);
       }
       break;
     }
@@ -186,7 +189,8 @@ function dispatch(ctx: Ctx, a: Action): void {
         break;
       }
       if (a.kind === 'exiger') endWar(ctx, a.warId, iAmAttacker ? 'attaquant' : 'defenseur');
-      else if (a.kind === 'capituler') endWar(ctx, a.warId, iAmAttacker ? 'defenseur' : 'attaquant');
+      else if (a.kind === 'capituler')
+        endWar(ctx, a.warId, iAmAttacker ? 'defenseur' : 'attaquant');
       else endWar(ctx, a.warId, 'blanche');
       break;
     }
@@ -249,10 +253,16 @@ function dispatch(ctx: Ctx, a: Action): void {
       createTitle(ctx, pl, a.titleId);
       break;
     case 'changeLaw':
-      if (a.law === 'primogeniture' && me.successionLaw !== 'primogeniture' && me.prestige >= BALANCE.characters.primogenitureCost) {
+      if (
+        a.law === 'primogeniture' &&
+        me.successionLaw !== 'primogeniture' &&
+        me.prestige >= BALANCE.characters.primogenitureCost
+      ) {
         me.prestige -= BALANCE.characters.primogenitureCost;
         me.successionLaw = 'primogeniture';
-        for (const v of vassalsOf(state, pl)) if (opinion(state, v, pl) < 0) notify(state, `${state.characters[v].name} désapprouve la nouvelle loi.`);
+        for (const v of vassalsOf(state, pl))
+          if (opinion(state, v, pl) < 0)
+            notify(state, `${state.characters[v].name} désapprouve la nouvelle loi.`);
       } else if (a.law === 'partage') me.successionLaw = 'partage';
       break;
     case 'grantCounty': {
@@ -282,7 +292,8 @@ function dispatch(ctx: Ctx, a: Action): void {
       if (inBattle) startBattle(state.battle!, ctx.rng);
       break;
     case 'battleRound':
-      if (inBattle && state.battle!.phase !== 'fin') resolveRound(state.battle!, ctx.rng, { playerOrders: a.orders });
+      if (inBattle && state.battle!.phase !== 'fin')
+        resolveRound(state.battle!, ctx.rng, { playerOrders: a.orders });
       break;
     case 'battleAuto':
       if (inBattle && state.battle!.phase !== 'fin') autoResolve(state.battle!, ctx.rng);
@@ -322,8 +333,21 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     }
     case 'debugBattle': {
-      const mk = (n: number) => ({ levees: n * 6, piquiers: n * 2, archers: n * 2, infanterie: n, cavalerie: n });
-      const cmd = (id: string, name: string, guerre: number) => ({ id, name, guerre, ruse: 10, traits: [] as string[], isSovereign: false });
+      const mk = (n: number) => ({
+        levees: n * 6,
+        piquiers: n * 2,
+        archers: n * 2,
+        infanterie: n,
+        cavalerie: n,
+      });
+      const cmd = (id: string, name: string, guerre: number) => ({
+        id,
+        name,
+        guerre,
+        ruse: 10,
+        traits: [] as string[],
+        isSovereign: false,
+      });
       state.battle = createBattle(
         {
           id: `debug${newId(state, '')}`,
@@ -331,8 +355,25 @@ function dispatch(ctx: Ctx, a: Action): void {
           terrain: ctx.rng.pick(['plaine', 'colline', 'foret', 'marais', 'montagne'] as const),
           river: ctx.rng.chance(0.3),
           season: (state.turn % 4) as 0 | 1 | 2 | 3,
-          attacker: { name: 'Vos troupes', men: mk(100), commanders: [cmd(pl, me.name, 12)], mainCommanderId: pl, isPlayer: true, ai: 'normal', friendlyTerritory: false, spied: false },
-          defender: { name: 'L’ennemi', men: mk(110), commanders: [cmd('debug-enemy', 'Capitaine ennemi', 10)], isPlayer: false, ai: state.difficulty, friendlyTerritory: true, spied: false },
+          attacker: {
+            name: 'Vos troupes',
+            men: mk(100),
+            commanders: [cmd(pl, me.name, 12)],
+            mainCommanderId: pl,
+            isPlayer: true,
+            ai: 'normal',
+            friendlyTerritory: false,
+            spied: false,
+          },
+          defender: {
+            name: 'L’ennemi',
+            men: mk(110),
+            commanders: [cmd('debug-enemy', 'Capitaine ennemi', 10)],
+            isPlayer: false,
+            ai: state.difficulty,
+            friendlyTerritory: true,
+            spied: false,
+          },
         },
         ctx.rng,
       );

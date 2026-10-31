@@ -46,7 +46,12 @@ function traitFactors(target: Character): Factor[] {
 
 function finish(factors: Factor[], blocked?: string): Acceptance {
   const score = Math.round(factors.reduce((s, f) => s + f.value, 0));
-  return { score, factors: factors.map((f) => ({ ...f, value: Math.round(f.value) })), accept: !blocked && score >= D.acceptThreshold, blocked };
+  return {
+    score,
+    factors: factors.map((f) => ({ ...f, value: Math.round(f.value) })),
+    accept: !blocked && score >= D.acceptThreshold,
+    blocked,
+  };
 }
 
 /** Peut-on marier ces deux personnages ? */
@@ -65,11 +70,19 @@ export function marriageAcceptance(state: GameState, a: Character, b: Character)
   const pl = state.playerId;
   const theirRuler = topLiege(state, b.id);
   const f: Factor[] = [{ label: 'Base', value: D.marriage.base }];
-  f.push({ label: `Opinion de ${state.characters[theirRuler]?.name ?? '—'}`, value: opinion(state, theirRuler, pl) * D.marriage.perOpinion });
+  f.push({
+    label: `Opinion de ${state.characters[theirRuler]?.name ?? '—'}`,
+    value: opinion(state, theirRuler, pl) * D.marriage.perOpinion,
+  });
   const rd = rankValue(rankOf(state, pl)) - rankValue(rankOf(state, theirRuler));
   if (rd) f.push({ label: 'Rang de votre maison', value: rd * D.marriage.rankBonus });
-  if (theirRuler !== pl && !allied(state, pl, theirRuler)) f.push({ label: 'Intérêt d’une alliance', value: D.marriage.allianceInterest });
-  if (a.id === pl || a.childrenIds.length === 0 && ageOf(state, a) < 30) f.push({ label: 'Prestige du prétendant', value: Math.min(15, state.characters[pl].prestige / 50) });
+  if (theirRuler !== pl && !allied(state, pl, theirRuler))
+    f.push({ label: 'Intérêt d’une alliance', value: D.marriage.allianceInterest });
+  if (a.id === pl || (a.childrenIds.length === 0 && ageOf(state, a) < 30))
+    f.push({
+      label: 'Prestige du prétendant',
+      value: Math.min(15, state.characters[pl].prestige / 50),
+    });
   if (atWar(state, pl, theirRuler)) f.push({ label: 'En guerre', value: -100 });
   const ageGap = Math.abs(ageOf(state, a) - ageOf(state, b));
   if (ageGap > 15) f.push({ label: 'Grande différence d’âge', value: -ageGap / 2 });
@@ -94,7 +107,9 @@ export function celebrateMarriage(ctx: Ctx, aId: string, bId: string): void {
     addOpinion(state, r1, r2, 'Liens du mariage', 20, 0);
   }
   // Mariage prestigieux : avec un souverain ou son enfant.
-  const prestigious = independentRulers(state).some((r) => r === theirs.id || state.characters[r]?.childrenIds.includes(theirs.id));
+  const prestigious = independentRulers(state).some(
+    (r) => r === theirs.id || state.characters[r]?.childrenIds.includes(theirs.id),
+  );
   if (mine.dynastyId === pd) {
     if (prestigious) {
       state.dynasties[pd].renown += BALANCE.characters.marriageRenown;
@@ -135,7 +150,11 @@ export function makeAlliance(state: GameState, a: string, b: string): void {
   if (!state.alliances.includes(k)) state.alliances.push(k);
   if (a === state.playerId || b === state.playerId) {
     const other = a === state.playerId ? b : a;
-    chronicle(state, `Alliance conclue avec ${displayName(state, state.characters[other])}.`, 'divers');
+    chronicle(
+      state,
+      `Alliance conclue avec ${displayName(state, state.characters[other])}.`,
+      'divers',
+    );
   }
 }
 
@@ -143,18 +162,27 @@ export function breakAlliance(state: GameState, a: string, b: string): void {
   state.alliances = state.alliances.filter((k) => k !== allyKey(a, b));
 }
 
-export function callToArmsAcceptance(state: GameState, fromId: string, allyId: string, warId: string): Acceptance {
+export function callToArmsAcceptance(
+  state: GameState,
+  fromId: string,
+  allyId: string,
+  warId: string,
+): Acceptance {
   const f: Factor[] = [{ label: 'Base', value: D.callToArms.base }];
   f.push({ label: 'Opinion', value: opinion(state, allyId, fromId) * D.callToArms.perOpinion });
   const w = state.wars[warId];
-  const enemy = w && (w.attackerId === fromId || w.attackerAllies.includes(fromId)) ? w.defenderId : w?.attackerId;
+  const enemy =
+    w && (w.attackerId === fromId || w.attackerAllies.includes(fromId))
+      ? w.defenderId
+      : w?.attackerId;
   if (enemy && allied(state, allyId, enemy)) f.push({ label: 'Allié de l’ennemi', value: -100 });
   if (warsOf(state, allyId).length) f.push({ label: 'Déjà en guerre', value: -30 });
   f.push(...traitFactors(state.characters[allyId]));
   let blocked: string | undefined;
   if (!allied(state, fromId, allyId)) blocked = 'Pas d’alliance';
   if (!w) blocked = 'Guerre introuvable';
-  if (w && (w.attackerAllies.includes(allyId) || w.defenderAllies.includes(allyId))) blocked = 'Déjà engagé';
+  if (w && (w.attackerAllies.includes(allyId) || w.defenderAllies.includes(allyId)))
+    blocked = 'Déjà engagé';
   if (enemy && truceWith(state, allyId, enemy)) blocked = 'Trêve avec l’ennemi';
   return finish(f, blocked);
 }
@@ -164,7 +192,8 @@ export function callToArms(ctx: Ctx, fromId: string, allyId: string, warId: stri
   const acc = callToArmsAcceptance(state, fromId, allyId, warId);
   const w = state.wars[warId];
   if (!w) return false;
-  const side = w.attackerId === fromId || w.attackerAllies.includes(fromId) ? 'attacker' : 'defender';
+  const side =
+    w.attackerId === fromId || w.attackerAllies.includes(fromId) ? 'attacker' : 'defender';
   if (acc.accept) {
     joinWar(state, warId, allyId, side);
     addOpinion(state, allyId, fromId, 'A répondu à l’appel', 5, 20);
@@ -173,7 +202,11 @@ export function callToArms(ctx: Ctx, fromId: string, allyId: string, warId: stri
   if (!acc.blocked) {
     breakAlliance(state, fromId, allyId);
     addOpinion(state, fromId, allyId, 'A trahi l’alliance', -40, 40);
-    if (fromId === state.playerId) notify(state, `${state.characters[allyId].name} refuse l’appel aux armes : l’alliance est rompue.`);
+    if (fromId === state.playerId)
+      notify(
+        state,
+        `${state.characters[allyId].name} refuse l’appel aux armes : l’alliance est rompue.`,
+      );
   }
   return false;
 }
@@ -197,10 +230,18 @@ export function tributeAcceptance(state: GameState, fromId: string, toId: string
   const T = D.tribute;
   const f: Factor[] = [{ label: 'Base', value: T.base }];
   const ratio = militaryStrength(state, fromId) / Math.max(1, militaryStrength(state, toId));
-  f.push({ label: `Rapport de force (×${ratio.toFixed(1)})`, value: (ratio - 1) * T.perPowerRatio });
+  f.push({
+    label: `Rapport de force (×${ratio.toFixed(1)})`,
+    value: (ratio - 1) * T.perPowerRatio,
+  });
   f.push({ label: 'Opinion', value: opinion(state, toId, fromId) * T.perOpinion });
   f.push(...traitFactors(state.characters[toId]));
-  const blocked = state.characters[toId].gold < T.amount ? 'Trésor insuffisant' : atWar(state, fromId, toId) ? 'En guerre' : undefined;
+  const blocked =
+    state.characters[toId].gold < T.amount
+      ? 'Trésor insuffisant'
+      : atWar(state, fromId, toId)
+        ? 'En guerre'
+        : undefined;
   return finish(f, blocked);
 }
 
@@ -212,19 +253,30 @@ export function demandTribute(ctx: Ctx, fromId: string, toId: string): boolean {
     state.characters[toId].gold -= amount;
     state.characters[fromId].gold += amount;
     addOpinion(state, toId, fromId, 'Tribut exigé', -20, 20);
-    if (fromId === state.playerId) notify(state, `${state.characters[toId].name} vous verse un tribut de ${amount} or.`);
+    if (fromId === state.playerId)
+      notify(state, `${state.characters[toId].name} vous verse un tribut de ${amount} or.`);
     return true;
   }
   addOpinion(state, toId, fromId, 'Exigence insultante', -10, 12);
-  if (fromId === state.playerId) notify(state, `${state.characters[toId].name} refuse de payer tribut.`);
+  if (fromId === state.playerId)
+    notify(state, `${state.characters[toId].name} refuse de payer tribut.`);
   return false;
 }
 
 /** Candidats au mariage dans les autres cours (adultes non mariés). */
 export function marriageCandidates(state: GameState, forChar: Character): Character[] {
   return Object.values(state.characters)
-    .filter((c) => !marriageBlock(state, forChar, c) && c.dynastyId !== forChar.dynastyId && topLiege(state, c.id) !== state.playerId)
-    .sort((x, y) => rankValue(rankOf(state, topLiege(state, y.id))) - rankValue(rankOf(state, topLiege(state, x.id))))
+    .filter(
+      (c) =>
+        !marriageBlock(state, forChar, c) &&
+        c.dynastyId !== forChar.dynastyId &&
+        topLiege(state, c.id) !== state.playerId,
+    )
+    .sort(
+      (x, y) =>
+        rankValue(rankOf(state, topLiege(state, y.id))) -
+        rankValue(rankOf(state, topLiege(state, x.id))),
+    )
     .slice(0, 30);
 }
 
@@ -232,35 +284,77 @@ export function marriageCandidates(state: GameState, forChar: Character): Charac
 // Conseil
 // ---------------------------------------------------------------------------
 
-export const COUNCIL_POSTS: CouncilPost[] = ['chancelier', 'marechal', 'intendant', 'espion', 'chapelain'];
-export const COUNCIL_INFO: Record<CouncilPost, { label: string; skill: 'diplomatie' | 'guerre' | 'gestion' | 'ruse' | 'savoir'; tasks: { id: string; label: string; target?: 'cour' | 'comte_etranger' | 'comte' | 'heritier' }[] }> = {
-  chancelier: { label: 'Chancelier', skill: 'diplomatie', tasks: [
-    { id: 'relations', label: 'Améliorer les relations', target: 'cour' },
-    { id: 'revendication', label: 'Fabriquer une revendication', target: 'comte_etranger' },
-  ] },
-  marechal: { label: 'Maréchal', skill: 'guerre', tasks: [
-    { id: 'entrainement', label: 'Entraîner les troupes' },
-    { id: 'levees', label: 'Augmenter les levées' },
-  ] },
-  intendant: { label: 'Intendant', skill: 'gestion', tasks: [
-    { id: 'impots', label: 'Collecter les impôts' },
-    { id: 'developper', label: 'Développer un comté', target: 'comte' },
-  ] },
-  espion: { label: 'Maître-espion', skill: 'ruse', tasks: [
-    { id: 'demasquer', label: 'Démasquer les complots' },
-    { id: 'espionner', label: 'Espionner une cour', target: 'cour' },
-  ] },
-  chapelain: { label: 'Chapelain', skill: 'savoir', tasks: [
-    { id: 'piete', label: 'Gagner de la piété' },
-    { id: 'eduquer', label: 'Éduquer un héritier', target: 'heritier' },
-  ] },
+export const COUNCIL_POSTS: CouncilPost[] = [
+  'chancelier',
+  'marechal',
+  'intendant',
+  'espion',
+  'chapelain',
+];
+export const COUNCIL_INFO: Record<
+  CouncilPost,
+  {
+    label: string;
+    skill: 'diplomatie' | 'guerre' | 'gestion' | 'ruse' | 'savoir';
+    tasks: {
+      id: string;
+      label: string;
+      target?: 'cour' | 'comte_etranger' | 'comte' | 'heritier';
+    }[];
+  }
+> = {
+  chancelier: {
+    label: 'Chancelier',
+    skill: 'diplomatie',
+    tasks: [
+      { id: 'relations', label: 'Améliorer les relations', target: 'cour' },
+      { id: 'revendication', label: 'Fabriquer une revendication', target: 'comte_etranger' },
+    ],
+  },
+  marechal: {
+    label: 'Maréchal',
+    skill: 'guerre',
+    tasks: [
+      { id: 'entrainement', label: 'Entraîner les troupes' },
+      { id: 'levees', label: 'Augmenter les levées' },
+    ],
+  },
+  intendant: {
+    label: 'Intendant',
+    skill: 'gestion',
+    tasks: [
+      { id: 'impots', label: 'Collecter les impôts' },
+      { id: 'developper', label: 'Développer un comté', target: 'comte' },
+    ],
+  },
+  espion: {
+    label: 'Maître-espion',
+    skill: 'ruse',
+    tasks: [
+      { id: 'demasquer', label: 'Démasquer les complots' },
+      { id: 'espionner', label: 'Espionner une cour', target: 'cour' },
+    ],
+  },
+  chapelain: {
+    label: 'Chapelain',
+    skill: 'savoir',
+    tasks: [
+      { id: 'piete', label: 'Gagner de la piété' },
+      { id: 'eduquer', label: 'Éduquer un héritier', target: 'heritier' },
+    ],
+  },
 };
 
 /** Personnages éligibles au conseil : adultes de la cour du joueur, famille et vassaux. */
 export function councilCandidates(state: GameState): Character[] {
   const pl = state.playerId;
   return Object.values(state.characters).filter(
-    (c) => c.alive && c.id !== pl && !c.imprisonedBy && isAdult(state, c) && (c.courtId === pl || c.liegeId === pl),
+    (c) =>
+      c.alive &&
+      c.id !== pl &&
+      !c.imprisonedBy &&
+      isAdult(state, c) &&
+      (c.courtId === pl || c.liegeId === pl),
   );
 }
 
@@ -277,12 +371,24 @@ export function seasonCouncil(ctx: Ctx): void {
     switch (`${post}:${seat.task}`) {
       case 'chancelier:relations':
         if (seat.targetId && state.characters[seat.targetId]?.alive)
-          addOpinion(state, seat.targetId, pl, 'Chancelier : relations', C.improveRelations * (s / 10), 8);
+          addOpinion(
+            state,
+            seat.targetId,
+            pl,
+            'Chancelier : relations',
+            C.improveRelations * (s / 10),
+            8,
+          );
         break;
       case 'chancelier:revendication': {
         const c = seat.targetId ? state.counties[seat.targetId] : undefined;
         const me = state.characters[pl];
-        if (c && countyRuler(state, c) !== pl && !me.claims.includes(c.id) && rng.chance(C.fabricateClaimChance + s * 0.004)) {
+        if (
+          c &&
+          countyRuler(state, c) !== pl &&
+          !me.claims.includes(c.id) &&
+          rng.chance(C.fabricateClaimChance + s * 0.004)
+        ) {
           me.claims.push(c.id);
           notify(state, `Votre chancelier a fabriqué une revendication sur ${c.name}.`);
           chronicle(state, `Revendication obtenue sur ${c.name}.`, 'divers');
@@ -303,14 +409,20 @@ export function seasonCouncil(ctx: Ctx): void {
 /** Remplit automatiquement les sièges vides (au début et après une succession). */
 export function autoFillCouncil(state: GameState): void {
   const cands = councilCandidates(state);
-  const used = new Set(Object.values(state.council).map((s) => s.holderId).filter(Boolean));
+  const used = new Set(
+    Object.values(state.council)
+      .map((s) => s.holderId)
+      .filter(Boolean),
+  );
   for (const post of COUNCIL_POSTS) {
     const seat = state.council[post];
     const h = seat.holderId ? state.characters[seat.holderId] : undefined;
     if (h?.alive && (h.courtId === state.playerId || h.liegeId === state.playerId)) continue;
     seat.holderId = undefined;
     const sk = COUNCIL_INFO[post].skill;
-    const best = cands.filter((c) => !used.has(c.id)).sort((a, b) => skill(b, sk) - skill(a, sk))[0];
+    const best = cands
+      .filter((c) => !used.has(c.id))
+      .sort((a, b) => skill(b, sk) - skill(a, sk))[0];
     if (best) {
       seat.holderId = best.id;
       used.add(best.id);
@@ -323,7 +435,9 @@ export function wards(state: GameState): Character[] {
   const p = player(state);
   const fam = [p, ...closeFamily(state, p)];
   const kids = new Map<string, Character>();
-  for (const f of fam) for (const k of livingChildren(state, f)) if (!isAdult(state, k) && k.dynastyId === state.playerDynastyId) kids.set(k.id, k);
+  for (const f of fam)
+    for (const k of livingChildren(state, f))
+      if (!isAdult(state, k) && k.dynastyId === state.playerDynastyId) kids.set(k.id, k);
   return [...kids.values()].sort((a, b) => a.birthTurn - b.birthTurn);
 }
 

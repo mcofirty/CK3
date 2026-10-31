@@ -136,11 +136,16 @@ export function createBattle(setup: BattleSetup, rng: Rng): BattleState {
     phase: 'deploiement',
     log: [],
     warId: setup.warId,
-    playerSide: setup.attacker.isPlayer ? 'attacker' : setup.defender.isPlayer ? 'defender' : undefined,
+    playerSide: setup.attacker.isPlayer
+      ? 'attacker'
+      : setup.defender.isPlayer
+        ? 'defender'
+        : undefined,
     estimate: 0,
     casualties: { killed: [], wounded: [] },
   };
-  for (const key of ['attacker', 'defender'] as SideKey[]) deployPreset(battle, key, aiPreset(battle, key));
+  for (const key of ['attacker', 'defender'] as SideKey[])
+    deployPreset(battle, key, aiPreset(battle, key));
   // Embuscade en forêt.
   const ambushRuse = TERRAINS[battle.terrain].ambushRuse;
   const defMain = effectiveCommander(defender, 'center');
@@ -241,7 +246,8 @@ export function setFrontCommander(
   commanderId: string | undefined,
 ): void {
   const side = battle[key];
-  for (const f of FRONTS) if (side.fronts[f].commanderId === commanderId) side.fronts[f].commanderId = undefined;
+  for (const f of FRONTS)
+    if (side.fronts[f].commanderId === commanderId) side.fronts[f].commanderId = undefined;
   side.fronts[front].commanderId = commanderId;
 }
 
@@ -298,7 +304,12 @@ export function canFeint(side: BattleSide, f: FrontId): boolean {
   const t = totalMen(fr.men);
   const c = effectiveCommander(side, f);
   if (hasAbility(c, 'cavalier')) return t > 0;
-  return t > 0 && fr.men.cavalerie / t >= B.orders.feint.minCavalry && !!c && c.guerre >= B.orders.feint.minGuerre;
+  return (
+    t > 0 &&
+    fr.men.cavalerie / t >= B.orders.feint.minCavalry &&
+    !!c &&
+    c.guerre >= B.orders.feint.minGuerre
+  );
 }
 
 export function canShoot(fr: Front): boolean {
@@ -359,7 +370,8 @@ function ruleOrder(
   if (ratio >= ai.chargeRatio) return { order: 'charger', rule: 4 };
   // 5. Archers : tirer.
   const t = totalMen(fr.men);
-  if (t > 0 && fr.men.archers / t >= ai.shootArcherShare && canShoot(fr)) return { order: 'tirer', rule: 5 };
+  if (t > 0 && fr.men.archers / t >= ai.shootArcherShare && canShoot(fr))
+    return { order: 'tirer', rule: 5 };
   // 6. Sinon : tenir.
   return { order: 'tenir', rule: 6 };
 }
@@ -379,9 +391,9 @@ export function aiOrders(battle: BattleState, key: SideKey, rng: Rng): SideOrder
     let target: FrontId | undefined;
     if (!isActive(side.fronts.center)) target = 'center';
     else {
-      const low = FRONTS.filter((f) => isActive(side.fronts[f]) && side.fronts[f].morale < B.ai.lowMorale).sort(
-        (a, b) => side.fronts[a].morale - side.fronts[b].morale,
-      );
+      const low = FRONTS.filter(
+        (f) => isActive(side.fronts[f]) && side.fronts[f].morale < B.ai.lowMorale,
+      ).sort((a, b) => side.fronts[a].morale - side.fronts[b].morale);
       if (low.length) target = low[0];
       else {
         const broken = FRONTS.filter((f) => side.fronts[f].broken);
@@ -457,8 +469,13 @@ function positionValue(battle: BattleState, key: SideKey): number {
       const fr = s.fronts[f];
       if (isActive(fr)) v += totalMen(fr.men) * Math.max(0, fr.morale);
     }
-    v += totalMen(s.reserve) * Math.max(0, s.reserveMorale) * 0.9;
-    return v / Math.max(1, s.initialMen);
+    // Un front replié ou brisé laisse un flanc libre à l'ennemi.
+    const penalty = FRONTS.reduce(
+      (p, f) => p + (s.fronts[f].broken ? 25 : s.fronts[f].withdrawn ? 12 : 0),
+      0,
+    );
+    v += totalMen(s.reserve) * Math.max(0, s.reserveMorale) * 0.5;
+    return v / Math.max(1, s.initialMen) - penalty;
   };
   let score = val(battle[key]) - val(battle[other(key)]);
   if (battle.result) score += battle.result.winner === key ? 1000 : -1000;
@@ -472,7 +489,11 @@ function positionValue(battle: BattleState, key: SideKey): number {
 function bestResponse(battle: BattleState, key: SideKey, base: SideOrders): SideOrders {
   const enemyKey = other(key);
   const predicted = predictedOrders(battle, enemyKey);
-  const best: SideOrders = { ...base, orders: { ...base.orders }, flankTargets: { ...base.flankTargets } };
+  const best: SideOrders = {
+    ...base,
+    orders: { ...base.orders },
+    flankTargets: { ...base.flankTargets },
+  };
   const evaluate = (candidate: SideOrders): number => {
     const clone = structuredClone(battle);
     clone.precomputedOrders = undefined;
@@ -481,7 +502,10 @@ function bestResponse(battle: BattleState, key: SideKey, base: SideOrders): Side
     // Deuxième round avec les règles, pour voir les conséquences.
     if (clone.phase === 'rounds') {
       resolveRound(clone, neutralRng(), {
-        forced: { [key]: predictedOrders(clone, key), [enemyKey]: predictedOrders(clone, enemyKey) },
+        forced: {
+          [key]: predictedOrders(clone, key),
+          [enemyKey]: predictedOrders(clone, enemyKey),
+        },
       });
     }
     lookahead = false;
@@ -491,7 +515,11 @@ function bestResponse(battle: BattleState, key: SideKey, base: SideOrders): Side
   for (const f of FRONTS) {
     for (const o of validOrders(battle, key, f)) {
       if (o === best.orders[f]) continue;
-      const cand: SideOrders = { ...best, orders: { ...best.orders, [f]: o }, flankTargets: { ...best.flankTargets } };
+      const cand: SideOrders = {
+        ...best,
+        orders: { ...best.orders, [f]: o },
+        flankTargets: { ...best.flankTargets },
+      };
       if (o === 'flanc') cand.flankTargets![f] = flankTargets(battle, key, f)[0];
       const sc = evaluate(cand);
       if (sc > bestScore + 1e-6) {
@@ -580,13 +608,15 @@ function defenseOf(
   const terrain = TERRAINS[battle.terrain];
   let orderDef = 1;
   if (eff.order === 'charger') orderDef = B.orders.charge.defense;
-  if (eff.order === 'tenir') orderDef = hasAbility(cmd, 'prudent') ? B.orders.hold.prudentDefense : B.orders.hold.defense;
+  if (eff.order === 'tenir')
+    orderDef = hasAbility(cmd, 'prudent') ? B.orders.hold.prudentDefense : B.orders.hold.defense;
   const terrainDef = key === 'defender' ? terrain.defenderDefense : 1;
   let d = 0;
   for (const v of UNIT_TYPES) {
     if (fr.men[v] <= 0) continue;
     let dv = UNITS[v].defense * orderDef * terrainDef;
-    if (v === 'archers' && eff.order === 'tirer' && chargedBy) dv *= B.orders.shoot.archerDefenseVsCharge;
+    if (v === 'archers' && eff.order === 'tirer' && chargedBy)
+      dv *= B.orders.shoot.archerDefenseVsCharge;
     d += (fr.men[v] / t) * dv;
   }
   return Math.max(0.1, d);
@@ -597,7 +627,11 @@ function commanderCoef(c: Commander | undefined): number {
   return 1 + B.commanderPerPoint * (c.guerre - B.commanderBase);
 }
 
-function validateOrders(battle: BattleState, key: SideKey, so: SideOrders): Record<FrontId, Effective> {
+function validateOrders(
+  battle: BattleState,
+  key: SideKey,
+  so: SideOrders,
+): Record<FrontId, Effective> {
   const side = battle[key];
   const res = {} as Record<FrontId, Effective>;
   for (const f of FRONTS) {
@@ -654,7 +688,9 @@ function applyReserve(battle: BattleState, key: SideKey, so: SideOrders, lines: 
     }
     for (const u of UNIT_TYPES) side.reserve[u] -= send[u];
     if (totalMen(side.reserve) < 1) side.reserveMorale = 0;
-    lines.push(`${side.name} engage ${Math.round(n)} hommes de réserve (${FRONT_LABELS[f].toLowerCase()}).`);
+    lines.push(
+      `${side.name} engage ${Math.round(n)} hommes de réserve (${FRONT_LABELS[f].toLowerCase()}).`,
+    );
   }
 }
 
@@ -676,7 +712,8 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
     const side = battle[key];
     const forced = opts.forced?.[key];
     if (forced) sideOrders[key] = forced;
-    else if (side.isPlayer && opts.playerOrders && !opts.autoPlayer) sideOrders[key] = opts.playerOrders;
+    else if (side.isPlayer && opts.playerOrders && !opts.autoPlayer)
+      sideOrders[key] = opts.playerOrders;
     else if (battle.precomputedOrders && battle.round === 0 && key !== battle.playerSide) {
       // Ordres déjà calculés et révélés au joueur (Stratège).
       sideOrders[key] = battle.precomputedOrders;
@@ -697,10 +734,17 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
     applyReserve(battle, key, sideOrders[key], lines);
     const side = battle[key];
     const rally = sideOrders[key].rally;
-    if (rally && !side.rallyUsed && isActive(side.fronts[rally]) && side.commanders.some((c) => hasAbility(c, 'inspirant'))) {
+    if (
+      rally &&
+      !side.rallyUsed &&
+      isActive(side.fronts[rally]) &&
+      side.commanders.some((c) => hasAbility(c, 'inspirant'))
+    ) {
       side.rallyUsed = true;
       side.fronts[rally].morale += B.traits.inspirantRally;
-      lines.push(`${side.name} rallie son ${FRONT_LABELS[rally].toLowerCase()} (+${B.traits.inspirantRally} moral).`);
+      lines.push(
+        `${side.name} rallie son ${FRONT_LABELS[rally].toLowerCase()} (+${B.traits.inspirantRally} moral).`,
+      );
     }
   }
 
@@ -717,7 +761,12 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       if (eff[key][f].order !== 'replier' || !isActive(side.fronts[f])) continue;
       const fr = side.fronts[f];
       const n = totalMen(fr.men);
-      side.reserveMorale = mergeMorale(side.reserveMorale, totalMen(side.reserve), fr.morale + B.withdrawMorale, n);
+      side.reserveMorale = mergeMorale(
+        side.reserveMorale,
+        totalMen(side.reserve),
+        fr.morale + B.withdrawMorale,
+        n,
+      );
       for (const u of UNIT_TYPES) {
         side.reserve[u] += fr.men[u];
         fr.men[u] = 0;
@@ -739,7 +788,9 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
   };
   const chargedBy = (key: SideKey, f: FrontId): boolean => {
     const ek = other(key);
-    return eff[ek][f].order === 'charger' && eff[ek][f].target === f && isActive(battle[ek].fronts[f]);
+    return (
+      eff[ek][f].order === 'charger' && eff[ek][f].target === f && isActive(battle[ek].fronts[f])
+    );
   };
 
   for (const key of ['attacker', 'defender'] as SideKey[]) {
@@ -797,7 +848,9 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       if (key === 'attacker') moraleHit[key][f] += TERRAINS[battle.terrain].attackerMoralePerRound;
       if (key === 'attacker' && round === 1 && battle.ambush === f) {
         moraleHit[key][f] += B.ambushMorale;
-        lines.push(`Embuscade ! ${FRONT_LABELS[f]} de ${battle.attacker.name} surpris (-${B.ambushMorale} moral).`);
+        lines.push(
+          `Embuscade ! ${FRONT_LABELS[f]} de ${battle.attacker.name} surpris (-${B.ambushMorale} moral).`,
+        );
       }
     }
   }
@@ -825,8 +878,17 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       lostThisRound[key][f] = applyMoraleLoss(side, f, mLoss, 0);
       // Lâche.
       const cmd = frontCommander(side, f);
-      if (hasAbility(cmd, 'lache') && fr.morale < B.traits.lacheThreshold && rng.chance(B.traits.lacheChance)) {
-        lostThisRound[key][f] = applyMoraleLoss(side, f, B.traits.lacheMorale, lostThisRound[key][f]);
+      if (
+        hasAbility(cmd, 'lache') &&
+        fr.morale < B.traits.lacheThreshold &&
+        rng.chance(B.traits.lacheChance)
+      ) {
+        lostThisRound[key][f] = applyMoraleLoss(
+          side,
+          f,
+          B.traits.lacheMorale,
+          lostThisRound[key][f],
+        );
         lines.push(`${cmd!.name} perd son sang-froid (${FRONT_LABELS[f].toLowerCase()}).`);
       }
     }
@@ -873,7 +935,13 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
           fr.commanderId = undefined;
           if (side.mainCommanderId === cmd.id) side.mainCommanderId = undefined;
           lines.push(`${cmd.name} est tué au combat !`);
-          if (isActive(fr)) lostThisRound[key][f] = applyMoraleLoss(side, f, B.shockCommanderLost, lostThisRound[key][f]);
+          if (isActive(fr))
+            lostThisRound[key][f] = applyMoraleLoss(
+              side,
+              f,
+              B.shockCommanderLost,
+              lostThisRound[key][f],
+            );
         } else {
           wounded.push(cmd.id);
           lines.push(`${cmd.name} est blessé.`);
@@ -890,7 +958,12 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
       for (const bf of queue) {
         for (const g of adjacentFronts(bf)) {
           if (!isActive(side.fronts[g])) continue;
-          lostThisRound[key][g] = applyMoraleLoss(side, g, B.shockNeighborBroken, lostThisRound[key][g]);
+          lostThisRound[key][g] = applyMoraleLoss(
+            side,
+            g,
+            B.shockNeighborBroken,
+            lostThisRound[key][g],
+          );
         }
       }
       const nb = checkBreaks(key);
@@ -906,14 +979,23 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
   // Journal : une ligne par front.
   for (const f of FRONTS) lines.push(frontLine(battle, f, eff));
   for (const key of ['attacker', 'defender'] as SideKey[])
-    for (const f of justBroken[key]) lines.push(`${FRONT_LABELS[f]} de ${battle[key].name} est brisé !`);
+    for (const f of justBroken[key])
+      lines.push(`${FRONT_LABELS[f]} de ${battle[key].name} est brisé !`);
 
   battle.log.push({
     round,
     lines,
     orders: {
-      attacker: { left: eff.attacker.left.order, center: eff.attacker.center.order, right: eff.attacker.right.order },
-      defender: { left: eff.defender.left.order, center: eff.defender.center.order, right: eff.defender.right.order },
+      attacker: {
+        left: eff.attacker.left.order,
+        center: eff.attacker.center.order,
+        right: eff.attacker.right.order,
+      },
+      defender: {
+        left: eff.defender.left.order,
+        center: eff.defender.center.order,
+        right: eff.defender.right.order,
+      },
     },
   });
   battle.casualties.killed.push(...killed);
@@ -925,7 +1007,8 @@ export function resolveRound(battle: BattleState, rng: Rng, opts: RoundOptions =
   if (routA || routD) {
     let winner: SideKey;
     if (routA && routD) {
-      winner = remainingPower(battle.attacker) > remainingPower(battle.defender) ? 'attacker' : 'defender';
+      winner =
+        remainingPower(battle.attacker) > remainingPower(battle.defender) ? 'attacker' : 'defender';
     } else winner = routA ? 'defender' : 'attacker';
     finishBattle(battle, winner, 'deroute', rng);
   } else if (round >= battle.maxRounds) {
@@ -944,15 +1027,25 @@ function applyMoraleLoss(side: BattleSide, f: FrontId, amount: number, already: 
   return already + a;
 }
 
-function frontLine(battle: BattleState, f: FrontId, eff: Record<SideKey, Record<FrontId, Effective>>): string {
+function frontLine(
+  battle: BattleState,
+  f: FrontId,
+  eff: Record<SideKey, Record<FrontId, Effective>>,
+): string {
   const me: SideKey = battle.playerSide ?? 'attacker';
   const en = other(me);
   const a = battle[me].fronts[f];
   const b = battle[en].fronts[f];
   const oa = isActive(a) || a.lastLoss > 0 ? ORDER_LABELS[eff[me][f].order] : '—';
   const ob = isActive(b) || b.lastLoss > 0 ? ORDER_LABELS[eff[en][f].order] : '—';
-  const flankA = eff[me][f].order === 'flanc' && eff[me][f].target ? ` (${FRONT_LABELS[eff[me][f].target!].toLowerCase()})` : '';
-  const flankB = eff[en][f].order === 'flanc' && eff[en][f].target ? ` (${FRONT_LABELS[eff[en][f].target!].toLowerCase()})` : '';
+  const flankA =
+    eff[me][f].order === 'flanc' && eff[me][f].target
+      ? ` (${FRONT_LABELS[eff[me][f].target!].toLowerCase()})`
+      : '';
+  const flankB =
+    eff[en][f].order === 'flanc' && eff[en][f].target
+      ? ` (${FRONT_LABELS[eff[en][f].target!].toLowerCase()})`
+      : '';
   return `${FRONT_LABELS[f]} : ${oa}${flankA} contre ${ob}${flankB} — pertes ${Math.round(a.lastLoss)} / ${Math.round(b.lastLoss)}, moral −${Math.round(a.lastMoraleLoss)} / −${Math.round(b.lastMoraleLoss)}`;
 }
 
@@ -968,11 +1061,18 @@ export function isRouted(side: BattleSide): boolean {
 
 function remainingPower(side: BattleSide): number {
   let p = 0;
-  for (const f of FRONTS) if (isActive(side.fronts[f])) p += totalMen(side.fronts[f].men) * Math.max(0, side.fronts[f].morale);
+  for (const f of FRONTS)
+    if (isActive(side.fronts[f]))
+      p += totalMen(side.fronts[f].men) * Math.max(0, side.fronts[f].morale);
   return p;
 }
 
-function finishBattle(battle: BattleState, winner: SideKey, reason: 'deroute' | 'retraite', rng: Rng): void {
+function finishBattle(
+  battle: BattleState,
+  winner: SideKey,
+  reason: 'deroute' | 'retraite',
+  rng: Rng,
+): void {
   const loserKey = other(winner);
   const loser = battle[loserKey];
   const win = battle[winner];

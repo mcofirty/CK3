@@ -43,7 +43,8 @@ export function addTrait(c: Character, t: string): void {
   const opp = TRAITS[t].opposite;
   if (opp) c.traits = c.traits.filter((x) => x !== opp);
   // Un seul trait d'éducation.
-  if (TRAITS[t].category === 'education') c.traits = c.traits.filter((x) => TRAITS[x]?.category !== 'education');
+  if (TRAITS[t].category === 'education')
+    c.traits = c.traits.filter((x) => TRAITS[x]?.category !== 'education');
   c.traits.push(t);
 }
 
@@ -133,12 +134,15 @@ export function createCharacter(ctx: Ctx, opts: NewCharacterOpts): Character {
     seed: rng.seed(),
   };
   for (const t of opts.traits ?? []) addTrait(c, t);
-  const nPers = opts.personalityCount ?? (opts.age >= C.adulthood ? C.traitsAtStart : opts.age >= 6 ? 1 : 0);
+  const nPers =
+    opts.personalityCount ?? (opts.age >= C.adulthood ? C.traitsAtStart : opts.age >= 6 ? 1 : 0);
   addRandomPersonality(rng, c, nPers);
   if (opts.education ?? opts.age >= C.adulthood) {
     const focus = rng.pick(SKILL_KEYS);
     const tier = rng.chance(0.3) ? 2 : 1;
-    const t = Object.values(TRAITS).find((d) => d.education?.skill === focus && d.education.tier === tier);
+    const t = Object.values(TRAITS).find(
+      (d) => d.education?.skill === focus && d.education.tier === tier,
+    );
     if (t) addTrait(c, t.id);
   }
   if (!opts.traits && rng.chance(0.15)) addTrait(c, rng.pick(HEREDITARY_TRAITS));
@@ -150,7 +154,10 @@ export function createCharacter(ctx: Ctx, opts: NewCharacterOpts): Character {
 
 export function addRandomPersonality(rng: Rng, c: Character, n: number): void {
   let guard = 0;
-  while (c.traits.filter((t) => TRAITS[t]?.category === 'personnalite').length < n && guard++ < 30) {
+  while (
+    c.traits.filter((t) => TRAITS[t]?.category === 'personnalite').length < n &&
+    guard++ < 30
+  ) {
     const t = rng.pick(PERSONALITY_TRAITS);
     const opp = TRAITS[t].opposite;
     if (c.traits.includes(t) || (opp && c.traits.includes(opp))) continue;
@@ -183,7 +190,8 @@ export function livingChildren(state: GameState, c: Character): Character[] {
 
 export function isCloseFamily(state: GameState, a: Character, b: Character): boolean {
   if (a.spouseId === b.id) return true;
-  if (a.fatherId === b.id || a.motherId === b.id || b.fatherId === a.id || b.motherId === a.id) return true;
+  if (a.fatherId === b.id || a.motherId === b.id || b.fatherId === a.id || b.motherId === a.id)
+    return true;
   return siblingsOf(state, a).some((s) => s.id === b.id);
 }
 
@@ -211,14 +219,16 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
   const to = state.characters[toId];
   const reasons: { label: string; value: number }[] = [];
   if (!from || !to || fromId === toId) return { total: 0, reasons };
-  const push = (label: string, value: number) => value !== 0 && reasons.push({ label, value: Math.round(value) });
+  const push = (label: string, value: number) =>
+    value !== 0 && reasons.push({ label, value: Math.round(value) });
 
   push(`Diplomatie de ${to.name}`, (skill(to, 'diplomatie') - 10) * O.diplomacyPerPoint);
   for (const t of from.traits) {
     const def = TRAITS[t];
     if (def?.category !== 'personnalite') continue;
     if (to.traits.includes(t)) push(`Trait commun : ${def.name}`, O.sameTrait);
-    if (def.opposite && to.traits.includes(def.opposite)) push(`Traits opposés : ${def.name} / ${TRAITS[def.opposite].name}`, O.oppositeTrait);
+    if (def.opposite && to.traits.includes(def.opposite))
+      push(`Traits opposés : ${def.name} / ${TRAITS[def.opposite].name}`, O.oppositeTrait);
   }
   if (from.liegeId === toId) {
     push('Vassal', O.vassalBase);
@@ -239,8 +249,11 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
     else if (allied(state, fromId, toId)) push('Alliés', O.allied);
   }
   // Revendications sur mes terres.
-  const myCounties = Object.values(state.counties).filter((c) => c.holderId === fromId).map((c) => c.id);
-  if (to.claims.some((cl) => myCounties.includes(cl))) push('Revendique mes terres', O.claimOnHolding);
+  const myCounties = Object.values(state.counties)
+    .filter((c) => c.holderId === fromId)
+    .map((c) => c.id);
+  if (to.claims.some((cl) => myCounties.includes(cl)))
+    push('Revendique mes terres', O.claimOnHolding);
   if (to.imprisonedBy === fromId) push('Mon prisonnier', -10);
   if (from.imprisonedBy === toId) push('Me retient prisonnier', -50);
   for (const m of from.opinions[toId] ?? []) {
@@ -269,7 +282,9 @@ export function addOpinion(
   const from = state.characters[fromId];
   if (!from || fromId === toId) return;
   const list = (from.opinions[toId] ??= []);
-  const existing = list.find((m) => m.reason === reason && (m.expires === undefined || m.expires > state.turn));
+  const existing = list.find(
+    (m) => m.reason === reason && (m.expires === undefined || m.expires > state.turn),
+  );
   if (existing) {
     existing.value = clamp(existing.value + value, -100, 100);
     existing.expires = seasons > 0 ? state.turn + seasons : undefined;
@@ -323,14 +338,21 @@ export function heldCounties(state: GameState, id: string): string[] {
 export function demesneLimit(state: GameState, id: string): number {
   const c = state.characters[id];
   if (!c) return 0;
-  return BALANCE.economy.demesneBase + Math.floor(skill(c, 'gestion') / BALANCE.economy.demesnePerGestion);
+  return (
+    BALANCE.economy.demesneBase +
+    Math.floor(skill(c, 'gestion') / BALANCE.economy.demesnePerGestion)
+  );
 }
 
 export function isOverDemesne(state: GameState, id: string): boolean {
   return heldCounties(state, id).length > demesneLimit(state, id);
 }
 
-export function warSide(state: GameState, warId: string, rulerId: string): 'attacker' | 'defender' | undefined {
+export function warSide(
+  state: GameState,
+  warId: string,
+  rulerId: string,
+): 'attacker' | 'defender' | undefined {
   const w = state.wars[warId];
   if (!w) return undefined;
   if (w.attackerId === rulerId || w.attackerAllies.includes(rulerId)) return 'attacker';

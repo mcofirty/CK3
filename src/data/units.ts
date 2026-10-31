@@ -17,11 +17,56 @@ export interface UnitStats {
 export const UNIT_TYPES: UnitType[] = ['levees', 'piquiers', 'archers', 'infanterie', 'cavalerie'];
 
 export const UNITS: Record<UnitType, UnitStats> = {
-  levees: { label: 'Levées', short: 'Lev', recruit: 0, upkeep: 1, attack: 2, defense: 2, morale: 40, building: null },
-  piquiers: { label: 'Piquiers', short: 'Piq', recruit: 40, upkeep: 3, attack: 3, defense: 6, morale: 60, building: 'caserne' },
-  archers: { label: 'Archers', short: 'Arc', recruit: 45, upkeep: 3, attack: 4, defense: 2, morale: 50, building: 'archerie' },
-  infanterie: { label: 'Infanterie lourde', short: 'Inf', recruit: 70, upkeep: 5, attack: 6, defense: 6, morale: 70, building: 'caserne' },
-  cavalerie: { label: 'Cavalerie lourde', short: 'Cav', recruit: 100, upkeep: 8, attack: 8, defense: 4, morale: 75, building: 'ecuries' },
+  levees: {
+    label: 'Levées',
+    short: 'Lev',
+    recruit: 0,
+    upkeep: 1,
+    attack: 2,
+    defense: 2,
+    morale: 40,
+    building: null,
+  },
+  piquiers: {
+    label: 'Piquiers',
+    short: 'Piq',
+    recruit: 40,
+    upkeep: 3,
+    attack: 3,
+    defense: 6,
+    morale: 60,
+    building: 'caserne',
+  },
+  archers: {
+    label: 'Archers',
+    short: 'Arc',
+    recruit: 45,
+    upkeep: 3,
+    attack: 4,
+    defense: 2,
+    morale: 50,
+    building: 'archerie',
+  },
+  infanterie: {
+    label: 'Infanterie lourde',
+    short: 'Inf',
+    recruit: 70,
+    upkeep: 5,
+    attack: 6,
+    defense: 6,
+    morale: 70,
+    building: 'caserne',
+  },
+  cavalerie: {
+    label: 'Cavalerie lourde',
+    short: 'Cav',
+    recruit: 100,
+    upkeep: 8,
+    attack: 8,
+    defense: 4,
+    morale: 75,
+    building: 'ecuries',
+  },
 };
 
 /** Matrice des contres : COUNTERS[attaquant][cible] multiplie l'attaque. */

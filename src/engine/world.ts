@@ -97,8 +97,15 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   const ctx: Ctx = { state, rng };
 
   // Comtés, duchés, royaumes.
-  for (const k of MAP_DATA.kingdoms) state.kingdoms[k.id] = { id: k.id, name: k.name, duchies: [...k.duchies] };
-  for (const d of MAP_DATA.duchies) state.duchies[d.id] = { id: d.id, name: d.name, kingdomId: d.kingdom, counties: [...d.counties] };
+  for (const k of MAP_DATA.kingdoms)
+    state.kingdoms[k.id] = { id: k.id, name: k.name, duchies: [...k.duchies] };
+  for (const d of MAP_DATA.duchies)
+    state.duchies[d.id] = {
+      id: d.id,
+      name: d.name,
+      kingdomId: d.kingdom,
+      counties: [...d.counties],
+    };
   for (const m of MAP_DATA.counties) {
     const terrain = m.terrain as Terrain;
     const c: County = {
@@ -130,13 +137,25 @@ export function newGame(opts: NewGameOptions = {}): GameState {
       dynastyId: dynId,
       skillBase: isPlayer ? 9 : 8,
     });
-    state.dynasties[dynId] = { id: dynId, name: dynastyName(rng, usedDyn), renown: 50, seed: rng.seed(), founderId: ruler.id };
+    state.dynasties[dynId] = {
+      id: dynId,
+      name: dynastyName(rng, usedDyn),
+      renown: 50,
+      seed: rng.seed(),
+      founderId: ruler.id,
+    };
     ruler.gold = isPlayer ? 150 : 120;
     ruler.prestige = isPlayer ? 150 : 120;
     ruler.piety = 50;
     // Conjoint et enfants.
     if (rng.chance(isPlayer ? 1 : 0.85)) {
-      const spouse = createCharacter(ctx, { age: Math.max(18, rng.int(18, 30)), female: !ruler.female, dynastyId: null, courtId: ruler.id, skillBase: 7 });
+      const spouse = createCharacter(ctx, {
+        age: Math.max(18, rng.int(18, 30)),
+        female: !ruler.female,
+        dynastyId: null,
+        courtId: ruler.id,
+        skillBase: 7,
+      });
       marry(state, ruler, spouse);
       const kids = rng.int(isPlayer ? 1 : 0, 3);
       for (let k = 0; k < kids; k++) {
@@ -154,8 +173,14 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     }
     // Courtisans (conseil, commandants).
     for (let k = 0; k < BALANCE.characters.courtSize; k++) {
-      const c = createCharacter(ctx, { age: rng.int(20, 50), dynastyId: null, courtId: ruler.id, skillBase: 8 });
-      if (k === 0 && rng.chance(0.3)) addTrait(c, rng.pick(['stratege', 'cavalier', 'inebranlable', 'inspirant']));
+      const c = createCharacter(ctx, {
+        age: rng.int(20, 50),
+        dynastyId: null,
+        courtId: ruler.id,
+        skillBase: 8,
+      });
+      if (k === 0 && rng.chance(0.3))
+        addTrait(c, rng.pick(['stratege', 'cavalier', 'inebranlable', 'inspirant']));
     }
     // Comtés : capitale au centre du domaine, 4 en propre, le reste aux vassaux.
     const counties = realm.map((id) => state.counties[id]);
@@ -174,12 +199,18 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     const duchy = state.duchies[capital.duchyId];
     if (!duchy.holderId) duchy.holderId = ruler.id;
     else {
-      const other = Object.values(state.duchies).find((d) => !d.holderId && d.counties.some((id) => demesne.some((c) => c.id === id)));
+      const other = Object.values(state.duchies).find(
+        (d) => !d.holderId && d.counties.some((id) => demesne.some((c) => c.id === id)),
+      );
       if (other) other.holderId = ruler.id;
     }
     // Bâtiments de départ et compagnies.
-    const starts: BuildingType[] = isPlayer ? ['caserne', 'marche'] : [rng.pick(['caserne', 'archerie', 'marche'] as BuildingType[]), 'ferme'];
-    starts.forEach((t, i) => (i === 0 ? capital : demesne[1]).buildings.push({ type: t, level: 1 }));
+    const starts: BuildingType[] = isPlayer
+      ? ['caserne', 'marche']
+      : [rng.pick(['caserne', 'archerie', 'marche'] as BuildingType[]), 'ferme'];
+    starts.forEach((t, i) =>
+      (i === 0 ? capital : demesne[1]).buildings.push({ type: t, level: 1 }),
+    );
     if (isPlayer) demesne[2].buildings.push({ type: 'archerie', level: 1 });
     const st = emptyUnits();
     st.piquiers = 200;
@@ -198,21 +229,25 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   // Une revendication de départ pour le joueur sur un comté voisin.
   const pl = state.characters[state.playerId];
   const mine = new Set(MAP_DATA.realms[0]);
-  const border = Object.values(state.counties).filter((c) => !mine.has(c.id) && c.adjacent.some((n) => mine.has(n)));
+  const border = Object.values(state.counties).filter(
+    (c) => !mine.has(c.id) && c.adjacent.some((n) => mine.has(n)),
+  );
   if (border.length) pl.claims.push(rng.pick(border).id);
   // Quelques revendications pour les rivaux.
   MAP_DATA.realms.slice(1).forEach((realm) => {
     const holder = state.counties[realm[0]].holderId;
     const ruler = state.characters[holder]?.liegeId ?? holder;
     const own = new Set(realm);
-    const b = Object.values(state.counties).filter((c) => !own.has(c.id) && c.adjacent.some((n) => own.has(n)));
+    const b = Object.values(state.counties).filter(
+      (c) => !own.has(c.id) && c.adjacent.some((n) => own.has(n)),
+    );
     if (b.length && rng.chance(0.6)) state.characters[ruler].claims.push(rng.pick(b).id);
   });
 
   autoFillCouncil(state);
   // Le chancelier cultive d'emblée un voisin.
   const neighbor = border[0] ? state.counties[border[0].id].holderId : undefined;
-  const nr = neighbor ? state.characters[neighbor]?.liegeId ?? neighbor : undefined;
+  const nr = neighbor ? (state.characters[neighbor]?.liegeId ?? neighbor) : undefined;
   if (nr) state.council.chancelier.targetId = nr;
 
   const eco = economyOf(state, state.playerId);
@@ -230,17 +265,36 @@ function createVassal(ctx: Ctx, liege: Character, used: Set<string>): Character 
   const { state, rng } = ctx;
   const dynId = `y${++state.nextId}`;
   const v = createCharacter(ctx, { age: rng.int(22, 55), dynastyId: dynId, skillBase: 7 });
-  state.dynasties[dynId] = { id: dynId, name: dynastyName(rng, used), renown: 10, seed: rng.seed(), founderId: v.id };
+  state.dynasties[dynId] = {
+    id: dynId,
+    name: dynastyName(rng, used),
+    renown: 10,
+    seed: rng.seed(),
+    founderId: v.id,
+  };
   v.liegeId = liege.id;
   v.courtId = v.id;
   v.gold = 30;
   v.prestige = 30;
   if (rng.chance(0.7)) {
-    const s = createCharacter(ctx, { age: rng.int(20, 45), female: !v.female, dynastyId: null, courtId: v.id, skillBase: 5 });
+    const s = createCharacter(ctx, {
+      age: rng.int(20, 45),
+      female: !v.female,
+      dynastyId: null,
+      courtId: v.id,
+      skillBase: 5,
+    });
     marry(state, v, s);
     if (rng.chance(0.6)) {
       const [mother, father] = v.female ? [v, s] : [s, v];
-      createCharacter(ctx, { age: rng.int(0, 15), dynastyId: dynId, courtId: v.id, fatherId: father.id, motherId: mother.id, education: false });
+      createCharacter(ctx, {
+        age: rng.int(0, 15),
+        dynastyId: dynId,
+        courtId: v.id,
+        fatherId: father.id,
+        motherId: mother.id,
+        education: false,
+      });
     }
   }
   return v;

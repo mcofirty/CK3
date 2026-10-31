@@ -124,7 +124,12 @@ for (let i = 0; i < LAND; i++) {
   const r = rng.next();
   if (coastal[i] && r < 0.22) terrain[i] = 'marais';
   else if (r < 0.42) terrain[i] = 'foret';
-  else if (r < 0.62) terrain[i] = adj[i].some((n) => terrain[n] === 'montagne') ? 'colline' : rng.chance(0.5) ? 'colline' : 'plaine';
+  else if (r < 0.62)
+    terrain[i] = adj[i].some((n) => terrain[n] === 'montagne')
+      ? 'colline'
+      : rng.chance(0.5)
+        ? 'colline'
+        : 'plaine';
 }
 
 // --- Rivière : une chaîne d'arêtes depuis la côte. ---
@@ -134,7 +139,10 @@ const riverPairs: [number, number][] = [];
   let a = start;
   let prev = -1;
   for (let step = 0; step < 7; step++) {
-    const options = adj[a].filter((n) => n !== prev && !riverPairs.some(([x, y]) => (x === a && y === n) || (x === n && y === a)));
+    const options = adj[a].filter(
+      (n) =>
+        n !== prev && !riverPairs.some(([x, y]) => (x === a && y === n) || (x === n && y === a)),
+    );
     if (!options.length) break;
     // Rivière le long de la frontière entre a et b ; on avance vers le centre.
     options.sort((x, y) => inBlob(...land[x]) - inBlob(...land[y]));
@@ -162,7 +170,9 @@ function grow(seeds: number[], sizes: number[]): number[] {
         if (o === k) for (const n of adj[i]) if (owner[n] === -1) frontier.push(n);
       });
       if (!frontier.length) continue;
-      const pick = frontier.sort((x, y) => dist(land[x], land[seeds[k]]) - dist(land[y], land[seeds[k]]))[0];
+      const pick = frontier.sort(
+        (x, y) => dist(land[x], land[seeds[k]]) - dist(land[y], land[seeds[k]]),
+      )[0];
       owner[pick] = k;
       count[k]++;
       changed = true;
@@ -242,7 +252,9 @@ const counties = land.map((_, i) => {
     y: Math.round(cy),
     polygon: cell.map(round),
     adjacent: adj[i].map((n) => `c${n}`),
-    rivers: riverPairs.filter(([a, b]) => a === i || b === i).map(([a, b]) => `c${a === i ? b : a}`),
+    rivers: riverPairs
+      .filter(([a, b]) => a === i || b === i)
+      .map(([a, b]) => `c${a === i ? b : a}`),
     coastal: coastal[i],
   };
 });
@@ -257,7 +269,9 @@ const kingdoms = [0, 1].map((k) => ({
   name: placeName(),
   duchies: duchies.filter((d) => d.kingdom === `k${k}`).map((d) => d.id),
 }));
-const realms = [...Array(5).keys()].map((r) => counties.filter((_, i) => realmOwner[i] === r).map((c) => c.id));
+const realms = [...Array(5).keys()].map((r) =>
+  counties.filter((_, i) => realmOwner[i] === r).map((c) => c.id),
+);
 const rivers = riverPairs.map(([a, b]) => {
   const e = edges.get(`${Math.min(a, b)}|${Math.max(a, b)}`)!;
   return { a: `c${a}`, b: `c${b}`, path: e.map(round) };
@@ -278,5 +292,13 @@ console.log(
   `Carte : ${counties.length} comtés, ${duchies.length} duchés, ${kingdoms.length} royaumes, ` +
     `${rivers.length} tronçons de rivière. Domaines : ${realms.map((r) => r.length).join(', ')}`,
 );
-console.log('Terrains :', Object.entries(terrain.reduce<Record<string, number>>((m, t) => ((m[t] = (m[t] ?? 0) + 1), m), {})));
-console.log('Duchés :', duchies.map((d) => `${d.name}(${d.counties.length},${d.kingdom})`).join(' '));
+console.log(
+  'Terrains :',
+  Object.entries(
+    terrain.reduce<Record<string, number>>((m, t) => ((m[t] = (m[t] ?? 0) + 1), m), {}),
+  ),
+);
+console.log(
+  'Duchés :',
+  duchies.map((d) => `${d.name}(${d.counties.length},${d.kingdom})`).join(' '),
+);

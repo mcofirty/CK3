@@ -9,7 +9,13 @@ import { drawSeasonEvents } from './events/engine';
 import { seasonPlots } from './intrigue';
 import { seasonIncome, seasonRealm } from './realm';
 import type { GameState, LineageScore } from './state';
-import { applyBattleResult, armiesHostile, moveAndDetect, seasonCampaign, setupBattle } from './war';
+import {
+  applyBattleResult,
+  armiesHostile,
+  moveAndDetect,
+  seasonCampaign,
+  setupBattle,
+} from './war';
 
 /** Bouton « Fin de saison » : résolution militaire, fin de saison, puis début de la suivante. */
 export function endSeason(ctx: Ctx): void {
@@ -64,7 +70,10 @@ export function continueSeason(ctx: Ctx): void {
   }
   state.turn += 1;
   if (state.turn >= BALANCE.game.maxYears * BALANCE.game.seasonsPerYear) {
-    state.gameOver = { reason: `${BALANCE.game.maxYears} ans ont passé : la chronique de votre lignée s’achève.`, score: lineageScore(state) };
+    state.gameOver = {
+      reason: `${BALANCE.game.maxYears} ans ont passé : la chronique de votre lignée s’achève.`,
+      score: lineageScore(state),
+    };
     finishGame(state);
     return;
   }
@@ -73,7 +82,8 @@ export function continueSeason(ctx: Ctx): void {
 
 export function startSeason(ctx: Ctx): void {
   const { state } = ctx;
-  for (const c of Object.values(state.characters)) if (c.recruitedThisSeason) c.recruitedThisSeason = 0;
+  for (const c of Object.values(state.characters))
+    if (c.recruitedThisSeason) c.recruitedThisSeason = 0;
   seasonIncome(ctx);
   seasonRealm(ctx);
   seasonCouncil(ctx);
@@ -85,10 +95,16 @@ export function startSeason(ctx: Ctx): void {
 
 export function lineageScore(state: GameState): LineageScore {
   const dyn = state.dynasties[state.playerDynastyId];
-  const members = new Set(Object.values(state.characters).filter((c) => c.alive && c.dynastyId === state.playerDynastyId).map((c) => c.id));
+  const members = new Set(
+    Object.values(state.characters)
+      .filter((c) => c.alive && c.dynastyId === state.playerDynastyId)
+      .map((c) => c.id),
+  );
   let titles = 0;
-  for (const k of Object.values(state.kingdoms)) if (k.holderId && members.has(k.holderId)) titles += 100;
-  for (const d of Object.values(state.duchies)) if (d.holderId && members.has(d.holderId)) titles += 30;
+  for (const k of Object.values(state.kingdoms))
+    if (k.holderId && members.has(k.holderId)) titles += 100;
+  for (const d of Object.values(state.duchies))
+    if (d.holderId && members.has(d.holderId)) titles += 30;
   for (const c of Object.values(state.counties)) if (members.has(c.holderId)) titles += 10;
   const renown = Math.round(dyn?.renown ?? 0);
   const years = Math.floor(state.turn / 4);
@@ -104,11 +120,18 @@ function checkLandless(state: GameState): void {
     .filter((c) => c.alive && c.dynastyId === state.playerDynastyId && holds(c.id))
     .sort((a, b) => (a.liegeId ? 1 : 0) - (b.liegeId ? 1 : 0) || a.birthTurn - b.birthTurn)[0];
   if (titled) {
-    chronicle(state, `Dépossédé de ses terres, ${state.characters[state.playerId].name} laisse la tête de la maison à ${titled.name}.`, 'succession');
+    chronicle(
+      state,
+      `Dépossédé de ses terres, ${state.characters[state.playerId].name} laisse la tête de la maison à ${titled.name}.`,
+      'succession',
+    );
     state.playerId = titled.id;
     return;
   }
-  state.gameOver = { reason: 'Votre maison a perdu toutes ses terres : la dynastie n’a plus d’héritier titré.', score: lineageScore(state) };
+  state.gameOver = {
+    reason: 'Votre maison a perdu toutes ses terres : la dynastie n’a plus d’héritier titré.',
+    score: lineageScore(state),
+  };
 }
 
 function finishGame(state: GameState): void {

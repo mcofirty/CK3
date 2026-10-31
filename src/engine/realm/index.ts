@@ -2,13 +2,7 @@
 import { BALANCE } from '../../data/balance';
 import { BUILDINGS } from '../../data/buildings';
 import { TRAITS } from '../../data/traits';
-import {
-  addOpinion,
-  demesneLimit,
-  heldCounties,
-  opinion,
-  skill,
-} from '../characters';
+import { addOpinion, demesneLimit, heldCounties, opinion, skill } from '../characters';
 import { chronicle, clamp, notify, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
 import { armyUpkeep, emptyUnits, totalMen } from '../units';
@@ -57,7 +51,11 @@ export function realmCounties(state: GameState, rulerId: string): County[] {
 export function capitalOf(state: GameState, rulerId: string): County | undefined {
   const own = Object.values(state.counties).filter((c) => c.holderId === rulerId);
   const titled = own.find((c) => state.duchies[c.duchyId]?.holderId === rulerId);
-  return titled ?? own.sort((a, b) => b.development - a.development)[0] ?? realmCounties(state, rulerId)[0];
+  return (
+    titled ??
+    own.sort((a, b) => b.development - a.development)[0] ??
+    realmCounties(state, rulerId)[0]
+  );
 }
 
 export type Rank = 'roi' | 'duc' | 'comte' | 'aucun';
@@ -100,7 +98,10 @@ export function buildingLevel(c: County, t: BuildingType): number {
   return c.buildings.find((b) => b.type === t)?.level ?? 0;
 }
 
-function sumBuilding(c: County, key: 'income' | 'levies' | 'development' | 'fort' | 'piety' | 'supply' | 'recruitCap'): number {
+function sumBuilding(
+  c: County,
+  key: 'income' | 'levies' | 'development' | 'fort' | 'piety' | 'supply' | 'recruitCap',
+): number {
   let s = 0;
   for (const b of c.buildings) {
     const def = BUILDINGS[b.type];
@@ -139,24 +140,36 @@ export interface BuildCheck {
   level: 1 | 2;
 }
 
-export function canBuild(state: GameState, rulerId: string, countyId: string, t: BuildingType): BuildCheck {
+export function canBuild(
+  state: GameState,
+  rulerId: string,
+  countyId: string,
+  t: BuildingType,
+): BuildCheck {
   const c = state.counties[countyId];
   const ruler = state.characters[rulerId];
   const cur = buildingLevel(c, t);
   const level = (cur + 1) as 1 | 2;
   const def = BUILDINGS[t];
-  if (cur >= 2) return { ok: false, reason: 'Niveau maximal atteint', cost: 0, seasons: 0, level: 2 };
+  if (cur >= 2)
+    return { ok: false, reason: 'Niveau maximal atteint', cost: 0, seasons: 0, level: 2 };
   const lv = def.levels[level - 1];
   const res = { cost: lv.cost, seasons: lv.seasons, level };
   if (c.holderId !== rulerId) return { ok: false, reason: 'Comté hors du domaine propre', ...res };
   if (c.construction) return { ok: false, reason: 'Un chantier est déjà en cours', ...res };
-  if (cur === 0 && c.buildings.length >= c.slots) return { ok: false, reason: 'Plus d’emplacement libre', ...res };
+  if (cur === 0 && c.buildings.length >= c.slots)
+    return { ok: false, reason: 'Plus d’emplacement libre', ...res };
   if (c.occupation) return { ok: false, reason: 'Comté occupé', ...res };
   if (ruler.gold < lv.cost) return { ok: false, reason: `Il faut ${lv.cost} or`, ...res };
   return { ok: true, ...res };
 }
 
-export function startBuilding(ctx: Ctx, rulerId: string, countyId: string, t: BuildingType): boolean {
+export function startBuilding(
+  ctx: Ctx,
+  rulerId: string,
+  countyId: string,
+  t: BuildingType,
+): boolean {
   const chk = canBuild(ctx.state, rulerId, countyId, t);
   if (!chk.ok) return false;
   ctx.state.characters[rulerId].gold -= chk.cost;
@@ -166,7 +179,11 @@ export function startBuilding(ctx: Ctx, rulerId: string, countyId: string, t: Bu
 
 // --- Vassaux et contributions ---
 export function vassalContribution(op: number): number {
-  return clamp(E.vassalContribBase + op * E.vassalContribPerOpinion, E.vassalContribMin, E.vassalContribMax);
+  return clamp(
+    E.vassalContribBase + op * E.vassalContribPerOpinion,
+    E.vassalContribMin,
+    E.vassalContribMax,
+  );
 }
 
 export function incomeMultiplier(state: GameState, rulerId: string): number {
@@ -197,7 +214,8 @@ export function economyOf(state: GameState, id: string): Economy {
   }
   gold.push({ label: 'Domaine propre', value: demesne });
   const taxCouncil = id === state.playerId ? councilTaxBonus(state) : 0;
-  if (taxCouncil) gold.push({ label: 'Intendant : collecte des impôts', value: demesne * taxCouncil });
+  if (taxCouncil)
+    gold.push({ label: 'Intendant : collecte des impôts', value: demesne * taxCouncil });
   // Impôts des vassaux.
   let tax = 0;
   for (const v of vassalsOf(state, id)) {
@@ -213,26 +231,36 @@ export function economyOf(state: GameState, id: string): Economy {
   }
   // Entretien des troupes.
   const standing = state.standing[id];
-  if (standing && totalMen(standing) > 0) gold.push({ label: 'Compagnies professionnelles', value: -armyUpkeep(standing) });
+  if (standing && totalMen(standing) > 0)
+    gold.push({ label: 'Compagnies professionnelles', value: -armyUpkeep(standing) });
   const armies = Object.values(state.armies).filter((a) => a.ownerId === id);
   const up = armies.reduce((s, a) => s + armyUpkeep(a.men), 0);
   if (up) gold.push({ label: 'Armées en campagne', value: -up });
   // Prestige.
   const P = E.prestige;
-  prestige.push({ label: 'Rang et réputation', value: P.base + heldCounties(state, id).length * P.perTitle * 0.25 });
+  prestige.push({
+    label: 'Rang et réputation',
+    value: P.base + heldCounties(state, id).length * P.perTitle * 0.25,
+  });
   const duchies = Object.values(state.duchies).filter((d) => d.holderId === id).length;
   const kingdoms = Object.values(state.kingdoms).filter((k) => k.holderId === id).length;
   if (duchies) prestige.push({ label: 'Titres ducaux', value: duchies * P.perDuchy });
   if (kingdoms) prestige.push({ label: 'Couronne royale', value: kingdoms * P.perKingdom });
   // Piété.
-  piety.push({ label: 'Dévotion personnelle', value: E.piety.base + skill(ruler, 'savoir') * E.piety.perSavoir });
+  piety.push({
+    label: 'Dévotion personnelle',
+    value: E.piety.base + skill(ruler, 'savoir') * E.piety.perSavoir,
+  });
   const chap = own.reduce((s, c) => s + countyPiety(c), 0);
   if (chap) piety.push({ label: 'Chapelles', value: chap });
   if (id === state.playerId) {
     const seat = state.council.chapelain;
     const holder = seat.holderId ? state.characters[seat.holderId] : undefined;
     if (holder?.alive && seat.task === 'piete')
-      piety.push({ label: 'Chapelain : prières', value: skill(holder, 'savoir') * BALANCE.council.pietyPerSavoir });
+      piety.push({
+        label: 'Chapelain : prières',
+        value: skill(holder, 'savoir') * BALANCE.council.pietyPerSavoir,
+      });
   }
   const round = (l: LedgerLine[]) => l.map((x) => ({ ...x, value: Math.round(x.value * 10) / 10 }));
   const g = round(gold);
@@ -252,12 +280,17 @@ function councilTaxBonus(state: GameState): number {
 }
 
 /** Levées disponibles pour un souverain : domaine propre + part des vassaux. */
-export function availableLevies(state: GameState, rulerId: string): { total: number; byCounty: Record<string, number> } {
+export function availableLevies(
+  state: GameState,
+  rulerId: string,
+): { total: number; byCounty: Record<string, number> } {
   const byCounty: Record<string, number> = {};
   let total = 0;
   const r = state.characters[rulerId];
   // Un vassal (en révolte) ne lève que sur ses propres terres.
-  const counties = r?.liegeId ? Object.values(state.counties).filter((c) => c.holderId === rulerId) : realmCounties(state, rulerId);
+  const counties = r?.liegeId
+    ? Object.values(state.counties).filter((c) => c.holderId === rulerId)
+    : realmCounties(state, rulerId);
   for (const c of counties) {
     if (c.occupation) continue;
     let n = c.levyPool;
@@ -274,7 +307,10 @@ export function availableLevies(state: GameState, rulerId: string): { total: num
 }
 
 /** Compagnies professionnelles recrutables (bâtiments du domaine propre). */
-export function recruitCapacity(state: GameState, rulerId: string): { unlocked: Set<string>; cap: number } {
+export function recruitCapacity(
+  state: GameState,
+  rulerId: string,
+): { unlocked: Set<string>; cap: number } {
   const unlocked = new Set<string>();
   let cap = 0;
   for (const c of Object.values(state.counties)) {
@@ -305,7 +341,8 @@ export function seasonRealm(ctx: Ctx): void {
         if (ex) ex.level = level;
         else c.buildings.push({ type, level });
         c.construction = undefined;
-        if (c.holderId === state.playerId) notify(state, `${BUILDINGS[type].name} (niveau ${level}) achevé à ${c.name}.`);
+        if (c.holderId === state.playerId)
+          notify(state, `${BUILDINGS[type].name} (niveau ${level}) achevé à ${c.name}.`);
       }
     }
     // Développement.
@@ -321,7 +358,8 @@ export function seasonRealm(ctx: Ctx): void {
       p /= 1 + c.development * 0.15;
       if (rng.chance(p)) {
         c.development += 1;
-        if (holder.id === state.playerId) notify(state, `${c.name} se développe (niveau ${c.development}).`);
+        if (holder.id === state.playerId)
+          notify(state, `${c.name} se développe (niveau ${c.development}).`);
       }
     }
     // Levées.
@@ -350,13 +388,17 @@ export function seasonIncome(ctx: Ctx): void {
     c.gold += eco.goldNet;
     c.prestige += eco.prestige.reduce((s, x) => s + x.value, 0);
     c.piety += eco.piety.reduce((s, x) => s + x.value, 0);
-    if (id === state.playerId) state.ledger = { gold: eco.gold, prestige: eco.prestige, piety: eco.piety };
+    if (id === state.playerId)
+      state.ledger = { gold: eco.gold, prestige: eco.prestige, piety: eco.piety };
     // Dettes : les vassaux s'agacent, les troupes désertent.
     if (c.gold < E.debtThreshold) {
       for (const v of vassalsOf(state, id)) addOpinion(state, v, id, 'Trésor vide', -5, 8);
       const st = state.standing[id];
-      if (st) for (const k of Object.keys(st) as (keyof UnitCounts)[]) st[k] = Math.floor((st[k] * 0.8) / 100) * 100;
-      if (id === state.playerId) notify(state, 'Votre trésor est à sec : des compagnies désertent et vos vassaux grondent.');
+      if (st)
+        for (const k of Object.keys(st) as (keyof UnitCounts)[])
+          st[k] = Math.floor((st[k] * 0.8) / 100) * 100;
+      if (id === state.playerId)
+        notify(state, 'Votre trésor est à sec : des compagnies désertent et vos vassaux grondent.');
     }
   }
 }
@@ -376,7 +418,7 @@ export function canCreateTitle(state: GameState, rulerId: string, titleId: strin
   const isKingdom = !!state.kingdoms[titleId];
   const counties = isKingdom
     ? state.kingdoms[titleId].duchies.flatMap((d) => state.duchies[d].counties)
-    : state.duchies[titleId]?.counties ?? [];
+    : (state.duchies[titleId]?.counties ?? []);
   const held = counties.filter((id) => countyRuler(state, state.counties[id]) === rulerId).length;
   const share = counties.length ? held / counties.length : 0;
   const R = BALANCE.realm;
@@ -386,7 +428,10 @@ export function canCreateTitle(state: GameState, rulerId: string, titleId: strin
   const holder = isKingdom ? state.kingdoms[titleId].holderId : state.duchies[titleId]?.holderId;
   if (holder) reasons.push(`Titre déjà tenu par ${state.characters[holder]?.name ?? '—'}`);
   if (r.liegeId) reasons.push('Un vassal ne peut pas créer de titre');
-  if (share < need) reasons.push(`Contrôler ${Math.round(need * 100)} % des comtés (actuellement ${Math.round(share * 100)} %)`);
+  if (share < need)
+    reasons.push(
+      `Contrôler ${Math.round(need * 100)} % des comtés (actuellement ${Math.round(share * 100)} %)`,
+    );
   if (r.prestige < prestige) reasons.push(`${prestige} prestige requis`);
   if (r.gold < gold) reasons.push(`${gold} or requis`);
   return { ok: reasons.length === 0, reasons, share, prestige, gold };
@@ -403,8 +448,13 @@ export function createTitle(ctx: Ctx, rulerId: string, titleId: string): boolean
   const C = BALANCE.characters;
   if (isKingdom) state.kingdoms[titleId].holderId = rulerId;
   else state.duchies[titleId].holderId = rulerId;
-  const name = isKingdom ? `Royaume de ${state.kingdoms[titleId].name}` : `Duché de ${state.duchies[titleId].name}`;
-  if (r.dynastyId) state.dynasties[r.dynastyId].renown += isKingdom ? C.renownPerTitle.royaume * 10 : C.renownPerTitle.duche * 10;
+  const name = isKingdom
+    ? `Royaume de ${state.kingdoms[titleId].name}`
+    : `Duché de ${state.duchies[titleId].name}`;
+  if (r.dynastyId)
+    state.dynasties[r.dynastyId].renown += isKingdom
+      ? C.renownPerTitle.royaume * 10
+      : C.renownPerTitle.duche * 10;
   chronicle(state, `${r.name} fonde le ${name}.`, 'titre');
   return true;
 }

@@ -30,7 +30,20 @@ describe('Succession (section 4)', () => {
     while (livingChildren(state, p).length < 2) {
       applyAction(state, { type: 'debugGold', amount: 0 });
       const id = `kid${livingChildren(state, p).length}`;
-      state.characters[id] = { ...structuredClone(spouse), id, dynastyId: p.dynastyId, fatherId: p.id, motherId: spouse.id, spouseId: undefined, childrenIds: [], birthTurn: -40 - livingChildren(state, p).length, courtId: p.id, liegeId: undefined, opinions: {}, claims: [] };
+      state.characters[id] = {
+        ...structuredClone(spouse),
+        id,
+        dynastyId: p.dynastyId,
+        fatherId: p.id,
+        motherId: spouse.id,
+        spouseId: undefined,
+        childrenIds: [],
+        birthTurn: -40 - livingChildren(state, p).length,
+        courtId: p.id,
+        liegeId: undefined,
+        opinions: {},
+        claims: [],
+      };
       p.childrenIds.push(id);
     }
     const [eldest, second] = livingChildren(state, p);
@@ -39,8 +52,12 @@ describe('Succession (section 4)', () => {
     killCharacter(ctx, p.id, 'test');
     expect(state.playerId).toBe(eldest.id);
     expect(duchy.holderId).toBe(eldest.id);
-    const eldestCounties = Object.values(state.counties).filter((c) => c.holderId === eldest.id).length;
-    const secondCounties = Object.values(state.counties).filter((c) => c.holderId === second.id).length;
+    const eldestCounties = Object.values(state.counties).filter(
+      (c) => c.holderId === eldest.id,
+    ).length;
+    const secondCounties = Object.values(state.counties).filter(
+      (c) => c.holderId === second.id,
+    ).length;
     expect(eldestCounties + secondCounties).toBe(before);
     expect(secondCounties).toBeGreaterThan(0);
     expect(state.characters[second.id].liegeId).toBe(eldest.id);
@@ -58,7 +75,9 @@ describe('Succession (section 4)', () => {
 
   it('les vassaux passent au nouveau souverain', () => {
     const { state, ctx, p } = setup();
-    const vassals = Object.values(state.characters).filter((c) => c.liegeId === p.id).map((c) => c.id);
+    const vassals = Object.values(state.characters)
+      .filter((c) => c.liegeId === p.id)
+      .map((c) => c.id);
     const heir = heirsOf(state, p)[0];
     killCharacter(ctx, p.id, 'test');
     for (const v of vassals) expect(state.characters[v].liegeId).toBe(heir.id);
@@ -66,7 +85,8 @@ describe('Succession (section 4)', () => {
 
   it('sans héritier, la partie s’arrête', () => {
     const { state, ctx, p } = setup();
-    for (const c of Object.values(state.characters)) if (c.dynastyId === p.dynastyId && c.id !== p.id) c.alive = false;
+    for (const c of Object.values(state.characters))
+      if (c.dynastyId === p.dynastyId && c.id !== p.id) c.alive = false;
     killCharacter(ctx, p.id, 'test');
     expect(state.gameOver).toBeDefined();
   });
@@ -74,7 +94,8 @@ describe('Succession (section 4)', () => {
   it('enchaîne 50 ans de jeu sans erreur, et la partie reste sérialisable', () => {
     let s = newGame({ seed: 11 });
     s.autoplay = true;
-    for (let y = 0; y < 50 && !s.gameOver; y++) s = applyAction(s, { type: 'debugAdvance', years: 1 });
+    for (let y = 0; y < 50 && !s.gameOver; y++)
+      s = applyAction(s, { type: 'debugAdvance', years: 1 });
     expect(s.turn).toBeGreaterThan(40);
     expect(() => JSON.parse(JSON.stringify(s))).not.toThrow();
   });

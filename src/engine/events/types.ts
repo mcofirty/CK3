@@ -32,7 +32,13 @@ export const ROLES: Role[] = [
 
 export interface Trigger {
   /** aleatoire : tiré au début de saison ; complot_decouvert, naissance, bataille_gagnee… : déclenchés par le moteur ; suite : uniquement enchaîné. */
-  type: 'aleatoire' | 'complot_decouvert' | 'naissance' | 'bataille_gagnee' | 'bataille_perdue' | 'suite';
+  type:
+    | 'aleatoire'
+    | 'complot_decouvert'
+    | 'naissance'
+    | 'bataille_gagnee'
+    | 'bataille_perdue'
+    | 'suite';
   saisons?: SeasonKey[];
 }
 

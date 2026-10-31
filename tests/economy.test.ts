@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { addOpinion, demesneLimit, opinion } from '../src/engine/characters';
-import { economyOf, vassalContribution, vassalsOf, countyIncome, canBuild } from '../src/engine/realm';
+import {
+  economyOf,
+  vassalContribution,
+  vassalsOf,
+  countyIncome,
+  canBuild,
+} from '../src/engine/realm';
 import { applyAction } from '../src/engine/actions';
 import { newGame } from '../src/engine/world';
 import { BALANCE } from '../src/data/balance';
@@ -12,7 +18,9 @@ const goldLine = (s: ReturnType<typeof newGame>, label: string) =>
 describe('Économie (section 5)', () => {
   it('un Marché augmente les revenus du comté', () => {
     const s = newGame({ seed: 5 });
-    const c = Object.values(s.counties).find((k) => k.holderId === s.playerId && !k.buildings.some((b) => b.type === 'marche'))!;
+    const c = Object.values(s.counties).find(
+      (k) => k.holderId === s.playerId && !k.buildings.some((b) => b.type === 'marche'),
+    )!;
     const before = countyIncome(c);
     c.buildings.push({ type: 'marche', level: 1 });
     expect(countyIncome(c)).toBeGreaterThan(before);
@@ -20,7 +28,9 @@ describe('Économie (section 5)', () => {
 
   it('une construction coûte de l’or et se termine après le nombre de saisons prévu', () => {
     let s = newGame({ seed: 5 });
-    const c = Object.values(s.counties).find((k) => k.holderId === s.playerId && k.buildings.length < k.slots)!;
+    const c = Object.values(s.counties).find(
+      (k) => k.holderId === s.playerId && k.buildings.length < k.slots,
+    )!;
     const chk = canBuild(s, s.playerId, c.id, 'chapelle');
     expect(chk.ok).toBe(true);
     const gold = s.characters[s.playerId].gold;

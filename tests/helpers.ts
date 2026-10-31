@@ -1,5 +1,11 @@
 import { createBattle, startBattle } from '../src/engine/battle/engine';
-import type { BattleSetup, BattleSetupSide, BattleState, Commander, FrontId } from '../src/engine/battle/types';
+import type {
+  BattleSetup,
+  BattleSetupSide,
+  BattleState,
+  Commander,
+  FrontId,
+} from '../src/engine/battle/types';
 import { Rng } from '../src/engine/rng';
 import { applyAction } from '../src/engine/actions';
 import type { GameState } from '../src/engine/state';
@@ -17,16 +23,47 @@ export function units(u: Partial<UnitCounts>): UnitCounts {
   return { ...emptyUnits(), ...u };
 }
 
-export function cmd(id: string, guerre = 10, traits: string[] = [], extra: Partial<Commander> = {}): Commander {
+export function cmd(
+  id: string,
+  guerre = 10,
+  traits: string[] = [],
+  extra: Partial<Commander> = {},
+): Commander {
   return { id, name: id, guerre, ruse: 8, traits, isSovereign: false, ...extra };
 }
 
 export function side(men: UnitCounts, extra: Partial<BattleSetupSide> = {}): BattleSetupSide {
-  return { name: extra.name ?? 'X', men, commanders: [], isPlayer: false, ai: 'normal', friendlyTerritory: false, spied: false, ...extra };
+  return {
+    name: extra.name ?? 'X',
+    men,
+    commanders: [],
+    isPlayer: false,
+    ai: 'normal',
+    friendlyTerritory: false,
+    spied: false,
+    ...extra,
+  };
 }
 
-export function battle(att: BattleSetupSide, def: BattleSetupSide, extra: Partial<BattleSetup> = {}, rng = fixedRng()): BattleState {
-  return createBattle({ id: 't', countyName: 'Test', terrain: 'plaine' as Terrain, river: false, season: 1, attacker: att, defender: def, ...extra }, rng);
+export function battle(
+  att: BattleSetupSide,
+  def: BattleSetupSide,
+  extra: Partial<BattleSetup> = {},
+  rng = fixedRng(),
+): BattleState {
+  return createBattle(
+    {
+      id: 't',
+      countyName: 'Test',
+      terrain: 'plaine' as Terrain,
+      river: false,
+      season: 1,
+      attacker: att,
+      defender: def,
+      ...extra,
+    },
+    rng,
+  );
 }
 
 /** Place toutes les troupes d'un camp sur un seul front. */
@@ -56,8 +93,8 @@ export function clearEvents(s: GameState, refuseOffers = false): GameState {
   for (let guard = 0; s.pendingEvents.length && guard < 20; guard++) {
     const uid = s.pendingEvents[0].uid;
     const first = refuseOffers && s.pendingEvents[0].eventId.startsWith('sys_') ? 1 : 0;
-    for (let c = first; c < 4 && s.pendingEvents[0]?.uid === uid; c++) s = applyAction(s, { type: 'chooseEvent', uid, choice: c });
+    for (let c = first; c < 4 && s.pendingEvents[0]?.uid === uid; c++)
+      s = applyAction(s, { type: 'chooseEvent', uid, choice: c });
   }
   return s;
 }
-

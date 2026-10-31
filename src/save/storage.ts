@@ -47,7 +47,13 @@ export async function listSlots(): Promise<SlotInfo[]> {
     SLOTS.map(async (slot) => {
       const meta = (await get(metaKey(slot))) as { label: string; savedAt: number } | undefined;
       if (!meta) return { slot, empty: true };
-      return { slot, empty: false, label: meta.label, savedAt: meta.savedAt, date: new Date(meta.savedAt).toLocaleString('fr-FR') };
+      return {
+        slot,
+        empty: false,
+        label: meta.label,
+        savedAt: meta.savedAt,
+        date: new Date(meta.savedAt).toLocaleString('fr-FR'),
+      };
     }),
   );
 }

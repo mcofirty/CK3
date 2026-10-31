@@ -71,20 +71,31 @@ export function giveBirth(ctx: Ctx, mother: Character, father: Character): Chara
   if (rng.chance(0.03)) addTrait(child, rng.pick(HEREDITARY_TRAITS));
   const isPlayerFamily = dynastyId === state.playerDynastyId;
   if (isPlayerFamily) {
-    chronicle(state, `Naissance de ${child.name}, ${child.female ? 'fille' : 'fils'} de ${father.name} et ${mother.name}.`, 'naissance');
-    notify(state, `${child.female ? 'Une fille' : 'Un fils'}, ${child.name}, est né${child.female ? 'e' : ''}.`);
+    chronicle(
+      state,
+      `Naissance de ${child.name}, ${child.female ? 'fille' : 'fils'} de ${father.name} et ${mother.name}.`,
+      'naissance',
+    );
+    notify(
+      state,
+      `${child.female ? 'Une fille' : 'Un fils'}, ${child.name}, est né${child.female ? 'e' : ''}.`,
+    );
   }
   return child;
 }
 
 function avgSkill(c: Character): number {
-  return (c.skills.diplomatie + c.skills.guerre + c.skills.gestion + c.skills.ruse + c.skills.savoir) / 5;
+  return (
+    (c.skills.diplomatie + c.skills.guerre + c.skills.gestion + c.skills.ruse + c.skills.savoir) / 5
+  );
 }
 
 /** Éducation à 16 ans selon l'éducateur et la compétence travaillée. */
 export function educate(ctx: Ctx, child: Character): void {
   const { state, rng } = ctx;
-  const focus = child.educationFocus ?? rng.pick(['diplomatie', 'guerre', 'gestion', 'ruse', 'savoir'] as const);
+  const focus =
+    child.educationFocus ??
+    rng.pick(['diplomatie', 'guerre', 'gestion', 'ruse', 'savoir'] as const);
   const educator = child.educatorId ? state.characters[child.educatorId] : undefined;
   let level = educator?.alive ? skill(educator, focus) : rng.int(3, 8);
   // Le chapelain qui éduque l'héritier.
@@ -100,7 +111,11 @@ export function educate(ctx: Ctx, child: Character): void {
   child.educatorId = undefined;
   if (child.dynastyId === state.playerDynastyId) {
     const t = child.traits.find((x) => TRAITS[x]?.category === 'education');
-    chronicle(state, `${child.name} atteint sa majorité, ${t ? TRAITS[t].name.toLowerCase() : 'sans éducation notable'}.`, 'divers');
+    chronicle(
+      state,
+      `${child.name} atteint sa majorité, ${t ? TRAITS[t].name.toLowerCase() : 'sans éducation notable'}.`,
+      'divers',
+    );
   }
 }
 
@@ -131,7 +146,11 @@ export function seasonLife(ctx: Ctx): void {
   }
   // Majorité.
   for (const c of alive) {
-    if (ageOf(state, c) === C.adulthood && (state.turn - c.birthTurn) % 4 === 0 && (state.turn - c.birthTurn) / 4 === C.adulthood) {
+    if (
+      ageOf(state, c) === C.adulthood &&
+      (state.turn - c.birthTurn) % 4 === 0 &&
+      (state.turn - c.birthTurn) / 4 === C.adulthood
+    ) {
       educate(ctx, c);
     }
   }
@@ -140,14 +159,22 @@ export function seasonLife(ctx: Ctx): void {
     if (!c.alive) continue;
     if (rng.chance(deathChance(state, c))) {
       const age = ageOf(state, c);
-      const cause = hasTrait(c, 'malade') ? 'de maladie' : age > 55 ? 'de vieillesse' : age < 16 ? 'en bas âge' : 'subitement';
+      const cause = hasTrait(c, 'malade')
+        ? 'de maladie'
+        : age > 55
+          ? 'de vieillesse'
+          : age < 16
+            ? 'en bas âge'
+            : 'subitement';
       killCharacter(ctx, c.id, cause);
     }
   }
 }
 
 export function isPlayerFamily(state: GameState, c: Character): boolean {
-  return c.dynastyId === state.playerDynastyId || c.id === state.characters[state.playerId]?.spouseId;
+  return (
+    c.dynastyId === state.playerDynastyId || c.id === state.characters[state.playerId]?.spouseId
+  );
 }
 
 /** Mort d'un personnage, avec succession s'il tenait des terres. */
@@ -161,26 +188,36 @@ export function killCharacter(ctx: Ctx, id: string, cause: string): void {
   const spouse = c.spouseId ? state.characters[c.spouseId] : undefined;
   if (spouse) spouse.spouseId = undefined;
   if (isPlayerFamily(state, c) || id === state.playerId) {
-    chronicle(state, `Mort de ${displayName(state, c)} ${cause}, à ${ageOf(state, c)} ans.`, 'deces');
+    chronicle(
+      state,
+      `Mort de ${displayName(state, c)} ${cause}, à ${ageOf(state, c)} ans.`,
+      'deces',
+    );
     if (id !== state.playerId) notify(state, `${c.name} est mort${c.female ? 'e' : ''} ${cause}.`);
   }
   // Conseil.
-  for (const seat of Object.values(state.council)) if (seat.holderId === id) seat.holderId = undefined;
+  for (const seat of Object.values(state.council))
+    if (seat.holderId === id) seat.holderId = undefined;
   // Commandants.
   for (const a of Object.values(state.armies)) {
     if (a.commanderId === id) a.commanderId = undefined;
     a.frontCommanders = a.frontCommanders.filter((x) => x !== id);
   }
   // Complots.
-  for (const p of Object.values(state.plots)) if (p.ownerId === id || p.targetId === id) delete state.plots[p.id];
+  for (const p of Object.values(state.plots))
+    if (p.ownerId === id || p.targetId === id) delete state.plots[p.id];
   if (heldCounties(state, id).length || titlesOf(state, id).length) succession(ctx, id);
   else if (id === state.playerId) succession(ctx, id);
 }
 
 export function titlesOf(state: GameState, id: string): string[] {
   return [
-    ...Object.values(state.kingdoms).filter((k) => k.holderId === id).map((k) => k.id),
-    ...Object.values(state.duchies).filter((d) => d.holderId === id).map((d) => d.id),
+    ...Object.values(state.kingdoms)
+      .filter((k) => k.holderId === id)
+      .map((k) => k.id),
+    ...Object.values(state.duchies)
+      .filter((d) => d.holderId === id)
+      .map((d) => d.id),
   ];
 }
 
@@ -214,13 +251,21 @@ export function succession(ctx: Ctx, id: string): void {
   let heir = heirs[0];
   if (!heir) {
     if (wasPlayer) {
-      state.gameOver = { reason: `La lignée s'éteint avec ${displayName(state, dead)} : aucun héritier titré.`, score: { renown: 0, titles: 0, years: 0, total: 0 } };
+      state.gameOver = {
+        reason: `La lignée s'éteint avec ${displayName(state, dead)} : aucun héritier titré.`,
+        score: { renown: 0, titles: 0, years: 0, total: 0 },
+      };
       chronicle(state, `Avec ${dead.name} s'éteint la lignée.`, 'succession');
       state.phase = 'fin';
       // Les terres reviennent à un nouveau seigneur.
     }
     // Un parent éloigné, d'une autre maison, recueille l'héritage.
-    heir = createCharacter(ctx, { age: rng.int(20, 40), dynastyId: null, courtId: undefined, skillBase: 7 });
+    heir = createCharacter(ctx, {
+      age: rng.int(20, 40),
+      dynastyId: null,
+      courtId: undefined,
+      skillBase: 7,
+    });
     heir.dynastyId = newMinorDynasty(ctx, heir);
   }
   const counties = Object.values(state.counties).filter((c) => c.holderId === id);
@@ -268,7 +313,8 @@ export function succession(ctx: Ctx, id: string): void {
     if (k.liegeId === k.id) k.liegeId = undefined;
     k.courtId = k.id;
     // Pas de vassalité à deux niveaux : les vassaux du cadet passent à l'héritier.
-    for (const v of Object.values(state.characters)) if (v.alive && v.liegeId === k.id) v.liegeId = k.liegeId;
+    for (const v of Object.values(state.characters))
+      if (v.alive && v.liegeId === k.id) v.liegeId = k.liegeId;
     addOpinion(state, to, heir.id, 'Partage de l’héritage', -10, 16);
   }
   if (!heir.liegeId) heir.gold += dead.gold;
@@ -315,8 +361,13 @@ export function succession(ctx: Ctx, id: string): void {
     );
     notify(state, `${dead.name} est mort. Vous incarnez désormais ${heir.name}.`);
     // L'héritier choisit son conseil parmi l'ancien.
-    for (const seat of Object.values(state.council)) if (seat.holderId === heir.id) seat.holderId = undefined;
-  } else if (independent && isIndependent(state, heir.id) && heir.dynastyId === state.playerDynastyId) {
+    for (const seat of Object.values(state.council))
+      if (seat.holderId === heir.id) seat.holderId = undefined;
+  } else if (
+    independent &&
+    isIndependent(state, heir.id) &&
+    heir.dynastyId === state.playerDynastyId
+  ) {
     chronicle(state, `${heir.name} hérite des terres de ${dead.name}.`, 'succession');
   }
 }

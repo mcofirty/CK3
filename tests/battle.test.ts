@@ -31,7 +31,10 @@ describe('Bataille — résolution d’un round (9.6)', () => {
   });
 
   it('le coefficient du commandant vaut 1 + 0,02 × (Guerre − 10)', () => {
-    const b = battle(side(units({ levees: 1000 }), { commanders: [cmd('a', 20)] }), side(units({ levees: 1000 })));
+    const b = battle(
+      side(units({ levees: 1000 }), { commanders: [cmd('a', 20)] }),
+      side(units({ levees: 1000 })),
+    );
     allOn(b, 'attacker', 'center');
     allOn(b, 'defender', 'center');
     start(b);
@@ -41,16 +44,23 @@ describe('Bataille — résolution d’un round (9.6)', () => {
 
   it('Charger contre un mur de piques : la cavalerie subit des pertes ×1,5', () => {
     const run = (pikes: boolean) => {
-      const b = battle(side(units({ cavalerie: 1000 })), side(units(pikes ? { piquiers: 1000 } : { levees: 1000 })));
+      const b = battle(
+        side(units({ cavalerie: 1000 })),
+        side(units(pikes ? { piquiers: 1000 } : { levees: 1000 })),
+      );
       allOn(b, 'attacker', 'center');
       allOn(b, 'defender', 'center');
       start(b);
-      resolveRound(b, fixedRng(), forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold));
+      resolveRound(
+        b,
+        fixedRng(),
+        forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold),
+      );
       return b;
     };
     const b = run(true);
     // Piquiers : atk 3 × 0,7 (Tenir) × 1,8 (contre cavalerie) ; cible charge : déf 4 × 0,85.
-    const expected = (0.1 * (1000 * 3 * 0.7 * 1.8)) / (4 * 0.85) * 1.5;
+    const expected = ((0.1 * (1000 * 3 * 0.7 * 1.8)) / (4 * 0.85)) * 1.5;
     expect(b.attacker.fronts.center.lastLoss).toBeCloseTo(expected, 3);
   });
 
@@ -59,7 +69,11 @@ describe('Bataille — résolution d’un round (9.6)', () => {
     allOn(b, 'attacker', 'center');
     allOn(b, 'defender', 'center');
     start(b);
-    resolveRound(b, fixedRng(), forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold));
+    resolveRound(
+      b,
+      fixedRng(),
+      forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold),
+    );
     const f = b.defender.fronts.center;
     expect(f.broken).toBe(true);
     expect(f.morale).toBe(0);
@@ -70,7 +84,11 @@ describe('Bataille — résolution d’un round (9.6)', () => {
     allOn(b, 'attacker', 'center');
     allOn(b, 'defender', 'center');
     start(b);
-    resolveRound(b, fixedRng(), forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold));
+    resolveRound(
+      b,
+      fixedRng(),
+      forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold),
+    );
     expect(isRouted(b.defender)).toBe(true);
     expect(b.phase).toBe('fin');
     expect(b.result?.winner).toBe('attacker');
@@ -83,7 +101,8 @@ describe('Bataille — résolution d’un round (9.6)', () => {
     for (let i = 0; i < 8 && b.phase === 'rounds'; i++) {
       // Aucun échange : les deux camps tirent sans archers → Tenir ; on neutralise les pertes.
       resolveRound(b, fixedRng(), forced(hold, hold));
-      for (const k of ['attacker', 'defender'] as const) for (const f of ['left', 'center', 'right'] as const) b[k].fronts[f].morale = 60;
+      for (const k of ['attacker', 'defender'] as const)
+        for (const f of ['left', 'center', 'right'] as const) b[k].fronts[f].morale = 60;
     }
     expect(b.result?.reason).toBe('retraite');
     expect(b.result?.winner).toBe('defender');
@@ -102,7 +121,9 @@ describe('Bataille — résolution d’un round (9.6)', () => {
 
   it('Impétueux ne peut pas ordonner Se replier', () => {
     const b = battle(
-      side(units({ levees: 3000 }), { commanders: [cmd('i', 10, ['impetueux']), cmd('p', 10, ['prudent'])] }),
+      side(units({ levees: 3000 }), {
+        commanders: [cmd('i', 10, ['impetueux']), cmd('p', 10, ['prudent'])],
+      }),
       side(units({ levees: 3000 })),
     );
     start(b);
@@ -119,7 +140,11 @@ describe('Bataille — résolution d’un round (9.6)', () => {
     start(b);
     const before = totalMen(b.attacker.reserve);
     const moved = totalMen(b.attacker.fronts.left.men);
-    resolveRound(b, fixedRng(), forced({ orders: { left: 'replier', center: 'tenir', right: 'tenir' } }, hold));
+    resolveRound(
+      b,
+      fixedRng(),
+      forced({ orders: { left: 'replier', center: 'tenir', right: 'tenir' } }, hold),
+    );
     expect(b.attacker.fronts.left.withdrawn).toBe(true);
     expect(totalMen(b.attacker.reserve)).toBeCloseTo(before + moved, 3);
   });
@@ -153,7 +178,11 @@ describe('Bataille — résolution d’un round (9.6)', () => {
 
   it('reconnaissance : territoire ami + espionnage + Stratège, plafonnée à 2', () => {
     const b = battle(
-      side(units({ levees: 1000 }), { friendlyTerritory: true, spied: true, commanders: [cmd('s', 10, ['stratege'])] }),
+      side(units({ levees: 1000 }), {
+        friendlyTerritory: true,
+        spied: true,
+        commanders: [cmd('s', 10, ['stratege'])],
+      }),
       side(units({ levees: 1000 })),
     );
     expect(b.attacker.recon).toBe(2);
@@ -161,19 +190,31 @@ describe('Bataille — résolution d’un round (9.6)', () => {
   });
 
   it('Inébranlable : jamais plus de 20 de moral perdus par round', () => {
-    const b = battle(side(units({ infanterie: 1200 })), side(units({ levees: 1000 }), { commanders: [cmd('ine', 10, ['inebranlable'])] }));
+    const b = battle(
+      side(units({ infanterie: 1200 })),
+      side(units({ levees: 1000 }), { commanders: [cmd('ine', 10, ['inebranlable'])] }),
+    );
     allOn(b, 'attacker', 'center');
     allOn(b, 'defender', 'center');
     start(b);
     const m0 = b.defender.fronts.center.morale;
-    resolveRound(b, fixedRng(), forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold));
+    resolveRound(
+      b,
+      fixedRng(),
+      forced({ orders: { left: 'tenir', center: 'charger', right: 'tenir' } }, hold),
+    );
     expect(m0 - b.defender.fronts.center.morale).toBeLessThanOrEqual(20 + 1e-9);
   });
 
   it('est déterministe à graine égale', () => {
     const run = () => {
       const rng = new Rng(42);
-      const b = battle(side(units({ levees: 1500, archers: 300, cavalerie: 200 })), side(units({ levees: 1200, piquiers: 400, infanterie: 200 })), {}, rng);
+      const b = battle(
+        side(units({ levees: 1500, archers: 300, cavalerie: 200 })),
+        side(units({ levees: 1200, piquiers: 400, infanterie: 200 })),
+        {},
+        rng,
+      );
       autoResolve(b, rng);
       return b.result;
     };
@@ -182,10 +223,17 @@ describe('Bataille — résolution d’un round (9.6)', () => {
 
   it('conserve les effectifs : pertes = effectif initial − survivants', () => {
     const rng = new Rng(7);
-    const b = battle(side(units({ levees: 1500, archers: 300 })), side(units({ levees: 1200, piquiers: 400 })), {}, rng);
+    const b = battle(
+      side(units({ levees: 1500, archers: 300 })),
+      side(units({ levees: 1200, piquiers: 400 })),
+      {},
+      rng,
+    );
     autoResolve(b, rng);
     const r = b.result!;
-    expect(r.losses.attacker).toBe(Math.round(b.attacker.initialMen - totalMen(sideMen(b.attacker))));
+    expect(r.losses.attacker).toBe(
+      Math.round(b.attacker.initialMen - totalMen(sideMen(b.attacker))),
+    );
     expect(r.rounds).toBeGreaterThan(0);
     expect(r.rounds).toBeLessThanOrEqual(8);
   });

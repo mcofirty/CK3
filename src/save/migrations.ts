@@ -27,7 +27,8 @@ export function migrate(raw: unknown): GameState {
   if (!raw || typeof raw !== 'object') throw new SaveError('Fichier de sauvegarde illisible.');
   let s = raw as AnySave;
   let v = typeof s.version === 'number' ? s.version : 0;
-  if (v > SAVE_VERSION) throw new SaveError('Cette sauvegarde vient d’une version plus récente du jeu.');
+  if (v > SAVE_VERSION)
+    throw new SaveError('Cette sauvegarde vient d’une version plus récente du jeu.');
   while (v < SAVE_VERSION) {
     const m = MIGRATIONS[v];
     if (!m) throw new SaveError(`Aucune migration depuis la version ${v}.`);

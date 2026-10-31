@@ -132,7 +132,8 @@ export function defaultCommander(state: GameState, rulerId: string): string | un
 
 export function courtiersOf(state: GameState, rulerId: string) {
   return Object.values(state.characters).filter(
-    (c) => c.alive && c.id !== rulerId && c.courtId === rulerId && !heldCounties(state, c.id).length,
+    (c) =>
+      c.alive && c.id !== rulerId && c.courtId === rulerId && !heldCounties(state, c.id).length,
   );
 }
 
@@ -189,8 +190,10 @@ export function disbandArmy(ctx: Ctx, armyId: string): void {
   }
   const pros = { ...a.men, levees: 0 };
   for (const k of UNIT_TYPES) pros[k] = Math.round(pros[k]);
-  if (state.characters[a.ownerId]?.alive) state.standing[a.ownerId] = addUnits(standingOf(state, a.ownerId), pros);
-  for (const c of Object.values(state.counties)) if (c.siege?.armyId === armyId) c.siege = undefined;
+  if (state.characters[a.ownerId]?.alive)
+    state.standing[a.ownerId] = addUnits(standingOf(state, a.ownerId), pros);
+  for (const c of Object.values(state.counties))
+    if (c.siege?.armyId === armyId) c.siege = undefined;
   delete state.armies[armyId];
 }
 
@@ -200,20 +203,37 @@ export interface RecruitCheck {
   cost: number;
 }
 
-export function canRecruit(state: GameState, rulerId: string, unit: UnitType, companies: number): RecruitCheck {
+export function canRecruit(
+  state: GameState,
+  rulerId: string,
+  unit: UnitType,
+  companies: number,
+): RecruitCheck {
   const r = state.characters[rulerId];
   const cost = UNITS[unit].recruit * companies;
   if (unit === 'levees') return { ok: false, reason: 'Les levées viennent des comtés', cost };
   const cap = recruitCapacity(state, rulerId);
-  if (!cap.unlocked.has(unit)) return { ok: false, reason: `Il faut ${bldName(UNITS[unit].building)}`, cost };
+  if (!cap.unlocked.has(unit))
+    return { ok: false, reason: `Il faut ${bldName(UNITS[unit].building)}`, cost };
   const done = r.recruitedThisSeason ?? 0;
-  if (done + companies > cap.cap) return { ok: false, reason: `Capacité de recrutement : ${cap.cap - done} compagnie(s) cette saison`, cost };
+  if (done + companies > cap.cap)
+    return {
+      ok: false,
+      reason: `Capacité de recrutement : ${cap.cap - done} compagnie(s) cette saison`,
+      cost,
+    };
   if (r.gold < cost) return { ok: false, reason: `Il faut ${cost} or`, cost };
   return { ok: true, cost };
 }
 
 function bldName(b: string | null): string {
-  return b === 'caserne' ? 'une Caserne' : b === 'archerie' ? 'une Archerie' : b === 'ecuries' ? 'des Écuries' : 'un bâtiment';
+  return b === 'caserne'
+    ? 'une Caserne'
+    : b === 'archerie'
+      ? 'une Archerie'
+      : b === 'ecuries'
+        ? 'des Écuries'
+        : 'un bâtiment';
 }
 
 export function recruit(ctx: Ctx, rulerId: string, unit: UnitType, companies: number): boolean {
@@ -233,7 +253,12 @@ export function recruit(ctx: Ctx, rulerId: string, unit: UnitType, companies: nu
   return true;
 }
 
-export function dismissCompanies(ctx: Ctx, rulerId: string, unit: UnitType, companies: number): void {
+export function dismissCompanies(
+  ctx: Ctx,
+  rulerId: string,
+  unit: UnitType,
+  companies: number,
+): void {
   const st = standingOf(ctx.state, rulerId);
   st[unit] = Math.max(0, st[unit] - companies * 100);
 }
@@ -282,9 +307,12 @@ export function moveAndDetect(ctx: Ctx): PendingBattle[] {
       a.cameFrom = a.location;
       a.location = next;
       moved.add(a.id);
-      for (const c of Object.values(state.counties)) if (c.siege?.armyId === a.id) c.siege = undefined;
+      for (const c of Object.values(state.counties))
+        if (c.siege?.armyId === a.id) c.siege = undefined;
       // Arrêt au contact d'une armée hostile.
-      const hostile = Object.values(state.armies).some((b) => b.location === next && armiesHostile(state, a, b));
+      const hostile = Object.values(state.armies).some(
+        (b) => b.location === next && armiesHostile(state, a, b),
+      );
       if (hostile) {
         a.path = [];
         break;
@@ -329,7 +357,11 @@ export function detectBattles(ctx: Ctx, moved: Set<string>): PendingBattle[] {
   return pending;
 }
 
-function toCommander(state: GameState, id: string | undefined, ownerId: string): Commander | undefined {
+function toCommander(
+  state: GameState,
+  id: string | undefined,
+  ownerId: string,
+): Commander | undefined {
   const c = id ? state.characters[id] : undefined;
   if (!c?.alive || c.imprisonedBy) return undefined;
   return {
@@ -351,14 +383,21 @@ function marshalTraining(state: GameState, ownerId: string): number {
   return Math.round((skill(h, 'guerre') / 10) * BALANCE.council.trainTroopsMorale);
 }
 
-export function setupBattle(ctx: Ctx, countyId: string, attArmyId: string, defArmyId: string): BattleState {
+export function setupBattle(
+  ctx: Ctx,
+  countyId: string,
+  attArmyId: string,
+  defArmyId: string,
+): BattleState {
   const { state, rng } = ctx;
   const county = state.counties[countyId];
   const att = state.armies[attArmyId];
   const def = state.armies[defArmyId];
   const side = (a: Army) => {
     const ids = [a.commanderId, ...a.frontCommanders];
-    const commanders = ids.map((id) => toCommander(state, id, a.ownerId)).filter((x): x is Commander => !!x);
+    const commanders = ids
+      .map((id) => toCommander(state, id, a.ownerId))
+      .filter((x): x is Commander => !!x);
     const isPlayer = a.ownerId === state.playerId;
     const enemy = a === att ? def : att;
     const spiedTurn = state.spied[enemy.ownerId];
@@ -370,9 +409,16 @@ export function setupBattle(ctx: Ctx, countyId: string, attArmyId: string, defAr
       commanders,
       mainCommanderId: commanders[0]?.id,
       isPlayer,
-      ai: isPlayer ? ('normal' as const) : enemy.ownerId === state.playerId ? state.difficulty : ('normal' as const),
+      ai: isPlayer
+        ? ('normal' as const)
+        : enemy.ownerId === state.playerId
+          ? state.difficulty
+          : ('normal' as const),
       friendlyTerritory: isFriendlyCounty(state, a.ownerId, county),
-      spied: isPlayer && spiedTurn !== undefined && state.turn - spiedTurn <= BALANCE.council.spyDuration,
+      spied:
+        isPlayer &&
+        spiedTurn !== undefined &&
+        state.turn - spiedTurn <= BALANCE.council.spyDuration,
     };
   };
   const war = warBetween(state, att.ownerId, def.ownerId);
@@ -423,7 +469,8 @@ export function applyBattleResult(ctx: Ctx, battle: BattleState): void {
     if (war) {
       war.captured.push(id);
       // Souverain ennemi capturé.
-      if (id === loserId || id === war.attackerId || id === war.defenderId) adjustScore(state, war, winnerId, W.capture);
+      if (id === loserId || id === war.attackerId || id === war.defenderId)
+        adjustScore(state, war, winnerId, W.capture);
     }
     if (winnerId === state.playerId) notify(state, `${c.name} est votre prisonnier.`);
     if (c.id === state.playerId) notify(state, `Vous êtes capturé par l’ennemi !`);
@@ -434,7 +481,11 @@ export function applyBattleResult(ctx: Ctx, battle: BattleState): void {
     const t = rng.pick(['stratege', 'inebranlable', 'cavalier', 'inspirant']);
     if (!hasTrait(wc, t)) {
       addTrait(wc, t);
-      if (winnerId === state.playerId) notify(state, `${wc.name} gagne le trait ${t === 'cavalier' ? 'Cavalier émérite' : t[0].toUpperCase() + t.slice(1)}.`);
+      if (winnerId === state.playerId)
+        notify(
+          state,
+          `${wc.name} gagne le trait ${t === 'cavalier' ? 'Cavalier émérite' : t[0].toUpperCase() + t.slice(1)}.`,
+        );
     }
   }
   if (war) adjustScore(state, war, winnerId, res.warScore);
@@ -458,7 +509,10 @@ export function applyBattleResult(ctx: Ctx, battle: BattleState): void {
       playerWon: winnerId === state.playerId,
       result: res,
     };
-  } else if (war && (warSide(state, war.id, state.playerId) || allied(state, state.playerId, winnerId))) {
+  } else if (
+    war &&
+    (warSide(state, war.id, state.playerId) || allied(state, state.playerId, winnerId))
+  ) {
     notify(state, text);
   }
 }
@@ -468,7 +522,11 @@ function retreat(state: GameState, a: Army): void {
   const cur = state.counties[a.location];
   const options = cur.adjacent
     .map((id) => state.counties[id])
-    .filter((c) => isFriendlyCounty(state, a.ownerId, c) && !Object.values(state.armies).some((b) => b.location === c.id && armiesHostile(state, a, b)));
+    .filter(
+      (c) =>
+        isFriendlyCounty(state, a.ownerId, c) &&
+        !Object.values(state.armies).some((b) => b.location === c.id && armiesHostile(state, a, b)),
+    );
   const cap = capitalOf(state, a.ownerId);
   const target = options.sort((x, y) => (x.id === cap?.id ? -1 : y.id === cap?.id ? 1 : 0))[0];
   if (target) {
@@ -492,7 +550,9 @@ export function seasonCampaign(ctx: Ctx): void {
   for (const a of Object.values(state.armies)) {
     const c = state.counties[a.location];
     a.seasonsRaised += 1;
-    const hostilePresent = Object.values(state.armies).some((b) => b.location === c.id && armiesHostile(state, a, b));
+    const hostilePresent = Object.values(state.armies).some(
+      (b) => b.location === c.id && armiesHostile(state, a, b),
+    );
     // Siège.
     const besiegeable =
       !hostilePresent &&
@@ -506,7 +566,8 @@ export function seasonCampaign(ctx: Ctx): void {
         for (const u of UNIT_TYPES) a.men[u] = Math.round(a.men[u] * (1 - loss));
         c.siege.progress = required;
         a.assault = false;
-        if (a.ownerId === state.playerId) notify(state, `Assaut sur ${c.name} : ${Math.round(loss * 100)} % de pertes.`);
+        if (a.ownerId === state.playerId)
+          notify(state, `Assaut sur ${c.name} : ${Math.round(loss * 100)} % de pertes.`);
       } else c.siege.progress += 1;
       if (c.siege.progress >= required) {
         c.siege = undefined;
@@ -518,7 +579,8 @@ export function seasonCampaign(ctx: Ctx): void {
     }
     a.assault = false;
     // Ravitaillement.
-    if (isFriendlyCounty(state, a.ownerId, c)) a.supply = Math.min(100, a.supply + W.supplyFriendly + countySupplyBonus(c));
+    if (isFriendlyCounty(state, a.ownerId, c))
+      a.supply = Math.min(100, a.supply + W.supplyFriendly + countySupplyBonus(c));
     else a.supply = Math.max(0, a.supply + (winter ? W.supplyEnemyWinter : W.supplyEnemy));
     // Usure.
     let rate = W.attritionBase;
@@ -528,7 +590,8 @@ export function seasonCampaign(ctx: Ctx): void {
     if (marshalTrainingActive(state, a.ownerId)) rate *= 0.75;
     const lost = a.baseMen * rate;
     const tot = totalMen(a.men);
-    if (tot > 0) for (const u of UNIT_TYPES) a.men[u] = Math.max(0, a.men[u] - (lost * a.men[u]) / tot);
+    if (tot > 0)
+      for (const u of UNIT_TYPES) a.men[u] = Math.max(0, a.men[u] - (lost * a.men[u]) / tot);
     // Levées gardées trop longtemps.
     if (a.seasonsRaised > W.leviesDecayAfter) a.men.levees *= 1 - W.leviesDecayRate;
     for (const u of UNIT_TYPES) a.men[u] = Math.round(a.men[u]);
@@ -538,9 +601,13 @@ export function seasonCampaign(ctx: Ctx): void {
   for (const w of Object.values(state.wars)) {
     if (!w.targetCountyId) continue;
     const t = state.counties[w.targetCountyId];
-    if (t.occupation?.warId === w.id && warSide(state, w.id, t.occupation.byRulerId) === 'attacker') {
+    if (
+      t.occupation?.warId === w.id &&
+      warSide(state, w.id, t.occupation.byRulerId) === 'attacker'
+    ) {
       w.objectiveHeldSeasons += 1;
-      if (w.objectiveHeldSeasons >= W.objectiveHeldSeasons) w.score = clamp(w.score + W.objectiveHeld, -100, 100);
+      if (w.objectiveHeldSeasons >= W.objectiveHeldSeasons)
+        w.score = clamp(w.score + W.objectiveHeld, -100, 100);
     } else w.objectiveHeldSeasons = 0;
   }
   void rng;
@@ -554,7 +621,10 @@ function marshalTrainingActive(state: GameState, ownerId: string): boolean {
 
 function isOccupiedBySideOf(state: GameState, c: County, ownerId: string): boolean {
   if (!c.occupation) return false;
-  return warSide(state, c.occupation.warId, ownerId) === warSide(state, c.occupation.warId, c.occupation.byRulerId);
+  return (
+    warSide(state, c.occupation.warId, ownerId) ===
+    warSide(state, c.occupation.warId, c.occupation.byRulerId)
+  );
 }
 
 /** Terre propre ou alliée (hors occupation). */
@@ -564,13 +634,15 @@ function isFriendlyLand(state: GameState, ownerId: string, c: County): boolean {
 }
 
 function occupy(state: GameState, c: County, ownerId: string): void {
-  const war = warBetween(state, ownerId, countyRuler(state, c)) ?? warBetween(state, ownerId, c.holderId);
+  const war =
+    warBetween(state, ownerId, countyRuler(state, c)) ?? warBetween(state, ownerId, c.holderId);
   if (!war) return;
   c.occupation = { warId: war.id, byRulerId: ownerId, since: state.turn };
   const pts = war.targetCountyId === c.id ? W.occupationObjective : W.occupation;
   adjustScore(state, war, ownerId, pts);
   if (ownerId === state.playerId) notify(state, `${c.name} est occupé par vos troupes.`);
-  else if (countyRuler(state, c) === state.playerId) notify(state, `${c.name} est tombé aux mains de l’ennemi.`);
+  else if (countyRuler(state, c) === state.playerId)
+    notify(state, `${c.name} est tombé aux mains de l’ennemi.`);
 }
 
 function liberate(state: GameState, c: County, ownerId: string): void {
@@ -588,8 +660,10 @@ function liberate(state: GameState, c: County, ownerId: string): void {
 /** Pillage : ravitaillement contre opinion et développement. */
 export function canLoot(state: GameState, a: Army): { ok: boolean; reason?: string } {
   const c = state.counties[a.location];
-  if (!isHostileCounty(state, a.ownerId, c)) return { ok: false, reason: 'Seulement en territoire ennemi' };
-  if (c.lootedTurn !== undefined && state.turn - c.lootedTurn < 4) return { ok: false, reason: 'Déjà pillé récemment' };
+  if (!isHostileCounty(state, a.ownerId, c))
+    return { ok: false, reason: 'Seulement en territoire ennemi' };
+  if (c.lootedTurn !== undefined && state.turn - c.lootedTurn < 4)
+    return { ok: false, reason: 'Déjà pillé récemment' };
   return { ok: true };
 }
 
@@ -642,13 +716,19 @@ export function canDeclareWar(
     if (a.liegeId) reasons.push('Un vassal ne peut pas déclarer cette guerre');
     const county = countyId ? state.counties[countyId] : undefined;
     if (!county) reasons.push('Choisir un comté objectif');
-    else if (countyRuler(state, county) !== defenderId) reasons.push('Le comté n’appartient pas à ce souverain');
-    if (cb === 'revendication' && county && !a.claims.includes(county.id)) reasons.push('Aucune revendication sur ce comté');
+    else if (countyRuler(state, county) !== defenderId)
+      reasons.push('Le comté n’appartient pas à ce souverain');
+    if (cb === 'revendication' && county && !a.claims.includes(county.id))
+      reasons.push('Aucune revendication sur ce comté');
     if (cb === 'conquete') {
       prestigeCost = W.conquestPrestige;
-      if (rankOf(state, attackerId) !== 'roi' && !hasTrait(a, 'ambitieux')) reasons.push('Rang de roi ou trait Ambitieux requis');
+      if (rankOf(state, attackerId) !== 'roi' && !hasTrait(a, 'ambitieux'))
+        reasons.push('Rang de roi ou trait Ambitieux requis');
       if (a.prestige < prestigeCost) reasons.push(`${prestigeCost} prestige requis`);
-      if (county && !county.adjacent.some((n) => countyRuler(state, state.counties[n]) === attackerId))
+      if (
+        county &&
+        !county.adjacent.some((n) => countyRuler(state, state.counties[n]) === attackerId)
+      )
         reasons.push('Le comté doit border votre royaume');
     }
     if (cb === 'defense') reasons.push('La défense d’un allié passe par l’appel aux armes');
@@ -669,7 +749,12 @@ export function declareWar(
   if (!chk.ok && !force) return undefined;
   const a = state.characters[attackerId];
   a.prestige -= chk.prestigeCost;
-  const cbLabel = { revendication: 'Revendication', conquete: 'Conquête', independance: 'Indépendance', defense: 'Défense' }[cb];
+  const cbLabel = {
+    revendication: 'Revendication',
+    conquete: 'Conquête',
+    independance: 'Indépendance',
+    defense: 'Défense',
+  }[cb];
   const target = countyId ? state.counties[countyId] : undefined;
   const war: War = {
     id: newId(state, 'w'),
@@ -688,14 +773,24 @@ export function declareWar(
   state.wars[war.id] = war;
   const d = state.characters[defenderId];
   const involvesPlayer = attackerId === state.playerId || defenderId === state.playerId;
-  if (involvesPlayer) chronicle(state, `${displayName(state, a)} déclare la guerre à ${displayName(state, d)} (${war.name}).`, 'guerre');
+  if (involvesPlayer)
+    chronicle(
+      state,
+      `${displayName(state, a)} déclare la guerre à ${displayName(state, d)} (${war.name}).`,
+      'guerre',
+    );
   else notify(state, `${a.name} déclare la guerre à ${d.name} (${war.name}).`);
   addOpinion(state, defenderId, attackerId, 'M’a déclaré la guerre', -30, 40);
   return war;
 }
 
 /** Ajoute un allié à un camp. */
-export function joinWar(state: GameState, warId: string, allyId: string, side: 'attacker' | 'defender'): void {
+export function joinWar(
+  state: GameState,
+  warId: string,
+  allyId: string,
+  side: 'attacker' | 'defender',
+): void {
   const w = state.wars[warId];
   if (!w || warSide(state, warId, allyId)) return;
   if (side === 'attacker') w.attackerAllies.push(allyId);
@@ -716,9 +811,17 @@ export function transferCounty(state: GameState, countyId: string, newHolder: st
   c.siege = undefined;
   // Duché perdu si on n'y tient plus rien.
   for (const d of Object.values(state.duchies)) {
-    if (d.holderId === old && !d.counties.some((id) => state.counties[id].holderId === old || countyRuler(state, state.counties[id]) === old)) d.holderId = undefined;
+    if (
+      d.holderId === old &&
+      !d.counties.some(
+        (id) =>
+          state.counties[id].holderId === old || countyRuler(state, state.counties[id]) === old,
+      )
+    )
+      d.holderId = undefined;
   }
-  for (const ch of Object.values(state.characters)) ch.claims = ch.claims.filter((x) => !(x === countyId && ch.id === newHolder));
+  for (const ch of Object.values(state.characters))
+    ch.claims = ch.claims.filter((x) => !(x === countyId && ch.id === newHolder));
   // Un vassal sans terre rejoint la cour de son ancien suzerain.
   const oldC = state.characters[old];
   if (oldC && !heldCounties(state, old).length && oldC.liegeId) {
@@ -733,8 +836,10 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
   if (!w) return;
   const att = state.characters[w.attackerId];
   const def = state.characters[w.defenderId];
-  const winnerId = outcome === 'attaquant' ? w.attackerId : outcome === 'defenseur' ? w.defenderId : undefined;
-  const loserId = outcome === 'attaquant' ? w.defenderId : outcome === 'defenseur' ? w.attackerId : undefined;
+  const winnerId =
+    outcome === 'attaquant' ? w.attackerId : outcome === 'defenseur' ? w.defenderId : undefined;
+  const loserId =
+    outcome === 'attaquant' ? w.defenderId : outcome === 'defenseur' ? w.attackerId : undefined;
   let detail = '';
   if (outcome === 'attaquant') {
     if (w.cb === 'independance') {
@@ -748,13 +853,20 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
       detail = `${att.name} obtient son indépendance.`;
     } else {
       const gained: string[] = [];
-      if (w.targetCountyId && countyRuler(state, state.counties[w.targetCountyId]) === w.defenderId) {
+      if (
+        w.targetCountyId &&
+        countyRuler(state, state.counties[w.targetCountyId]) === w.defenderId
+      ) {
         transferCounty(state, w.targetCountyId, w.attackerId);
         gained.push(state.counties[w.targetCountyId].name);
       }
       if (w.cb === 'conquete') {
         for (const c of Object.values(state.counties)) {
-          if (c.occupation?.warId === w.id && warSide(state, w.id, c.occupation.byRulerId) === 'attacker' && countyRuler(state, c) === w.defenderId) {
+          if (
+            c.occupation?.warId === w.id &&
+            warSide(state, w.id, c.occupation.byRulerId) === 'attacker' &&
+            countyRuler(state, c) === w.defenderId
+          ) {
             transferCounty(state, c.id, w.attackerId);
             gained.push(c.name);
           }
@@ -824,15 +936,24 @@ export interface PeaceCheck {
 }
 
 /** L'adversaire IA accepte-t-il la paix proposée par `fromId` ? */
-export function peaceAcceptance(state: GameState, warId: string, fromId: string, kind: 'exiger' | 'blanche' | 'capituler'): PeaceCheck {
+export function peaceAcceptance(
+  state: GameState,
+  warId: string,
+  fromId: string,
+  kind: 'exiger' | 'blanche' | 'capituler',
+): PeaceCheck {
   const w = state.wars[warId];
   if (!w) return { accept: false, reasons: ['Guerre introuvable'] };
   const my = scoreFor(state, w, fromId);
   const age = state.turn - w.startTurn;
-  if (kind === 'capituler') return { accept: true, reasons: ['L’ennemi accepte toujours votre reddition'] };
+  if (kind === 'capituler')
+    return { accept: true, reasons: ['L’ennemi accepte toujours votre reddition'] };
   if (kind === 'exiger') {
     const ok = my >= W.peaceThreshold;
-    return { accept: ok, reasons: [`Score de guerre ${Math.round(my)} (il faut ${W.peaceThreshold})`] };
+    return {
+      accept: ok,
+      reasons: [`Score de guerre ${Math.round(my)} (il faut ${W.peaceThreshold})`],
+    };
   }
   const reasons = [`Score de guerre ${Math.round(my)} de votre point de vue`];
   if (my >= 0) reasons.push('L’ennemi ne perd rien à signer');

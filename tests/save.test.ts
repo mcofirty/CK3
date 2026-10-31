@@ -23,7 +23,7 @@ describe('Sauvegarde', () => {
 
   it('une sauvegarde de version précédente est migrée', () => {
     const s = newGame({ seed: 9 }) as unknown as Record<string, unknown>;
-    const old = { ...s, version: 0 };
+    const old: Record<string, unknown> = { ...s, version: 0 };
     delete old.pendingTriggers;
     delete old.tutorialSeen;
     const m = migrate(old);

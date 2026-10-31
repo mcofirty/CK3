@@ -19,14 +19,21 @@ describe('Guerre de campagne (section 8)', () => {
     expect(canDeclareWar(s, s.playerId, defender, 'revendication', county.id).ok).toBe(true);
     const other = realmCounties(s, defender).find((c) => c.id !== county.id)!;
     expect(canDeclareWar(s, s.playerId, defender, 'revendication', other.id).ok).toBe(false);
-    expect(canDeclareWar(s, s.playerId, defender, 'conquete', county.id).reasons.join()).toMatch(/roi|Ambitieux|prestige/);
+    expect(canDeclareWar(s, s.playerId, defender, 'conquete', county.id).reasons.join()).toMatch(
+      /roi|Ambitieux|prestige/,
+    );
   });
 
   it('une guerre complète : déclaration, siège, occupation, paix et cession du comté', () => {
     let s = newGame({ seed: 4 });
     const { county, defender } = claimTarget(s);
     s.characters[s.playerId].gold = 5000;
-    s = applyAction(s, { type: 'declareWar', targetId: defender, cb: 'revendication', countyId: county.id });
+    s = applyAction(s, {
+      type: 'declareWar',
+      targetId: defender,
+      cb: 'revendication',
+      countyId: county.id,
+    });
     const war = Object.values(s.wars)[0];
     expect(war).toBeDefined();
     s = applyAction(s, { type: 'raiseArmy' });
@@ -47,7 +54,8 @@ describe('Guerre de campagne (section 8)', () => {
       if (w && w.score >= 50) s = applyAction(s, { type: 'peace', warId: war.id, kind: 'exiger' });
       else s = applyAction(s, { type: 'endSeason' });
       const a = s.armies[army.id];
-      if (a && a.location !== county.id && !a.path.length) s = applyAction(s, { type: 'moveArmy', armyId: army.id, targetCountyId: county.id });
+      if (a && a.location !== county.id && !a.path.length)
+        s = applyAction(s, { type: 'moveArmy', armyId: army.id, targetCountyId: county.id });
     }
     expect(s.wars[war.id]).toBeUndefined();
     expect(countyRuler(s, s.counties[county.id])).toBe(s.playerId);
@@ -67,6 +75,8 @@ describe('Guerre de campagne (section 8)', () => {
     const own = realmCounties(s, s.playerId);
     const foreign = Object.values(s.counties).find((c) => countyRuler(s, c) !== s.playerId)!;
     expect(findPath(s, s.playerId, own[0].id, foreign.id)).toEqual([]);
-    expect(findPath(s, s.playerId, own[0].id, own[own.length - 1].id).length).toBeGreaterThanOrEqual(0);
+    expect(
+      findPath(s, s.playerId, own[0].id, own[own.length - 1].id).length,
+    ).toBeGreaterThanOrEqual(0);
   });
 });

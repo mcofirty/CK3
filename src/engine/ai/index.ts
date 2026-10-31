@@ -126,7 +126,8 @@ function aiRuler(ctx: Ctx, r: Character): void {
   // Construction.
   if (r.gold > reserve + 60) options.push({ score: A.buildChance, run: () => aiBuild(ctx, r) });
   // Recrutement.
-  if (r.gold > reserve + 120) options.push({ score: wars.length ? 0.5 : 0.12, run: () => aiRecruit(ctx, r) });
+  if (r.gold > reserve + 120)
+    options.push({ score: wars.length ? 0.5 : 0.12, run: () => aiRecruit(ctx, r) });
   const roll = rng.next();
   let acc = 0;
   const total = options.reduce((s, o) => s + Math.max(0, o.score), 0);
@@ -151,24 +152,39 @@ function aiRuler(ctx: Ctx, r: Character): void {
 }
 
 /** Cible de guerre : revendication (ou conquête) avec un rapport de force suffisant. */
-function pickWarTarget(state: GameState, r: Character): { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number } | undefined {
-  const myAllies = state.alliances.filter((k) => k.split('|').includes(r.id)).map((k) => k.split('|').find((x) => x !== r.id)!);
+function pickWarTarget(
+  state: GameState,
+  r: Character,
+):
+  | { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number }
+  | undefined {
+  const myAllies = state.alliances
+    .filter((k) => k.split('|').includes(r.id))
+    .map((k) => k.split('|').find((x) => x !== r.id)!);
   const myStr = sideStrength(state, [r.id, ...myAllies]);
-  let best: { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number } | undefined;
+  let best:
+    | { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number }
+    | undefined;
   const tryTarget = (county: County, cb: 'revendication' | 'conquete') => {
     const def = countyRuler(state, county);
     if (def === r.id) return;
     if (!canDeclareWar(state, r.id, def, cb, county.id).ok) return;
-    const defAllies = state.alliances.filter((k) => k.split('|').includes(def)).map((k) => k.split('|').find((x) => x !== def)!);
+    const defAllies = state.alliances
+      .filter((k) => k.split('|').includes(def))
+      .map((k) => k.split('|').find((x) => x !== def)!);
     const ratio = myStr / Math.max(1, sideStrength(state, [def, ...defAllies]));
     const need = BALANCE.war.forceRatioToDeclare * (1 - aggression(r) * 0.2);
-    if (ratio >= need && (!best || ratio > best.ratio)) best = { defender: def, cb, county: county.id, ratio };
+    if (ratio >= need && (!best || ratio > best.ratio))
+      best = { defender: def, cb, county: county.id, ratio };
   };
   for (const cid of r.claims) {
     const c = state.counties[cid];
     if (c) tryTarget(c, 'revendication');
   }
-  if (!best && (hasTrait(r, 'ambitieux') || Object.values(state.kingdoms).some((k) => k.holderId === r.id))) {
+  if (
+    !best &&
+    (hasTrait(r, 'ambitieux') || Object.values(state.kingdoms).some((k) => k.holderId === r.id))
+  ) {
     const mine = new Set(realmCounties(state, r.id).map((c) => c.id));
     for (const c of Object.values(state.counties)) {
       if (!mine.has(c.id) && c.adjacent.some((n) => mine.has(n))) tryTarget(c, 'conquete');
@@ -183,7 +199,9 @@ export function callAllies(ctx: Ctx, w: War): void {
   for (const side of ['attacker', 'defender'] as const) {
     const leader = side === 'attacker' ? w.attackerId : w.defenderId;
     const enemy = side === 'attacker' ? w.defenderId : w.attackerId;
-    const allies = state.alliances.filter((k) => k.split('|').includes(leader)).map((k) => k.split('|').find((x) => x !== leader)!);
+    const allies = state.alliances
+      .filter((k) => k.split('|').includes(leader))
+      .map((k) => k.split('|').find((x) => x !== leader)!);
     for (const ally of allies) {
       if (warSide(state, w.id, ally) || allied(state, ally, enemy)) continue;
       if (ally === state.playerId) {
@@ -192,7 +210,19 @@ export function callAllies(ctx: Ctx, w: War): void {
           titre: 'Appel aux armes',
           texte: `${state.characters[leader].name}, votre allié, est en guerre contre ${state.characters[enemy].name} (« ${w.name} ») et vous appelle à ses côtés.`,
           choix: [
-            { libelle: 'Honorer l’alliance', effets: [{ rejoindre_guerre: { warId: w.id, allie: leader, camp: side === 'attacker' ? 'attaquant' : 'defenseur' } }, { prestige: 10 }] },
+            {
+              libelle: 'Honorer l’alliance',
+              effets: [
+                {
+                  rejoindre_guerre: {
+                    warId: w.id,
+                    allie: leader,
+                    camp: side === 'attacker' ? 'attaquant' : 'defenseur',
+                  },
+                },
+                { prestige: 10 },
+              ],
+            },
             { libelle: 'Refuser', effets: [{ prestige: -30 }] },
           ],
         });
@@ -231,7 +261,12 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
         titre: 'Exigences de l’ennemi',
         texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)}) et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
         choix: [
-          { libelle: 'Accepter ses conditions', effets: [{ paix: { warId: w.id, issue: w.attackerId === r.id ? 'attaquant' : 'defenseur' } }] },
+          {
+            libelle: 'Accepter ses conditions',
+            effets: [
+              { paix: { warId: w.id, issue: w.attackerId === r.id ? 'attaquant' : 'defenseur' } },
+            ],
+          },
           { libelle: 'Refuser et combattre', effets: [{ prestige: 5 }] },
         ],
       });
@@ -244,7 +279,10 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
           titre: 'Une offre de paix',
           texte: `${r.name}, en mauvaise posture dans la guerre « ${w.name} », propose une paix blanche.`,
           choix: [
-            { libelle: 'Accepter la paix blanche', effets: [{ paix: { warId: w.id, issue: 'blanche' } }] },
+            {
+              libelle: 'Accepter la paix blanche',
+              effets: [{ paix: { warId: w.id, issue: 'blanche' } }],
+            },
             { libelle: 'Refuser : poursuivre la guerre', effets: [] },
           ],
         });
@@ -262,7 +300,9 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
   if (!army) army = raiseArmy(ctx, r.id);
   if (!army) return;
   const w = warsOf(state, r.id)[0];
-  const enemies = [w.attackerId, ...w.attackerAllies].includes(r.id) ? [w.defenderId, ...w.defenderAllies] : [w.attackerId, ...w.attackerAllies];
+  const enemies = [w.attackerId, ...w.attackerAllies].includes(r.id)
+    ? [w.defenderId, ...w.defenderAllies]
+    : [w.attackerId, ...w.attackerAllies];
   const myStr = totalMen(army.men);
   const enemyArmies = Object.values(state.armies).filter((a) => enemies.includes(a.ownerId));
   // Armée ennemie proche et plus faible : l'attaquer. Plus forte : se replier.
@@ -286,16 +326,27 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
   const mineOccupied = realmCounties(state, r.id).filter((c) => c.occupation);
   const targets: County[] = mineOccupied.length
     ? mineOccupied
-    : Object.values(state.counties).filter((c) => isHostileCounty(state, r.id, c) && enemies.includes(countyRuler(state, c)) && !(c.occupation && isFriendlyCounty(state, r.id, c)));
+    : Object.values(state.counties).filter(
+        (c) =>
+          isHostileCounty(state, r.id, c) &&
+          enemies.includes(countyRuler(state, c)) &&
+          !(c.occupation && isFriendlyCounty(state, r.id, c)),
+      );
   const objective = w.targetCountyId ? state.counties[w.targetCountyId] : undefined;
   const cur = state.counties[army.location];
-  if (isHostileCounty(state, r.id, cur) && !(cur.occupation && isFriendlyCounty(state, r.id, cur))) {
+  if (
+    isHostileCounty(state, r.id, cur) &&
+    !(cur.occupation && isFriendlyCounty(state, r.id, cur))
+  ) {
     army.path = [];
     if (army.supply < 15 && cur.lootedTurn === undefined) army.supply += 0; // reste sur place
     return;
   }
   const ranked = targets
-    .map((c) => ({ c, d: findPath(state, r.id, army!.location, c.id).length + (c === objective ? -2 : 0) }))
+    .map((c) => ({
+      c,
+      d: findPath(state, r.id, army!.location, c.id).length + (c === objective ? -2 : 0),
+    }))
     .filter((x) => x.d > -2)
     .sort((x, y) => x.d - y.d);
   if (ranked[0]) setPath(state, army.id, ranked[0].c.id);
@@ -310,10 +361,14 @@ function setPath(state: GameState, armyId: string, target: string): void {
 
 function aiMarriage(ctx: Ctx, r: Character): void {
   const { state, rng } = ctx;
-  const singles = [r, ...livingChildren(state, r)].filter((c) => !c.spouseId && isAdult(state, c) && ageOf(state, c) < 45);
+  const singles = [r, ...livingChildren(state, r)].filter(
+    (c) => !c.spouseId && isAdult(state, c) && ageOf(state, c) < 45,
+  );
   if (!singles.length) return;
   const me = singles[0];
-  const pool = Object.values(state.characters).filter((c) => !marriageBlock(state, me, c) && c.dynastyId !== me.dynastyId && ageOf(state, c) < 40);
+  const pool = Object.values(state.characters).filter(
+    (c) => !marriageBlock(state, me, c) && c.dynastyId !== me.dynastyId && ageOf(state, c) < 40,
+  );
   if (!pool.length) return;
   const target = rng.pick(pool);
   const theirCourt = target.courtId;
@@ -335,7 +390,9 @@ function aiMarriage(ctx: Ctx, r: Character): void {
 
 function aiAlliance(ctx: Ctx, r: Character): void {
   const { state, rng } = ctx;
-  const others = independentRulers(state).filter((x) => x !== r.id && !allied(state, r.id, x) && marriageTie(state, r.id, x));
+  const others = independentRulers(state).filter(
+    (x) => x !== r.id && !allied(state, r.id, x) && marriageTie(state, r.id, x),
+  );
   if (!others.length) return;
   const t = rng.pick(others);
   if (t === state.playerId) {
@@ -359,7 +416,13 @@ function ensureSpouse(ctx: Ctx, r: Character): void {
   if (r.spouseId || !isAdult(state, r) || ageOf(state, r) > 50) return;
   if (heirsOf(state, r).length > 1 && !rng.chance(0.1)) return;
   if (!rng.chance(0.25)) return;
-  const spouse = createCharacter(ctx, { age: Math.max(16, ageOf(state, r) - rng.int(0, 8)), female: !r.female, dynastyId: null, courtId: r.id, skillBase: 5 });
+  const spouse = createCharacter(ctx, {
+    age: Math.max(16, ageOf(state, r) - rng.int(0, 8)),
+    female: !r.female,
+    dynastyId: null,
+    courtId: r.id,
+    skillBase: 5,
+  });
   marry(state, r, spouse);
 }
 
@@ -372,7 +435,9 @@ function aiBuild(ctx: Ctx, r: Character): void {
   const c = rng.pick(own);
   const options = BUILDING_TYPES.filter((t) => canBuild(state, r.id, c.id, t).ok);
   if (!options.length) return;
-  const t = rng.weighted(options, (b) => (b === 'marche' ? 3 : b === 'ferme' ? 2 : BUILDINGS[b].unlocks ? 1.5 : 1));
+  const t = rng.weighted(options, (b) =>
+    b === 'marche' ? 3 : b === 'ferme' ? 2 : BUILDINGS[b].unlocks ? 1.5 : 1,
+  );
   if (t) startBuilding(ctx, r.id, c.id, t);
 }
 
@@ -408,20 +473,30 @@ function aiVassals(ctx: Ctx): void {
     const fStr = faction.reduce((s, v) => s + factionStrength(state, v), 0);
     const lStr = militaryStrength(state, liege) - fStr;
     if (fStr > lStr * A.revoltFactionRatio && rng.chance(0.5)) {
-      const leader = faction.sort((a, b) => factionStrength(state, b) - factionStrength(state, a))[0];
+      const leader = faction.sort(
+        (a, b) => factionStrength(state, b) - factionStrength(state, a),
+      )[0];
       const w = declareWar(ctx, leader, liege, 'independance', undefined, true);
       if (w) {
         for (const v of faction) if (v !== leader) joinWar(state, w.id, v, 'attacker');
-        if (liege === state.playerId) notify(state, `Révolte ! ${state.characters[leader].name} et sa faction prennent les armes.`);
+        if (liege === state.playerId)
+          notify(
+            state,
+            `Révolte ! ${state.characters[leader].name} et sa faction prennent les armes.`,
+          );
       }
     }
   }
 }
 
 function factionStrength(state: GameState, id: string): number {
-  return Object.values(state.counties)
-    .filter((c) => c.holderId === id)
-    .reduce((s, c) => s + c.levyPool, 0) / 100 * 4;
+  return (
+    (Object.values(state.counties)
+      .filter((c) => c.holderId === id)
+      .reduce((s, c) => s + c.levyPool, 0) /
+      100) *
+    4
+  );
 }
 
 /** Les vassaux en révolte lèvent leurs propres armées. */

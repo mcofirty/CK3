@@ -32,21 +32,27 @@ export interface BuildingDef {
 
 export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   marche: {
-    id: 'marche', name: 'Marché', description: 'Augmente les revenus du comté.',
+    id: 'marche',
+    name: 'Marché',
+    description: 'Augmente les revenus du comté.',
     levels: [
       { cost: 60, seasons: 2, income: 2 },
       { cost: 120, seasons: 3, income: 4 },
     ],
   },
   ferme: {
-    id: 'ferme', name: 'Ferme', description: 'Plus de levées et un meilleur ravitaillement.',
+    id: 'ferme',
+    name: 'Ferme',
+    description: 'Plus de levées et un meilleur ravitaillement.',
     levels: [
       { cost: 50, seasons: 2, levies: 100, supply: 10, income: 0.5 },
       { cost: 100, seasons: 3, levies: 200, supply: 20, income: 1 },
     ],
   },
   caserne: {
-    id: 'caserne', name: 'Caserne', description: 'Permet de recruter piquiers et infanterie lourde.',
+    id: 'caserne',
+    name: 'Caserne',
+    description: 'Permet de recruter piquiers et infanterie lourde.',
     unlocks: ['piquiers', 'infanterie'],
     levels: [
       { cost: 80, seasons: 2, levies: 50, recruitCap: 2 },
@@ -54,7 +60,9 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     ],
   },
   ecuries: {
-    id: 'ecuries', name: 'Écuries', description: 'Permet de recruter la cavalerie lourde.',
+    id: 'ecuries',
+    name: 'Écuries',
+    description: 'Permet de recruter la cavalerie lourde.',
     unlocks: ['cavalerie'],
     levels: [
       { cost: 100, seasons: 3, recruitCap: 1 },
@@ -62,7 +70,9 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     ],
   },
   archerie: {
-    id: 'archerie', name: 'Archerie', description: 'Permet de recruter des archers.',
+    id: 'archerie',
+    name: 'Archerie',
+    description: 'Permet de recruter des archers.',
     unlocks: ['archers'],
     levels: [
       { cost: 70, seasons: 2, recruitCap: 2 },
@@ -70,21 +80,27 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     ],
   },
   muraille: {
-    id: 'muraille', name: 'Muraille', description: '+1 niveau de fortification par niveau.',
+    id: 'muraille',
+    name: 'Muraille',
+    description: '+1 niveau de fortification par niveau.',
     levels: [
       { cost: 100, seasons: 3, fort: 1 },
       { cost: 180, seasons: 4, fort: 1 },
     ],
   },
   chapelle: {
-    id: 'chapelle', name: 'Chapelle', description: 'Produit de la piété et favorise le développement.',
+    id: 'chapelle',
+    name: 'Chapelle',
+    description: 'Produit de la piété et favorise le développement.',
     levels: [
       { cost: 50, seasons: 2, piety: 1, development: 1 },
       { cost: 100, seasons: 3, piety: 2, development: 2 },
     ],
   },
   route: {
-    id: 'route', name: 'Route', description: 'Les armées traversent 2 comtés par saison depuis ce comté.',
+    id: 'route',
+    name: 'Route',
+    description: 'Les armées traversent 2 comtés par saison depuis ce comté.',
     road: true,
     levels: [
       { cost: 60, seasons: 2, income: 0.5, development: 1 },

@@ -25,18 +25,18 @@ Incarnez un souverain, faites durer votre lignée sur environ 150 ans, tenez vos
 
 ## Fonctionnalités
 
-| Domaine | Contenu |
-| --- | --- |
-| **Boucle de jeu** | 1 tour = 1 saison (4 par an). Revenus et entretien, 0 à 3 événements, décisions, résolution militaire, puis santé, naissances, décès et succession. Sauvegarde automatique à chaque fin de saison. |
-| **Personnages** | 5 compétences (Diplomatie, Guerre, Gestion, Ruse, Savoir) notées de 0 à 20, ~30 traits (personnalité, éducation, héréditaires, acquis), santé, âge, opinions de -100 à +100 avec le détail des raisons. |
-| **Dynastie** | Mariages, naissances, éducation des enfants à 16 ans, succession par Partage ou Primogéniture, Renommée de la lignée, arbre généalogique. |
-| **Royaume** | ~30 comtés sur une carte SVG zoomable, 7 duchés, 2 royaumes à fonder. Développement, fortifications, 8 bâtiments à 2 niveaux, vassaux dont la contribution dépend de leur opinion. |
-| **Événements** | 40 événements narratifs écrits en français, décrits en JSON et interprétés par un moteur d'effets : ajouter un événement ne demande aucune ligne de code. |
-| **Diplomatie & intrigues** | Conseil à 5 postes, mariages, alliances, cadeaux, appels aux armes, tributs ; complots (assassiner, discréditer, gagner l'amitié, inciter à la révolte) avec chances et raisons affichées. |
-| **Guerre de campagne** | Levées et compagnies professionnelles, déplacements, ravitaillement et usure, pillage, sièges et assauts, score de guerre, paix. |
+| Domaine                     | Contenu                                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Boucle de jeu**           | 1 tour = 1 saison (4 par an). Revenus et entretien, 0 à 3 événements, décisions, résolution militaire, puis santé, naissances, décès et succession. Sauvegarde automatique à chaque fin de saison.              |
+| **Personnages**             | 5 compétences (Diplomatie, Guerre, Gestion, Ruse, Savoir) notées de 0 à 20, ~30 traits (personnalité, éducation, héréditaires, acquis), santé, âge, opinions de -100 à +100 avec le détail des raisons.         |
+| **Dynastie**                | Mariages, naissances, éducation des enfants à 16 ans, succession par Partage ou Primogéniture, Renommée de la lignée, arbre généalogique.                                                                       |
+| **Royaume**                 | ~30 comtés sur une carte SVG zoomable, 7 duchés, 2 royaumes à fonder. Développement, fortifications, 8 bâtiments à 2 niveaux, vassaux dont la contribution dépend de leur opinion.                              |
+| **Événements**              | 40 événements narratifs écrits en français, décrits en JSON et interprétés par un moteur d'effets : ajouter un événement ne demande aucune ligne de code.                                                       |
+| **Diplomatie & intrigues**  | Conseil à 5 postes, mariages, alliances, cadeaux, appels aux armes, tributs ; complots (assassiner, discréditer, gagner l'amitié, inciter à la révolte) avec chances et raisons affichées.                      |
+| **Guerre de campagne**      | Levées et compagnies professionnelles, déplacements, ravitaillement et usure, pillage, sièges et assauts, score de guerre, paix.                                                                                |
 | **Bataille à trois fronts** | Reconnaissance, déploiement, 8 rounds d'ordres simultanés (Charger, Tenir, Tirer, Feindre la retraite, Se replier, Prendre de flanc), réserve, terrain, météo, commandants et leurs traits, IA à trois niveaux. |
-| **IA rivale** | 4 souverains rivaux et leurs vassaux pilotés par une IA à scores d'utilité, factions et révoltes, 3 niveaux de difficulté. |
-| **Mobile d'abord** | Portrait, une main, onglets en bas, bouton « Fin de saison » flottant, appui long pour les infobulles, zones sûres de l'iPhone, thème clair/sombre automatique, 100 % hors ligne. |
+| **IA rivale**               | 4 souverains rivaux et leurs vassaux pilotés par une IA à scores d'utilité, factions et révoltes, 3 niveaux de difficulté.                                                                                      |
+| **Mobile d'abord**          | Portrait, une main, onglets en bas, bouton « Fin de saison » flottant, appui long pour les infobulles, zones sûres de l'iPhone, thème clair/sombre automatique, 100 % hors ligne.                               |
 
 ## Installer sur iPhone
 
@@ -66,16 +66,16 @@ Un **écran de débogage** caché s'ouvre par un appui long sur le titre « Lign
 
 ### Stack
 
-| Sujet | Choix |
-| --- | --- |
-| Build | Vite, TypeScript en mode strict |
-| Interface | React 18, état global avec Zustand |
-| Rendu carte et bataille | SVG et CSS (ni moteur de jeu, ni canvas WebGL) |
-| PWA | vite-plugin-pwa : manifest, service worker, hors ligne, standalone, portrait |
-| Sauvegarde | IndexedDB via idb-keyval, 3 emplacements, export/import JSON |
-| Aléatoire | Générateur à graine mulberry32, graine stockée dans la sauvegarde |
-| Tests | Vitest pour le moteur, script de simulation de batailles en masse |
-| Qualité | ESLint et Prettier |
+| Sujet                   | Choix                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Build                   | Vite, TypeScript en mode strict                                              |
+| Interface               | React 18, état global avec Zustand                                           |
+| Rendu carte et bataille | SVG et CSS (ni moteur de jeu, ni canvas WebGL)                               |
+| PWA                     | vite-plugin-pwa : manifest, service worker, hors ligne, standalone, portrait |
+| Sauvegarde              | IndexedDB via idb-keyval, 3 emplacements, export/import JSON                 |
+| Aléatoire               | Générateur à graine mulberry32, graine stockée dans la sauvegarde            |
+| Tests                   | Vitest pour le moteur, script de simulation de batailles en masse            |
+| Qualité                 | ESLint et Prettier                                                           |
 
 ## Architecture
 
@@ -139,11 +139,15 @@ Tout le contenu vit dans `src/data/` ; l'univers peut être changé sans toucher
   "poids": 10,
   "delai_retour": 8,
   "choix": [
-    { "libelle": "Offrir un présent (50 or)",
-      "effets": [{ "or": -50 }, { "opinion": { "cible": "vassal", "valeur": 20 } }] },
-    { "libelle": "Le faire taire",
+    {
+      "libelle": "Offrir un présent (50 or)",
+      "effets": [{ "or": -50 }, { "opinion": { "cible": "vassal", "valeur": 20 } }]
+    },
+    {
+      "libelle": "Le faire taire",
       "effets": [{ "prestige": 10 }, { "opinion": { "cible": "vassal", "valeur": -25 } }],
-      "suite": "vassal_banquet_02" }
+      "suite": "vassal_banquet_02"
+    }
   ]
 }
 ```
@@ -174,17 +178,17 @@ Une seule fois, dans le repo GitHub : **Settings → Pages → Build and deploym
 
 ## Feuille de route
 
-| Jalon | Contenu | Critère |
-| --- | --- | --- |
-| 0 — Socle | Repo, Vite, TypeScript, PWA, GitHub Pages, sauvegarde, export | La page est en ligne, s'installe et s'ouvre hors ligne |
-| 1 — Souverain et saisons | Personnages, compétences, traits, famille, vieillissement, décès, succession | 50 ans de jeu avec au moins 2 successions, reprise après fermeture |
-| 2 — Bataille autonome | Écran de bataille, IA de bataille, script de simulation | Une bataille en moins de 3 minutes, cibles d'équilibrage tenues |
-| 3 — Royaume | Carte SVG, comtés, revenus, bâtiments, vassaux, opinion | Carte lisible au doigt, revenus réactifs |
-| 4 — Événements | Moteur d'effets, format JSON, 40 événements | Ajouter un événement = ajouter du JSON |
-| 5 — Guerre de campagne | Armées, déplacements, ravitaillement, sièges, score, paix | Une guerre complète de la déclaration à la paix |
-| 6 — Diplomatie et intrigues | Conseil, mariages, alliances, complots | Chances et raisons toujours affichées |
-| 7 — IA des royaumes | Rivaux, vassaux, factions, révoltes, difficulté | 50 ans simulés : frontières mouvantes, pas de faillite en boucle |
-| 8 — Finition | Équilibrage, arbre généalogique, chronique, écran de fin, tutoriel | Une partie de 150 ans sans bug bloquant |
+| Jalon                       | Contenu                                                                      | Critère                                                            |
+| --------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 0 — Socle                   | Repo, Vite, TypeScript, PWA, GitHub Pages, sauvegarde, export                | La page est en ligne, s'installe et s'ouvre hors ligne             |
+| 1 — Souverain et saisons    | Personnages, compétences, traits, famille, vieillissement, décès, succession | 50 ans de jeu avec au moins 2 successions, reprise après fermeture |
+| 2 — Bataille autonome       | Écran de bataille, IA de bataille, script de simulation                      | Une bataille en moins de 3 minutes, cibles d'équilibrage tenues    |
+| 3 — Royaume                 | Carte SVG, comtés, revenus, bâtiments, vassaux, opinion                      | Carte lisible au doigt, revenus réactifs                           |
+| 4 — Événements              | Moteur d'effets, format JSON, 40 événements                                  | Ajouter un événement = ajouter du JSON                             |
+| 5 — Guerre de campagne      | Armées, déplacements, ravitaillement, sièges, score, paix                    | Une guerre complète de la déclaration à la paix                    |
+| 6 — Diplomatie et intrigues | Conseil, mariages, alliances, complots                                       | Chances et raisons toujours affichées                              |
+| 7 — IA des royaumes         | Rivaux, vassaux, factions, révoltes, difficulté                              | 50 ans simulés : frontières mouvantes, pas de faillite en boucle   |
+| 8 — Finition                | Équilibrage, arbre généalogique, chronique, écran de fin, tutoriel           | Une partie de 150 ans sans bug bloquant                            |
 
 ## Hors périmètre
 

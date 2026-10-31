@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_EVENTS } from '../src/data/events';
 import { TRAITS } from '../src/data/traits';
-import { EVENTS, applyEffects, buildScope, chooseEvent, effectLabels, renderText, rolesOf } from '../src/engine/events/engine';
+import {
+  EVENTS,
+  applyEffects,
+  buildScope,
+  chooseEvent,
+  effectLabels,
+  renderText,
+  rolesOf,
+} from '../src/engine/events/engine';
 import type { Ctx } from '../src/engine/context';
 import { Rng } from '../src/engine/rng';
 import { newGame } from '../src/engine/world';
@@ -25,7 +33,14 @@ describe('Événements (section 6)', () => {
 
   it('répartit les événements selon les catégories du cahier', () => {
     const count = (c: string) => ALL_EVENTS.filter((e) => e.categorie === c).length;
-    expect([count('cour'), count('famille'), count('vassaux'), count('religion'), count('guerre'), count('intrigue')]).toEqual([10, 8, 8, 5, 5, 4]);
+    expect([
+      count('cour'),
+      count('famille'),
+      count('vassaux'),
+      count('religion'),
+      count('guerre'),
+      count('intrigue'),
+    ]).toEqual([10, 8, 8, 5, 5, 4]);
   });
 
   it('remplit les variables du texte avec les rôles tirés', () => {

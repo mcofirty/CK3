@@ -18,14 +18,7 @@ export type UnitCounts = Record<UnitType, number>;
 export type Difficulty = 'facile' | 'normal' | 'difficile';
 export type CouncilPost = 'chancelier' | 'marechal' | 'intendant' | 'espion' | 'chapelain';
 export type BuildingType =
-  | 'marche'
-  | 'ferme'
-  | 'caserne'
-  | 'ecuries'
-  | 'archerie'
-  | 'muraille'
-  | 'chapelle'
-  | 'route';
+  'marche' | 'ferme' | 'caserne' | 'ecuries' | 'archerie' | 'muraille' | 'chapelle' | 'route';
 export type SuccessionLaw = 'partage' | 'primogeniture';
 
 export interface OpinionModifier {
@@ -201,7 +194,17 @@ export interface CouncilSeat {
 export interface ChronicleEntry {
   turn: number;
   text: string;
-  kind: 'naissance' | 'deces' | 'succession' | 'guerre' | 'bataille' | 'titre' | 'mariage' | 'evenement' | 'intrigue' | 'divers';
+  kind:
+    | 'naissance'
+    | 'deces'
+    | 'succession'
+    | 'guerre'
+    | 'bataille'
+    | 'titre'
+    | 'mariage'
+    | 'evenement'
+    | 'intrigue'
+    | 'divers';
 }
 
 /** Instance d'événement en attente de choix. */
