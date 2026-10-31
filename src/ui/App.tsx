@@ -46,7 +46,23 @@ function TitleScreen() {
   const anySave = slots.some((s) => !s.empty);
   return (
     <div className="title-screen">
-      <h1>Lignées</h1>
+      <svg
+        viewBox="0 0 256 256"
+        width={120}
+        height={120}
+        style={{ margin: '0 auto 4px', display: 'block', color: 'var(--accent)' }}
+        aria-hidden
+      >
+        <g stroke="currentColor" strokeWidth="22" strokeLinecap="round" fill="none">
+          <path d="M128 178V102M128 178L90 112M128 178L166 112M78 196H178" />
+        </g>
+        <g fill="currentColor">
+          <circle cx="128" cy="70" r="14" />
+          <circle cx="74" cy="84" r="14" />
+          <circle cx="182" cy="84" r="14" />
+        </g>
+      </svg>
+      <h1 className="brand">Highborn</h1>
       <p className="center muted" style={{ marginBottom: 24 }}>
         Une dynastie, des vassaux, des batailles.
         <br />
@@ -288,7 +304,7 @@ function LongPressTitle({ onLong }: { onLong: () => void }) {
       onPointerUp={() => clearTimeout(t.current)}
       onPointerLeave={() => clearTimeout(t.current)}
     >
-      Lignées
+      Highborn
     </span>
   );
 }

@@ -12,16 +12,16 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Lignées',
-        short_name: 'Lignées',
+        name: 'Highborn',
+        short_name: 'Highborn',
         description: 'Jeu de dynastie médiévale et de bataille stratégique',
         lang: 'fr',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#1c1813',
-        theme_color: '#1c1813',
+        theme_color: '#8a2f24',
         start_url: base,
         scope: base,
         icons: [

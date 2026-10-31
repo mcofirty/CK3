@@ -1,4 +1,4 @@
-# CLAUDE.md — Lignées
+# CLAUDE.md — Highborn
 
 Jeu de dynastie et de bataille pour iPhone, en PWA statique (GitHub Pages). Spécification complète : `docs/cahier-des-charges.md` (à relire avant tout jalon).
 
@@ -34,7 +34,7 @@ Les scripts passent par `vite-node` (nécessaire pour `import.meta.glob` des év
 - Une nouvelle règle du moteur arrive avec son test Vitest, avant le branchement UI.
 - Ajouter un événement : un objet dans `src/data/events/*.json` (format dans `src/engine/events/README.md`). Aucun code.
 - Mobile d'abord : zones tactiles ≥ 44 px, texte ≥ 16 px, appui long pour les infobulles (`<Tip>`), zones sûres.
-- Écran de débogage : appui long sur « Lignées » dans la barre du haut.
+- Écran de débogage : appui long sur « Highborn » dans la barre du haut.
 
 ## Méthode de travail (section 15 du cahier)
 

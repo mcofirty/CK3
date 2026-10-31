@@ -1,4 +1,6 @@
-# Lignées
+<p align="center"><img src="design/logo/highborn-horizontal.svg" alt="Highborn" width="420"></p>
+
+# Highborn
 
 **Jeu de dynastie médiévale et de bataille stratégique pour iPhone** — application web progressive (PWA), jouée en solo, hébergée sur GitHub Pages et installable sur l'écran d'accueil, sans passer par l'App Store.
 
@@ -42,7 +44,7 @@ Incarnez un souverain, faites durer votre lignée sur environ 150 ans, tenez vos
 
 1. Ouvrir l'adresse GitHub Pages du jeu dans **Safari** (iOS 17 ou plus récent) : `https://mcofirty.github.io/CK3/`.
 2. Appuyer sur le bouton **Partager**, puis **Sur l'écran d'accueil**.
-3. Lancer **Lignées** depuis l'écran d'accueil : le jeu s'ouvre en plein écran et fonctionne ensuite hors ligne.
+3. Lancer **Highborn** depuis l'écran d'accueil : le jeu s'ouvre en plein écran et fonctionne ensuite hors ligne.
 
 ## Développement
 
@@ -62,7 +64,7 @@ npm run simulate     # simulation de 10 000 batailles IA contre IA (équilibrage
 
 Pour tester sur iPhone pendant le développement : `npm run dev -- --host`, puis ouvrir l'adresse réseau affichée depuis Safari sur le même Wi-Fi.
 
-Un **écran de débogage** caché s'ouvre par un appui long sur le titre « Lignées » dans la barre du haut : bataille de test, ajout d'or, avance de 10 ans.
+Un **écran de débogage** caché s'ouvre par un appui long sur le titre « Highborn » dans la barre du haut : bataille de test, ajout d'or, avance de 10 ans.
 
 ### Stack
 
@@ -193,6 +195,12 @@ Une seule fois, dans le repo GitHub : **Settings → Pages → Build and deploym
 ## Hors périmètre
 
 Multijoueur, serveur, compte, monétisation, App Store ; musique et sons ; religions et cultures multiples, hérésies, croisades ; carte de plus de 40 comtés, batailles navales ; tout contenu issu de jeux existants.
+
+## Identité visuelle
+
+- Symbole : l'arbre-couronne, trois branches qui sont aussi les fleurons d'une couronne (`design/logo/`).
+- Couleur principale : pourpre `#8A2F24`. Encre `#1C1813`, parchemin `#F3ECDC`, or `#C9A227` (accents), sauge `#5D7A4A` (succès).
+- Nom en lettres capitales espacées (Inter SemiBold, vectorisé). Les textes du jeu restent en français.
 
 ## Licence
 

@@ -671,3 +671,22 @@ p {
   border-radius: 12px;
   animation: up 0.2s;
 }
+
+/* Identité Highborn */
+.brand {
+  font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.title-screen h1.brand {
+  font-size: 36px;
+  color: var(--accent);
+}
+.topbar .title {
+  font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 14px;
+  color: var(--accent);
+}
