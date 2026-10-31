@@ -308,11 +308,13 @@ Poursuite : le perdant subit des pertes supplémentaires de 5 %, plus 40 % de la
 | Terrain | Effets |
 | --- | --- |
 | Plaine | Cavalerie : attaque ×1,2 |
-| Colline | Défenseur : défense ×1,25 et archers ×1,2 ; charges de l'attaquant ×0,85 |
+| Colline | Défenseur : défense ×1,15 et archers ×1,2 ; charges de l'attaquant ×0,85 |
 | Forêt | Cavalerie ×0,7, archers ×0,8 ; un défenseur avec Ruse ≥ 12 peut tendre une embuscade (-15 de moral à un front attaquant au round 1) |
 | Marais | Toutes les unités : attaque ×0,8 ; l'attaquant perd 5 de moral par round |
-| Montagne | Défenseur : défense ×1,4 ; cavalerie ×0,6 |
+| Montagne | Défenseur : défense ×1,2 ; cavalerie ×0,6 |
 | Rivière franchie | Attaquant : attaque ×0,7 aux rounds 1 et 2 |
+
+_Révision du 31 octobre 2026 : défense du défenseur ramenée de ×1,25 à ×1,15 (colline) et de ×1,4 à ×1,2 (montagne), à la suite du script d'équilibrage._
 
 Météo : en hiver, -10 de moral de départ pour tous. Hors été, 20 % de risque de pluie, qui réduit les archers à ×0,7.
 

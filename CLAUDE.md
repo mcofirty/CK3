@@ -42,4 +42,4 @@ Un jalon à la fois, plan court validé avant de coder, une branche par jalon, c
 
 ## État d'équilibrage connu
 
-`npm run simulate` : 4 cibles sur 6 tenues. L'avantage défensif du terrain dépasse la cible (colline ≈ +25 pts, montagne ≈ +27 pts pour +10 à +20). Proposition mesurée, non appliquée car ce sont des valeurs du cahier : défense du défenseur colline ×1,25 → ×1,15 et montagne ×1,4 → ×1,2 (`src/data/terrain.ts`).
+`npm run simulate` (10 000 batailles) : 4 cibles sur 6 tenues. Correction terrain appliquée le 31/10/2026 (colline ×1,25 → ×1,15, montagne ×1,4 → ×1,2) : l'avantage défensif passe de +25/+27 pts à environ +22 (colline) et +20 (montagne), encore un peu au-dessus de la cible +10 à +20. Piste : colline ×1,1 ou archers défenseurs ×1,1 (`src/data/terrain.ts`).
