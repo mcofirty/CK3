@@ -289,6 +289,9 @@
                 },
                 {
                   "opinion_vassaux": 10
+                },
+                {
+                  "drapeau": "invasion_repoussee"
                 }
               ],
               "defaite": [
@@ -329,6 +332,9 @@
                 },
                 {
                   "renommee": 40
+                },
+                {
+                  "drapeau": "invasion_repoussee"
                 }
               ],
               "defaite": [

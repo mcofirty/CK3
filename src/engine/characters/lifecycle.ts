@@ -262,6 +262,7 @@ export function succession(ctx: Ctx, id: string): void {
       state.gameOver = {
         reason: `La lignée s'éteint avec ${displayName(state, dead)} : aucun héritier titré.`,
         score: { renown: 0, titles: 0, years: 0, total: 0 },
+        ending: 'extinction',
       };
       chronicle(state, `Avec ${dead.name} s'éteint la lignée.`, 'succession');
       state.phase = 'fin';

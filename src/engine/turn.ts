@@ -8,6 +8,8 @@ import { autoFillCouncil, seasonCouncil } from './diplomacy';
 import { drawSeasonEvents } from './events/engine';
 import { seasonPlots } from './intrigue';
 import { seasonCourt } from './court';
+import { checkAchievements, computeEnding } from './endings';
+import { realmCounties } from './realm';
 import { seasonPlague } from './plague';
 import { seasonProgression } from './progression';
 import { applyEventBattle } from './war/eventBattle';
@@ -56,6 +58,7 @@ export function closeBattle(ctx: Ctx): void {
   else if (!debug) applyBattleResult(ctx, state.battle);
   state.battle = undefined;
   state.phase = 'saison';
+  checkAchievements(state);
   if (debug || event) return;
   if (startNextBattle(ctx)) return;
   continueSeason(ctx);
@@ -67,6 +70,12 @@ export function continueSeason(ctx: Ctx): void {
   seasonPlague(ctx);
   seasonLife(ctx);
   checkLandless(state);
+  if (state.stats && state.characters[state.playerId])
+    state.stats.maxCounties = Math.max(
+      state.stats.maxCounties,
+      realmCounties(state, state.playerId).length,
+    );
+  checkAchievements(state);
   if (state.gameOver) {
     finishGame(state);
     return;
@@ -141,12 +150,17 @@ function checkLandless(state: GameState): void {
   state.gameOver = {
     reason: 'Votre maison a perdu toutes ses terres : la dynastie n’a plus d’héritier titré.',
     score: lineageScore(state),
+    ending: 'ruine',
   };
 }
 
 function finishGame(state: GameState): void {
   if (!state.gameOver) return;
   state.gameOver.score = lineageScore(state);
+  state.gameOver.ending ??= computeEnding(state);
+  const cur = state.rulers?.find((r) => r.to === undefined);
+  if (cur) cur.to = state.turn;
+  checkAchievements(state);
   state.phase = 'fin';
   chronicle(state, state.gameOver.reason, 'succession');
 }
