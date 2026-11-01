@@ -27,6 +27,13 @@ import {
 import { killCharacter } from './characters/lifecycle';
 import { offerAmbition } from './court';
 import { takeDecision } from './decisions';
+import {
+  dismissCourtier,
+  inviteCandidate,
+  poachCourtier,
+  rallyPrisoner,
+  requestWard,
+} from './entourage';
 import { repayLoan, setConscription, setTax, setTaxAll, takeLoan, toggleEdict } from './economy';
 import { hireMercenaries } from './war/campaignExtras';
 import { addMemory } from './relations';
@@ -93,6 +100,12 @@ export type Action =
   | { type: 'takeDecision'; id: string }
   | { type: 'siegeMode'; armyId: string; mode?: 'blocus' | 'negocier' }
   | { type: 'hireMercenaries'; id: string }
+  | { type: 'inviteCandidate'; id: string }
+  | { type: 'dismissCourtier'; id: string }
+  | { type: 'rallyPrisoner'; id: string }
+  | { type: 'requestWard'; childId: string }
+  | { type: 'poachCourtier'; id: string }
+  | { type: 'setTreasury'; policy: 'prudent' | 'manuel' }
   | { type: 'setTax'; countyId: string; level: TaxLevel }
   | { type: 'setTaxAll'; level: TaxLevel }
   | { type: 'setConscription'; countyId: string; level: ConscriptionLevel }
@@ -398,6 +411,25 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'repayLoan':
       repayLoan(state, pl, a.loanId);
+      break;
+    case 'inviteCandidate':
+      inviteCandidate(ctx, a.id);
+      break;
+    case 'dismissCourtier':
+      if (dismissCourtier(ctx, a.id))
+        notify(state, `${state.characters[a.id]?.name} quitte votre cour.`);
+      break;
+    case 'rallyPrisoner':
+      rallyPrisoner(ctx, a.id);
+      break;
+    case 'requestWard':
+      requestWard(ctx, a.childId);
+      break;
+    case 'poachCourtier':
+      poachCourtier(ctx, a.id);
+      break;
+    case 'setTreasury':
+      state.treasury = a.policy;
       break;
     case 'hireMercenaries':
       hireMercenaries(ctx, pl, a.id);

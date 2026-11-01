@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "simulate": "vite-node scripts/simulate-battles.ts --",
     "generate-map": "vite-node scripts/generate-map.ts --",
-    "simulate-campaign": "vite-node scripts/simulate-campaign.ts --"
+    "simulate-campaign": "vite-node scripts/simulate-campaign.ts --",
+    "simulate-economy": "vite-node scripts/simulate-economy.ts --"
   },
   "dependencies": {
     "idb-keyval": "^6.2.1",

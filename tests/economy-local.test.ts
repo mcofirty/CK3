@@ -14,6 +14,7 @@ import { applyEffects, effectLabels } from '../src/engine/events/engine';
 import { economyOf } from '../src/engine/realm';
 import { Rng } from '../src/engine/rng';
 import { newGame } from '../src/engine/world';
+import { SAVE_VERSION } from '../src/engine/state';
 import { migrate } from '../src/save/migrations';
 import { clearEvents } from './helpers';
 
@@ -132,13 +133,13 @@ describe('Événements économiques', () => {
 });
 
 describe('Sauvegarde', () => {
-  it('une sauvegarde v3 passe en v4', () => {
+  it('une sauvegarde v3 passe à la version courante', () => {
     const s = newGame({ seed: 69 }) as unknown as Record<string, unknown>;
     s.version = 3;
     delete s.edicts;
     delete s.loans;
     const m = migrate(JSON.parse(JSON.stringify(s)));
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(SAVE_VERSION);
     expect(m.loans).toEqual([]);
     expect(m.edicts).toEqual({});
   });

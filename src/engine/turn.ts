@@ -9,6 +9,7 @@ import { drawSeasonEvents } from './events/engine';
 import { seasonPlots } from './intrigue';
 import { seasonCourt } from './court';
 import { seasonLocalEconomy } from './economy';
+import { seasonEntourage } from './entourage';
 import { checkAchievements, computeEnding } from './endings';
 import { realmCounties } from './realm';
 import { seasonPlague } from './plague';
@@ -109,6 +110,7 @@ export function startSeason(ctx: Ctx): void {
   seasonPlots(ctx);
   runAi(ctx);
   autoFillCouncil(state);
+  seasonEntourage(ctx);
   seasonCourt(ctx);
   drawSeasonEvents(ctx);
 }

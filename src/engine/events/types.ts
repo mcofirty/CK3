@@ -180,7 +180,17 @@ export interface Effect {
   /** Fixe les impôts du comté du rôle « comte ». */
   impots?: TaxLevel;
   /** Un enfant illégitime, ou un prétendant, rejoint la cour. */
-  nouveau_courtisan?: { age_min: number; age_max: number; guerre?: number; trait?: string };
+  nouveau_courtisan?: {
+    age_min: number;
+    age_max: number;
+    guerre?: number;
+    trait?: string;
+    /** Compétence mise en avant. */
+    competence?: { competence: SkillKey; valeur: number };
+    femme?: boolean;
+    /** Un enfant confié à la cour (pupille) plutôt qu'un adulte. */
+    pupille?: boolean;
+  };
   // --- Effets internes (propositions générées par le moteur) ---
   ambition?: string;
   mariage?: { a: string; b: string };
@@ -188,6 +198,8 @@ export interface Effect {
   paix?: { warId: string; issue: 'attaquant' | 'defenseur' | 'blanche' };
   rejoindre_guerre?: { warId: string; allie: string; camp: 'attaquant' | 'defenseur' };
   tribut?: { de: string; a: string; montant: number };
+  /** Avenir d'un pupille devenu adulte. */
+  pupille?: { id: string; action: 'retour' | 'garder' };
   /** Rend un otage contre de l'or. */
   rendre_otage?: { otage: string; montant: number };
 }
@@ -235,7 +247,8 @@ export interface EventDef {
     | 'saisons'
     | 'decisions'
     | 'chroniques'
-    | 'economie';
+    | 'economie'
+    | 'arrivees';
   declencheur: Trigger;
   conditions?: Condition[];
   poids?: number;

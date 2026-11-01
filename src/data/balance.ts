@@ -275,6 +275,8 @@ export const BALANCE = {
     debtThreshold: -100,
     debtOpinion: -1,
     titleBaseSlots: { min: 2, max: 3 },
+    /** Revenu net minimal d'un souverain au départ : les compagnies de trop sont retirées. */
+    startNetFloor: 4,
   },
 
   /** Économie locale : impôts, contentement, conscription, emprunts. */
@@ -313,6 +315,73 @@ export const BALANCE = {
     /** IA : impôts élevés si le trésor est sous la réserve et le peuple content. */
     aiRaiseTaxContentment: 55,
     aiLowerTaxContentment: 35,
+  },
+
+  /** Cour : capacité, salaires, recrutement. */
+  entourage: {
+    /** Courtisans extérieurs sans salaire : base + rang + Gestion/gestionPerSlot. */
+    freeBase: 4,
+    freeRank: { aucun: 0, comte: 0, duc: 1, roi: 3 },
+    gestionPerSlot: 6,
+    /** Salaire par saison : wageBase + wagePerSkill × meilleure compétence. */
+    wageBase: 0.8,
+    wagePerSkill: 0.12,
+    /** Prime d'engagement : feeBase + feePerSkill × meilleure compétence. */
+    feeBase: 15,
+    feePerSkill: 4,
+    candidates: { base: 3, perPrestige: 400, max: 5, expireSeasons: 4 },
+    /** Acceptation d'un candidat. */
+    accept: {
+      base: 20,
+      prestigeDiv: 25,
+      prestigeCap: 15,
+      diploPerPoint: 1.5,
+      fameFrom: 13,
+      famePerPoint: 7,
+    },
+    /** Départ d'un courtisan congédié ou impayé. */
+    leaveOpinion: -5,
+    arrearsOpinion: -8,
+    /** Rallier un prisonnier : prime et chances. */
+    rally: { fee: 40, base: 15, opinionFactor: 0.35, failOpinion: -10, formerLordOpinion: -15 },
+    /** Pupilles. */
+    ward: {
+      base: -8,
+      opinionFactor: 0.7,
+      prestigeDiv: 40,
+      prestigeCap: 10,
+      vassalOpinion: 10,
+      returnOpinion: 15,
+      keepOpinion: -8,
+      keepLoyalty: 25,
+    },
+    /** Débauchage. */
+    poach: {
+      base: -25,
+      opinionFactor: 0.5,
+      prestigeDiv: 30,
+      prestigeCap: 15,
+      diploPerPoint: 1.5,
+      councilPenalty: 15,
+      allyPenalty: 20,
+      friendPenalty: 15,
+      ambitieux: 10,
+      avare: 8,
+      lache: 5,
+      lordOpinion: -25,
+      lordOpinionSeasons: 20,
+      failLordOpinion: -8,
+      failPrestige: -5,
+    },
+  },
+
+  /** Trésorier : politique de trésorerie du joueur. */
+  treasury: {
+    /** Réserve visée : on agit si l'or prévu à la saison suivante passe sous ce seuil. */
+    reserve: 0,
+    /** Comtés dont les impôts montent d'un cran par saison (à contentement suffisant). */
+    taxStepCounties: 3,
+    taxMinContentment: 60,
   },
 
   realm: {

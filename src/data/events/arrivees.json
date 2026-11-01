@@ -1,0 +1,667 @@
+[
+  {
+    "id": "arr_chevalier",
+    "titre": "Un chevalier errant",
+    "texte": [
+      "Un cavalier couvert de poussière se présente aux portes : un chevalier sans seigneur, l'épée au côté, qui demande l'hospitalité pour la nuit.",
+      "Un chevalier d'âge mûr, son armure rapiécée, sollicite l'honneur de dîner à votre table. On le dit excellent lance."
+    ],
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "L'accueillir et lui offrir une place à la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 22,
+              "age_max": 42,
+              "competence": {
+                "competence": "guerre",
+                "valeur": 5
+              },
+              "trait": "courageux"
+            }
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Le mettre à l'épreuve dans la lice.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "nouveau_courtisan": {
+                    "age_min": 22,
+                    "age_max": 42,
+                    "competence": {
+                      "competence": "guerre",
+                      "valeur": 6
+                    },
+                    "trait": "soldat"
+                  }
+                },
+                {
+                  "prestige": 25
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -10
+                },
+                {
+                  "sante": -5
+                }
+              ],
+              "texte_succes": "Il vous désarçonne avec courtoisie, et jure fidélité.",
+              "texte_echec": "Vous êtes jeté à terre, et il repart sans un mot."
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "age_max": 55
+          }
+        ]
+      },
+      {
+        "libelle": "Lui offrir un repas et le laisser reprendre sa route.",
+        "effets": [
+          {
+            "or": -10
+          },
+          {
+            "piete": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_lettre",
+    "titre": "Un lettré aux portes",
+    "texte": "Un homme maigre, une caisse de manuscrits sur le dos, cherche un protecteur : il écrit, calcule, traduit trois langues, et n'a jamais trouvé de maître qui l'écoute.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "Lui offrir un bureau à la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 25,
+              "age_max": 55,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 5
+              },
+              "trait": "lettre"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui commander une chronique de la maison.",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "renommee": 25
+          },
+          {
+            "nouveau_courtisan": {
+              "age_min": 25,
+              "age_max": 55,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 4
+              },
+              "trait": "erudit"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 30
+          }
+        ]
+      },
+      {
+        "libelle": "L'orienter vers le monastère voisin.",
+        "effets": [
+          {
+            "piete": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_marchand",
+    "titre": "Un marchand ruiné",
+    "texte": "Un marchand d'une cité lointaine, ruiné par un naufrage, vous supplie de l'employer : il sait tenir des comptes comme personne et connaît les prix de chaque marché.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "L'engager comme intendant de la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 30,
+              "age_max": 55,
+              "competence": {
+                "competence": "gestion",
+                "valeur": 5
+              },
+              "trait": "econome"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Lui prêter de l'or pour qu'il se relève (60 or).",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "or": 140
+                },
+                {
+                  "prestige": 10
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -5
+                }
+              ],
+              "texte_succes": "Il vous rembourse avec de généreux intérêts.",
+              "texte_echec": "Il disparaît avec l'argent."
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 60
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : on n'a pas d'or à perdre.",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "id": "arr_clerc",
+    "titre": "Un clerc exilé",
+    "texte": "Un clerc en robe usée, banni de {etranger} pour avoir écrit contre les puissants, demande asile et l'honneur de servir votre maison.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "L'accueillir : la maison abritera les proscrits.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 28,
+              "age_max": 60,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 4
+              },
+              "trait": "erudit"
+            }
+          },
+          {
+            "piete": 20
+          },
+          {
+            "stress": {
+              "juste": -5
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le cacher aux émissaires qui le cherchent.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 28,
+              "age_max": 60,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 4
+              },
+              "trait": "lettre"
+            }
+          },
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [
+                {
+                  "prestige": 15
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -20
+                }
+              ],
+              "texte_succes": "Les émissaires repartent bredouilles.",
+              "texte_echec": "Ils découvrent le clerc et s'indignent de votre accueil."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer : on ne se brouille pas pour un clerc.",
+        "effets": [
+          {
+            "prestige": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_menestrel",
+    "titre": "Un ménestrel de renom",
+    "texte": "Un ménestrel célèbre dans toutes les cours des Marches s'arrête chez vous le temps d'une veillée. Il est las des routes et songe à se fixer.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 6,
+    "delai_retour": 20,
+    "choix": [
+      {
+        "libelle": "Lui proposer de rester à la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 20,
+              "age_max": 45,
+              "competence": {
+                "competence": "diplomatie",
+                "valeur": 5
+              },
+              "trait": "courtois"
+            }
+          },
+          {
+            "prestige": 15
+          }
+        ]
+      },
+      {
+        "libelle": "L'écouter chanter, et le combler de présents (40 or).",
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "prestige": 40
+          },
+          {
+            "stress": -15
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ]
+      },
+      {
+        "libelle": "Lui laisser reprendre la route.",
+        "effets": [
+          {
+            "stress": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_espionne",
+    "titre": "Une espionne repentie",
+    "texte": "Une femme se présente seule, un soir, et avoue : elle espionnait votre cour pour un rival. Elle est lasse de mentir, et vous offre ce qu'elle sait.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 3,
+    "delai_retour": 40,
+    "choix": [
+      {
+        "libelle": "L'engager : elle connaît les secrets de tous.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 24,
+              "age_max": 45,
+              "competence": {
+                "competence": "ruse",
+                "valeur": 6
+              },
+              "trait": "intrigant",
+              "femme": true
+            }
+          },
+          {
+            "prestige": -5
+          }
+        ]
+      },
+      {
+        "libelle": "L'interroger sur son ancien maître.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.6,
+              "succes": [
+                {
+                  "nouveau_courtisan": {
+                    "age_min": 24,
+                    "age_max": 45,
+                    "competence": {
+                      "competence": "ruse",
+                      "valeur": 5
+                    },
+                    "trait": "intrigant",
+                    "femme": true
+                  }
+                },
+                {
+                  "xp": {
+                    "competence": "ruse",
+                    "valeur": 40
+                  }
+                }
+              ],
+              "echec": [
+                {
+                  "stress": 10
+                }
+              ],
+              "texte_succes": "Elle vous livre les noms des agents infiltrés.",
+              "texte_echec": "Elle se tait, puis s'évanouit dans la nuit."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "La faire chasser du château.",
+        "effets": [
+          {
+            "prestige": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_dame",
+    "titre": "Une dame sans maison",
+    "texte": "La dernière héritière d'une maison éteinte, ruinée mais d'excellente éducation, cherche une cour qui l'accueille. Les nobles la connaissent et la respectent.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 5,
+    "delai_retour": 24,
+    "choix": [
+      {
+        "libelle": "L'accueillir comme dame de compagnie.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 18,
+              "age_max": 38,
+              "competence": {
+                "competence": "diplomatie",
+                "valeur": 4
+              },
+              "trait": "courtois",
+              "femme": true
+            }
+          },
+          {
+            "renommee": 10
+          }
+        ]
+      },
+      {
+        "libelle": "L'aider à trouver un mari (50 or).",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "prestige": 20
+          },
+          {
+            "piete": 15
+          }
+        ],
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ]
+      },
+      {
+        "libelle": "La recommander à un autre seigneur.",
+        "effets": [
+          {
+            "opinion_vassaux": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_deserteur",
+    "titre": "Un capitaine déserteur",
+    "texte": "Un capitaine de l'armée d'un seigneur voisin a déserté, écœuré par la cruauté de son maître. Il offre son épée et ses secrets.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "L'engager comme capitaine.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 28,
+              "age_max": 50,
+              "competence": {
+                "competence": "guerre",
+                "valeur": 5
+              },
+              "trait": "capitaine"
+            }
+          },
+          {
+            "stress": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Le livrer à son ancien maître.",
+        "effets": [
+          {
+            "or": 60
+          },
+          {
+            "prestige": -10
+          }
+        ]
+      },
+      {
+        "libelle": "L'accueillir quelques jours, puis l'éconduire.",
+        "effets": [
+          {
+            "piete": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_orphelin",
+    "titre": "Un orphelin doué",
+    "texte": "Un jeune orphelin au regard vif, fils d'un petit écuyer mort à la guerre, est confié à votre cour par un moine qui jure qu'il a l'étoffe d'un grand.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "L'élever à la cour : un pupille de plus.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 8,
+              "age_max": 12,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 3
+              },
+              "pupille": true
+            }
+          },
+          {
+            "piete": 15
+          }
+        ]
+      },
+      {
+        "libelle": "Le placer en apprentissage chez le maître d'armes.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 8,
+              "age_max": 12,
+              "competence": {
+                "competence": "guerre",
+                "valeur": 3
+              },
+              "pupille": true
+            }
+          },
+          {
+            "prestige": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Le confier à l'abbaye.",
+        "effets": [
+          {
+            "piete": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arr_medecin",
+    "titre": "Un médecin de {etranger}",
+    "texte": "Un médecin venu de {etranger}, aux remèdes étranges, propose ses services à la cour. Ses pratiques surprennent, mais on lui prête des guérisons miraculeuses.",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "poids": 4,
+    "delai_retour": 30,
+    "choix": [
+      {
+        "libelle": "L'engager comme médecin de la cour.",
+        "effets": [
+          {
+            "nouveau_courtisan": {
+              "age_min": 30,
+              "age_max": 60,
+              "competence": {
+                "competence": "savoir",
+                "valeur": 4
+              },
+              "trait": "erudit"
+            }
+          },
+          {
+            "sante": 8
+          }
+        ]
+      },
+      {
+        "libelle": "L'essayer sur un domestique d'abord.",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.7,
+              "succes": [
+                {
+                  "nouveau_courtisan": {
+                    "age_min": 30,
+                    "age_max": 60,
+                    "competence": {
+                      "competence": "savoir",
+                      "valeur": 4
+                    },
+                    "trait": "lettre"
+                  }
+                },
+                {
+                  "sante": 10
+                }
+              ],
+              "echec": [
+                {
+                  "piete": -10
+                }
+              ],
+              "texte_succes": "La cure fait merveille : on le garde.",
+              "texte_echec": "La cure échoue, et le médecin est prié de partir."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser : l'Église désapprouve ces pratiques.",
+        "effets": [
+          {
+            "piete": 15
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -7,6 +7,8 @@ import { emptyStats, recordRuler, type Ctx } from './context';
 import { offerAmbition } from './court';
 import { ALL_EVENTS } from '../data/events';
 import { autoFillCouncil } from './diplomacy';
+import { generateCandidates } from './entourage';
+import { UNIT_TYPES, UNITS } from '../data/units';
 import { generateMap, type MapData } from './mapgen';
 import { economyOf, countyMaxLevies, countyRuler } from './realm';
 import { Rng } from './rng';
@@ -83,6 +85,8 @@ export function emptyState(seed: number, difficulty: Difficulty): GameState {
     rulers: [],
     achievements: [],
     stats: emptyStats(),
+    candidates: [],
+    treasury: 'prudent',
   };
 }
 
@@ -255,6 +259,12 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   });
 
   for (const c of Object.values(state.counties)) c.levyPool = countyMaxLevies(c);
+  // Les compagnies de départ ne doivent pas ruiner leur seigneur : on retire les plus chères
+  // jusqu'à ce que le revenu net soit positif (un peu négatif pour une origine guerrière).
+  for (const id of Object.keys(state.standing)) {
+    const floor = id === state.playerId && origin.troupes ? -4 : BALANCE.economy.startNetFloor;
+    trimStanding(state, id, floor);
+  }
 
   // Revendications de départ du joueur sur des comtés voisins.
   const pl = state.characters[state.playerId];
@@ -310,6 +320,7 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     },
   });
   recordRuler(state, state.playerId);
+  generateCandidates(ctx);
   offerAmbition(ctx);
   state.rng = rng.s;
   return state;
@@ -448,4 +459,18 @@ function dist(a: County, b: County, map: MapData): number {
   const pa = map.counties.find((c) => c.id === a.id)!;
   const pb = map.counties.find((c) => c.id === b.id)!;
   return Math.hypot(pa.x - pb.x, pa.y - pb.y);
+}
+
+/** Retire des compagnies (les plus chères d'abord) jusqu'à un revenu net suffisant. */
+function trimStanding(state: GameState, id: string, floor: number): void {
+  const st = state.standing[id];
+  if (!st) return;
+  let guard = 0;
+  while (economyOf(state, id).goldNet < floor && guard++ < 60) {
+    const pick = [...UNIT_TYPES]
+      .filter((u) => st[u] >= 100)
+      .sort((a, b) => UNITS[b].upkeep - UNITS[a].upkeep)[0];
+    if (!pick) break;
+    st[pick] -= 100;
+  }
 }

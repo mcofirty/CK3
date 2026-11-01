@@ -92,6 +92,12 @@ export interface Character {
   hostageHome?: string;
   /** Une ambition a déjà été proposée à ce souverain. */
   ambitionOffered?: boolean;
+  /** Candidat de passage : personne n'est son seigneur tant qu'il n'est pas engagé. */
+  visitor?: boolean;
+  /** Pupille : enfant confié à la cour de ce souverain. */
+  fosterOf?: string;
+  /** Une tentative pour rallier ce prisonnier a déjà eu lieu. */
+  rallyTried?: boolean;
 }
 
 export interface AmbitionState {
@@ -360,6 +366,21 @@ export interface GameState {
   edictCooldown?: Record<string, number>;
   /** Emprunts en cours. */
   loans?: Loan[];
+  /** Candidats de passage à la cour du joueur. */
+  candidates?: Candidate[];
+  /** Politique de trésorerie du joueur : le trésorier évite le rouge, ou non. */
+  treasury?: 'prudent' | 'manuel';
+}
+
+export interface Candidate {
+  id: string;
+  /** Prime d'engagement (or). */
+  fee: number;
+  /** Profil (« Chevalier errant »…) et provenance. */
+  profile: string;
+  origin: string;
+  /** Tour d'expiration. */
+  until: number;
 }
 
 export interface Loan {
@@ -418,4 +439,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;

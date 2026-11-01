@@ -53,6 +53,13 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     ...s,
     version: 4,
   }),
+  // Version 4 → 5 : cour (candidats, pupilles, salaires) et trésorier.
+  4: (s) => ({
+    candidates: [],
+    treasury: 'prudent',
+    ...s,
+    version: 5,
+  }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

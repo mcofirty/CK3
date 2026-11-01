@@ -264,6 +264,14 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
     }
     if (isOverDemesne(state, toId)) push('Domaine propre trop étendu', O.overDemesne);
   }
+  // Un seigneur dont l'enfant grandit à la cour de son suzerain y est attaché.
+  if (
+    from.liegeId === toId &&
+    from.childrenIds.some(
+      (k) => state.characters[k]?.alive && state.characters[k].fosterOf === toId,
+    )
+  )
+    push('Enfant confié à votre cour', BALANCE.entourage.ward.vassalOpinion);
   if (from.spouseId === toId) push('Conjoint', O.spouse);
   else if (isCloseFamily(state, from, to)) push('Famille', O.family);
   if (from.friends.includes(toId)) push('Ami', O.friend);

@@ -15,6 +15,11 @@ const arg = (k: string) => {
 const map = generateMap(new Rng(Number(arg('seed') ?? 1066)));
 const out = arg('out') ?? new URL('../src/data/map.json', import.meta.url);
 writeFileSync(out, JSON.stringify(map));
-const terrains = map.counties.reduce<Record<string, number>>((m, c) => ((m[c.terrain] = (m[c.terrain] ?? 0) + 1), m), {});
-console.log(`Carte : ${map.counties.length} comtés, ${map.duchies.length} duchés, ${map.rivers.length} tronçons de rivière`);
+const terrains = map.counties.reduce<Record<string, number>>(
+  (m, c) => ((m[c.terrain] = (m[c.terrain] ?? 0) + 1), m),
+  {},
+);
+console.log(
+  `Carte : ${map.counties.length} comtés, ${map.duchies.length} duchés, ${map.rivers.length} tronçons de rivière`,
+);
 console.log('Domaines :', map.realms.map((r) => r.length).join(', '), '· terrains :', terrains);

@@ -24,6 +24,7 @@ import { giveBirth, heirsOf, killCharacter } from '../characters/lifecycle';
 import { ambitionStatus, startAmbition } from '../ambitions';
 import { coastalCounties, foreignKingdoms } from '../geo';
 import { contentmentOf, TAX_LABELS } from '../economy/local';
+import { settleWard } from '../entourage';
 import { playerRealmPlagued, startPlague } from '../plague';
 import { gainXp } from '../progression';
 import {
@@ -526,7 +527,14 @@ export function effectLabels(
       out.push(
         `⚔️ Bataille contre ${renderText(state, e.bataille.ennemi, scope)} (force ×${String(e.bataille.force).replace('.', ',')})`,
       );
-    if (e.nouveau_courtisan) out.push('Un nouveau venu rejoint la cour');
+    if (e.nouveau_courtisan)
+      out.push(
+        e.nouveau_courtisan.pupille
+          ? 'Un enfant est confié à votre cour'
+          : 'Un nouveau venu rejoint la cour (salaire au-delà des places gratuites)',
+      );
+    if (e.pupille)
+      out.push(e.pupille.action === 'retour' ? 'Il retourne chez les siens' : 'Il reste à la cour');
     if (e.contentement)
       out.push(
         `Contentement${scope.comte ? ` de ${name('comte')}` : ' du domaine'} : ${sign(e.contentement)}`,
@@ -749,14 +757,26 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       const n = e.nouveau_courtisan;
       const c = createCharacter(ctx, {
         age: rng.int(n.age_min, n.age_max),
+        female: n.femme,
         dynastyId: null,
         courtId: p.id,
         skillBase: 7,
       });
-      if (n.trait) c.traits = [...c.traits.filter((t) => t !== n.trait), n.trait];
+      if (n.trait) addTrait(c, n.trait);
       if (n.guerre) c.skills.guerre = clamp(c.skills.guerre + n.guerre, 0, 20);
-      notify(state, `${c.name} rejoint votre cour.`);
+      if (n.competence)
+        c.skills[n.competence.competence] = clamp(
+          c.skills[n.competence.competence] + n.competence.valeur,
+          0,
+          20,
+        );
+      if (n.pupille) c.fosterOf = p.id;
+      notify(
+        state,
+        n.pupille ? `${c.name} grandit désormais à votre cour.` : `${c.name} rejoint votre cour.`,
+      );
     }
+    if (e.pupille) settleWard(state, e.pupille.id, e.pupille.action);
     if (e.ambition) {
       startAmbition(state, p, e.ambition);
       const st = ambitionStatus(state, p);

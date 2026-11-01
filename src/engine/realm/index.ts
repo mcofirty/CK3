@@ -4,6 +4,7 @@ import { BUILDINGS } from '../../data/buildings';
 import { TRAITS } from '../../data/traits';
 import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } from '../characters';
 import { gainXp, record } from '../progression';
+import { courtPayroll } from '../entourage/roster';
 import { countyDevMult, countyIncomeMult, countyLevyMult, edictSum } from '../economy/local';
 import { chronicle, clamp, notify, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
@@ -247,6 +248,11 @@ export function economyOf(state: GameState, id: string): Economy {
   const armies = Object.values(state.armies).filter((a) => a.ownerId === id);
   const up = armies.reduce((s, a) => s + armyUpkeep(a.men), 0);
   if (up) gold.push({ label: 'Armées en campagne', value: -up });
+  // Salaires de la cour (joueur) au-delà des places gratuites.
+  if (id === state.playerId) {
+    const payroll = courtPayroll(state, id);
+    if (payroll.total) gold.push({ label: 'Salaires de la cour', value: -payroll.total });
+  }
   // Édits et emprunts.
   const edictUpkeep = edictSum(state, id, 'upkeep');
   if (edictUpkeep) gold.push({ label: 'Édits : entretien', value: -edictUpkeep });

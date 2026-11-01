@@ -64,6 +64,7 @@ export function marriageBlock(state: GameState, a: Character, b: Character): str
   if (!isAdult(state, a) || !isAdult(state, b)) return 'Trop jeune';
   if (a.dynastyId && a.dynastyId === b.dynastyId) return 'Même dynastie';
   if (a.imprisonedBy || b.imprisonedBy) return 'Prisonnier';
+  if (a.visitor || b.visitor) return 'De passage';
   return undefined;
 }
 
@@ -445,6 +446,9 @@ export function wards(state: GameState): Character[] {
   for (const f of fam)
     for (const k of livingChildren(state, f))
       if (!isAdult(state, k) && k.dynastyId === state.playerDynastyId) kids.set(k.id, k);
+  // Pupilles confiés par les vassaux : le joueur les fait éduquer aussi.
+  for (const k of Object.values(state.characters))
+    if (k.alive && k.fosterOf === state.playerId && !isAdult(state, k)) kids.set(k.id, k);
   return [...kids.values()].sort((a, b) => a.birthTurn - b.birthTurn);
 }
 
