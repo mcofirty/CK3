@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { atWar } from '../../engine/characters';
 import { contentmentOf } from '../../engine/economy/local';
-import { Rng } from '../../engine/rng';
 import {
   capitalOf,
   countyRuler,
@@ -14,50 +13,33 @@ import type { GameState } from '../../engine/state';
 import { totalMen } from '../../engine/units';
 import type { MapData } from '../../engine/mapgen';
 import { MapSymbols, decorFor } from './MapArt';
+import { houseColorOf } from '../../engine/heraldry';
 
 // ---------------------------------------------------------------------------
-// Couleurs des royaumes : une couleur distincte par souverain indépendant
+// Couleurs des royaumes : celle de la maison du souverain (blason, fond des portraits)
 // ---------------------------------------------------------------------------
 
-export const PLAYER_COLOR = '#b4473a';
-const REALM_PALETTE = [
-  '#4f7fb5',
-  '#5d9a55',
-  '#9a6fb0',
-  '#d39a3a',
-  '#3f9e9a',
-  '#8a9450',
-  '#b8737f',
-  '#6f7d8f',
-];
+const NO_HOUSE = '#8c8c8c';
 
-/** Attribue à chaque souverain une couleur stable (graine de dynastie) et sans doublon. */
+/** Couleur de la maison d'un personnage (gris s'il n'en a pas). */
+export function characterColor(game: GameState, id: string): string {
+  const dyn = game.characters[id]?.dynastyId;
+  const d = dyn ? game.dynasties[dyn] : undefined;
+  return d ? houseColorOf(d) : NO_HOUSE;
+}
+
+/** Couleur du domaine du joueur. */
+export const playerColor = (game: GameState): string => characterColor(game, game.playerId);
+
+/** Chaque souverain indépendant prend la couleur de sa maison, unique par maison. */
 export function realmColors(game: GameState): Map<string, string> {
   const res = new Map<string, string>();
-  const used = new Set<string>();
-  const rulers = independentRulers(game).sort((a, b) => {
-    const da = game.characters[a]?.dynastyId ?? a;
-    const db = game.characters[b]?.dynastyId ?? b;
-    return da.localeCompare(db);
-  });
-  for (const r of rulers) {
-    if (r === game.playerId) {
-      res.set(r, PLAYER_COLOR);
-      continue;
-    }
-    const dyn = game.characters[r]?.dynastyId;
-    const seed = dyn ? (game.dynasties[dyn]?.seed ?? 7) : 7;
-    let i = new Rng(seed).int(0, REALM_PALETTE.length - 1);
-    for (let k = 0; k < REALM_PALETTE.length && used.has(REALM_PALETTE[i]); k++)
-      i = (i + 1) % REALM_PALETTE.length;
-    used.add(REALM_PALETTE[i]);
-    res.set(r, REALM_PALETTE[i]);
-  }
+  for (const r of independentRulers(game)) res.set(r, characterColor(game, r));
   return res;
 }
 
 export function realmColor(game: GameState, rulerId: string): string {
-  return realmColors(game).get(rulerId) ?? '#8c8c8c';
+  return characterColor(game, rulerId);
 }
 
 /** Effectif visible d'une armée : exact près de vos troupes et forts, estimé au-delà. */
@@ -751,7 +733,7 @@ export function MapView({
             const vis = visibleMen(game, id);
             const x = m.x + (i - (ids.length - 1) / 2) * 76;
             const y = m.y + 44;
-            const col = mine ? PLAYER_COLOR : (colors.get(a.ownerId) ?? '#666');
+            const col = colors.get(a.ownerId) ?? characterColor(game, a.ownerId);
             const label = vis.exact
               ? vis.men >= 1000
                 ? `${(vis.men / 1000).toFixed(1)}k`
@@ -771,8 +753,8 @@ export function MapView({
                   height={30}
                   rx={8}
                   fill="#f1e4c3"
-                  stroke={hostile ? '#a3261c' : '#3b2a1a'}
-                  strokeWidth={hostile ? 3.5 : 2}
+                  stroke={hostile ? '#a3261c' : mine ? '#b8860b' : '#3b2a1a'}
+                  strokeWidth={hostile || mine ? 3.5 : 2}
                 />
                 <path
                   d="M-28 -10 h16 v9 c0 6 -8 9 -8 9 c0 0 -8 -3 -8 -9 z"

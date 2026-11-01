@@ -10,7 +10,7 @@ import type { GameState } from '../../engine/state';
 import { useState } from 'react';
 import { CharLine, CountyLink, Opinion, Segmented, usePager } from '../components/common';
 import { EconomyView } from '../components/Economy';
-import { MapView, PLAYER_COLOR } from '../components/MapView';
+import { MapView, playerColor } from '../components/MapView';
 import { useStore } from '../store';
 
 const REALM_VIEWS = ['carte', 'economie'] as const;
@@ -53,7 +53,7 @@ function MapAndRealm({ game }: { game: GameState }) {
       />
       <div className="card">
         <div className="row">
-          <span className="swatch lg" style={{ background: PLAYER_COLOR }} />
+          <span className="swatch lg" style={{ background: playerColor(game) }} />
           <h3 className="grow" style={{ margin: 0 }}>
             {realmName(game, pl)}
           </h3>
