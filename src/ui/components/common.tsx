@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { HOUSE_COLORS } from '../../data/heraldry';
 import { TRAITS } from '../../data/traits';
 import { ageOf, displayName, opinionOf, skillsOf } from '../../engine/characters';
+import { houseColorIndex } from '../../engine/heraldry';
 import { Rng } from '../../engine/rng';
-import { SKILL_KEYS, SKILL_LABELS, type Character, type GameState } from '../../engine/state';
+import {
+  SKILL_KEYS,
+  SKILL_LABELS,
+  type Character,
+  type Dynasty,
+  type GameState,
+} from '../../engine/state';
 import { useStore } from '../store';
 
 // ---------------------------------------------------------------------------
@@ -492,28 +500,36 @@ export function Opinion({ state, from, to }: { state: GameState; from: string; t
 // Blasons et portraits procéduraux
 // ---------------------------------------------------------------------------
 
-const TINCTURES = [
-  '#b3261e',
-  '#1f4e8c',
-  '#2f6b2f',
-  '#5b2a7a',
-  '#1b1b1b',
-  '#c99a1d',
-  '#e8e2d0',
-  '#a4581c',
-];
 const METALS = ['#d9b23a', '#ece6d6'];
-const FIELDS = TINCTURES.slice(0, 6);
-
-/** Couleur d'une maison : celle du champ de son blason (premier tirage de la graine). */
-export function houseColor(seed: number): string {
-  return new Rng(seed).pick(FIELDS);
+const FIELDS: readonly string[] = HOUSE_COLORS.map((c) => c.hex);
+/** Assombrit une couleur (vêtements assortis à la maison). */
+function darken(hex: string, k: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (s: number) => Math.round(((n >> s) & 255) * (1 - k));
+  return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
 }
 
-export function CoatOfArms({ seed, size = 40 }: { seed: number; size?: number }) {
+/** Couleur d'une maison : celle du champ de son blason. */
+export function houseColor(d: Pick<Dynasty, 'seed' | 'color'>): string {
+  return FIELDS[houseColorIndex(d)];
+}
+
+export function CoatOfArms({
+  seed,
+  color,
+  size = 40,
+}: {
+  seed: number;
+  /** Couleur attribuée à la maison (sinon tirée de la graine). */
+  color?: number;
+  size?: number;
+}) {
   const r = new Rng(seed);
-  const field = r.pick(FIELDS);
-  const metal = r.pick(METALS);
+  const drawnField = r.pick(FIELDS);
+  const field = color !== undefined && FIELDS[color] ? FIELDS[color] : drawnField;
+  // Sur un champ d'or, la pièce est d'argent (sinon elle se confond).
+  const drawn = r.pick(METALS);
+  const metal = field === '#c99a1d' ? METALS[1] : drawn;
   const div = r.int(0, 5);
   const charge = r.int(0, 4);
   const shield = 'M5 4 H55 V30 C55 50 40 60 30 66 C20 60 5 50 5 30 Z';
@@ -593,8 +609,8 @@ export function Portrait({
   const eye = r.pick(EYES);
   const dyn = c.dynastyId ? state.dynasties[c.dynastyId] : undefined;
   // Fond = couleur de la maison (champ du blason), vêtements assortis.
-  const bg = dyn ? houseColor(dyn.seed) : '#6f6458';
-  const garment = dyn ? GARMENTS[FIELDS.indexOf(bg) % GARMENTS.length] : r.pick(GARMENTS);
+  const bg = dyn ? houseColor(dyn) : '#6f6458';
+  const garment = dyn ? darken(bg, bg === '#1b1b1b' ? -0.6 : 0.3) : r.pick(GARMENTS);
   const rank = rankOfChar(state, c.id);
   const child = age < 16;
   const sick = c.traits.includes('malade');

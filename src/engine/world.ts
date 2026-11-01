@@ -10,7 +10,14 @@ import { autoFillCouncil } from './diplomacy';
 import { generateCandidates } from './entourage';
 import { UNIT_TYPES, UNITS } from '../data/units';
 import { generateMap, type MapData } from './mapgen';
-import { economyOf, countyMaxLevies, countyRuler, ensureCapitals } from './realm';
+import {
+  economyOf,
+  countyMaxLevies,
+  countyRuler,
+  ensureCapitals,
+  independentRulers,
+} from './realm';
+import { assignHouseColors } from './heraldry';
 import { Rng } from './rng';
 import {
   SAVE_VERSION,
@@ -297,6 +304,13 @@ export function newGame(opts: NewGameOptions = {}): GameState {
 
   applyOriginWorld(ctx, origin, border);
   worldTwists(ctx);
+
+  // Couleurs de maison : distinctes pour les souverains (générateur à part, pour ne pas
+  // modifier le reste de la partie).
+  const rulerHouses = [state.playerId, ...independentRulers(state)]
+    .map((id) => state.characters[id]?.dynastyId)
+    .filter((d): d is string => !!d);
+  assignHouseColors(state, [...new Set(rulerHouses)], new Rng(seed ^ 0x5eed));
 
   autoFillCouncil(state);
   // Le chancelier cultive d'emblée un voisin.

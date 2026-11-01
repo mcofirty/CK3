@@ -130,6 +130,8 @@ export interface Dynasty {
   legacies?: string[];
   /** Renommée déjà dépensée (la renommée totale compte pour le score). */
   renownSpent?: number;
+  /** Couleur de la maison (index dans data/heraldry) ; sinon tirée de la graine. */
+  color?: number;
 }
 
 export interface BuildingSlot {
@@ -466,4 +468,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;

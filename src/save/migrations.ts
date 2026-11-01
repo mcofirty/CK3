@@ -4,7 +4,9 @@
  */
 import MAP from '../data/map.json';
 import { emptyStats } from '../engine/context';
-import { ensureCapitals } from '../engine/realm';
+import { ensureCapitals, independentRulers } from '../engine/realm';
+import { assignHouseColors } from '../engine/heraldry';
+import { Rng } from '../engine/rng';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
 type AnySave = Record<string, unknown> & { version?: number };
@@ -71,6 +73,18 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   6: (s) => {
     const next: AnySave = { ...s, version: 7 };
     if (next.counties && next.characters) ensureCapitals(next as unknown as GameState);
+    return next;
+  },
+  // Version 7 → 8 : couleurs de maison (14 teintes, distinctes pour les souverains).
+  7: (s) => {
+    const next: AnySave = { ...s, version: 8 };
+    const g = next as unknown as GameState;
+    if (g.counties && g.characters && g.dynasties) {
+      const rulers = independentRulers(g)
+        .map((id) => g.characters[id]?.dynastyId)
+        .filter((d): d is string => !!d);
+      assignHouseColors(g, [...new Set(rulers)], new Rng(4242 + (g.turn ?? 0)));
+    }
     return next;
   },
 };

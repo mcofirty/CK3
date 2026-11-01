@@ -3,6 +3,7 @@
  * Les sections « générées » lisent les données du jeu : elles restent toujours exactes.
  */
 import { AMBITIONS } from './ambitions';
+import { HOUSE_COLORS } from './heraldry';
 import { BALANCE } from './balance';
 import { BUILDINGS, BUILDING_TYPES } from './buildings';
 import { DECISIONS } from './decisions';
@@ -512,7 +513,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Couleur de maison',
-        text: 'Chaque maison a une couleur, celle du champ de son blason : elle sert de fond aux portraits de ses membres. Un fond gris signale un personnage sans maison.',
+        text: `Chaque maison a une couleur parmi ${HOUSE_COLORS.length} (${HOUSE_COLORS.map((c) => c.name.toLowerCase()).join(', ')}), celle du champ de son blason : elle sert de fond aux portraits de ses membres et teinte leurs vêtements. Les maisons régnantes ont toutes des couleurs différentes. Un fond gris signale un personnage sans maison.`,
       },
       {
         term: 'Royaumes étrangers',

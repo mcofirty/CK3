@@ -33,6 +33,7 @@ import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../compone
 import { perkPoints } from '../../engine/progression';
 import { CandidatesCard, CourtCard, WardsCard } from '../components/Entourage';
 import { useStore } from '../store';
+import { houseColorIndex } from '../../engine/heraldry';
 
 const COURT_VIEWS = ['souverain', 'entourage', 'conseil', 'arbre'] as const;
 
@@ -77,7 +78,7 @@ export function CharacterCard({ game, c }: { game: GameState; c: Character }) {
             {c.imprisonedBy && <span className="bad"> · prisonnier</span>}
           </div>
         </div>
-        {dyn && <CoatOfArms seed={dyn.seed} size={40} />}
+        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorIndex(dyn)} size={40} />}
       </div>
       <div style={{ marginTop: 10 }}>
         <Skills c={c} />

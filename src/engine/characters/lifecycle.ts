@@ -3,6 +3,8 @@ import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
 import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
 import { ensureCapitals, isIndependent } from '../realm';
+import { newHouseColor } from '../heraldry';
+import { Rng } from '../rng';
 import type { Character, GameState } from '../state';
 import {
   addOpinion,
@@ -415,7 +417,9 @@ export function newMinorDynasty(ctx: Ctx, founder: Character): string {
   const used = new Set(Object.values(state.dynasties).map((d) => d.name));
   const id = `y${++state.nextId}`;
   const name = dynastyName(rng, used);
-  state.dynasties[id] = { id, name, renown: 0, seed: rng.seed(), founderId: founder.id };
+  const seed = rng.seed();
+  const color = newHouseColor(state, new Rng(seed));
+  state.dynasties[id] = { id, name, renown: 0, seed, founderId: founder.id, color };
   return id;
 }
 
