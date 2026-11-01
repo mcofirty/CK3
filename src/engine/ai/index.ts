@@ -26,12 +26,13 @@ import {
   makeAlliance,
   marriageBlock,
   marriageTie,
+  renounceAlliance,
 } from '../diplomacy';
 import { queueEvent } from '../events/engine';
 import type { EventDef } from '../events/types';
 import { aiPlots } from '../intrigue';
 import { aiLandOffer } from '../diplomacy/trade';
-import { pressableClaims } from '../crowns';
+import { breakPacts, hasFamilyPact, pressableClaims } from '../crowns';
 import {
   availableLevies,
   canBuild,
@@ -96,6 +97,18 @@ function goldReserve(state: GameState, id: string): number {
 
 function aiRuler(ctx: Ctx, r: Character): void {
   const { state, rng } = ctx;
+  // Alliances devenues insupportables : l'IA les dénonce.
+  for (const k of [...state.alliances]) {
+    const [x, y] = k.split('|');
+    if (x !== r.id && y !== r.id) continue;
+    const other = x === r.id ? y : x;
+    if (opinion(state, r.id, other) <= A.breakAllianceOpinion) {
+      if (hasFamilyPact(state, r.id, other)) breakPacts(state, r.id, other);
+      else renounceAlliance(state, r.id, other);
+      if (other === state.playerId)
+        notify(state, `${r.name} vous méprise et rompt votre alliance.`);
+    }
+  }
   const wars = warsOf(state, r.id);
   // 1. Menaces : guerres en cours.
   if (wars.length) {

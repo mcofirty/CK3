@@ -684,6 +684,8 @@ export const BALANCE = {
     revoltFactionRatio: 0.8,
     recruitShare: 0.4,
     disbandWhenPeace: true,
+    /** Une IA rompt l'alliance d'un souverain qu'elle déteste à ce point. */
+    breakAllianceOpinion: -50,
   },
 } as const;
 

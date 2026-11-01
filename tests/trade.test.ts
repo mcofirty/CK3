@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../src/data/balance';
 import { applyAction } from '../src/engine/actions';
+import { runAi } from '../src/engine/ai';
+import { applyEffects } from '../src/engine/events/engine';
 import { addOpinion, allied } from '../src/engine/characters';
 import { makeAlliance } from '../src/engine/diplomacy';
 import { callToArmsAcceptance } from '../src/engine/diplomacy';
@@ -164,5 +166,36 @@ describe('Rompre une alliance', () => {
     expect(next.characters[next.playerId].prestige).toBe(
       before + BALANCE.diplomacy.breakAlliance.treacheryPrestige,
     );
+  });
+});
+
+describe('Allié devenu ennemi', () => {
+  it('un allié insultant qui déclare la guerre par événement rompt l’alliance et la guerre a lieu', () => {
+    const s = newGame({ seed: 50 });
+    clearEvents(s);
+    const rival = independentRulers(s).find((id) => id !== s.playerId && bordersPlayer(s, id))!;
+    makeAlliance(s, s.playerId, rival);
+    applyEffects(
+      { state: s, rng: new Rng(1) },
+      [{ guerre: { cible: 'rival', attaquant: 'rival' } }],
+      {
+        souverain: s.playerId,
+        rival,
+      },
+    );
+    expect(allied(s, s.playerId, rival)).toBe(false);
+    expect(
+      Object.values(s.wars).some((w) => w.attackerId === rival && w.defenderId === s.playerId),
+    ).toBe(true);
+  });
+
+  it('une IA qui vous méprise rompt d’elle-même votre alliance', () => {
+    const s = newGame({ seed: 51 });
+    clearEvents(s);
+    const rival = independentRulers(s).find((id) => id !== s.playerId)!;
+    makeAlliance(s, s.playerId, rival);
+    addOpinion(s, rival, s.playerId, 'Insulte', -200, 0);
+    runAi({ state: s, rng: new Rng(2) });
+    expect(allied(s, s.playerId, rival)).toBe(false);
   });
 });

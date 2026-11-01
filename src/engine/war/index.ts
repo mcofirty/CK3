@@ -44,7 +44,14 @@ import {
 import type { Army, CasusBelliType, County, GameState, UnitType, War } from '../state';
 import { addUnits, armyStrength, emptyUnits, totalMen } from '../units';
 import { hurtPopulation, isCapital } from '../economy/local';
-import { dynasticCheck, hasFamilyPact, resolveDynasticWar } from '../crowns';
+import {
+  breakPacts,
+  dynasticCheck,
+  hasFamilyPact,
+  hasSuccessionPact,
+  resolveDynasticWar,
+} from '../crowns';
+import { renounceAlliance } from '../diplomacy';
 
 const W = BALANCE.war;
 
@@ -592,6 +599,11 @@ export function adjustScore(state: GameState, war: War, rulerId: string, points:
 /** Sièges, ravitaillement et usure, objectifs tenus. */
 export function seasonCampaign(ctx: Ctx): void {
   const { state, rng } = ctx;
+  // Pas d'alliance entre ennemis : une incohérence ancienne est réparée.
+  state.alliances = state.alliances.filter((k) => {
+    const [x, y] = k.split('|');
+    return !atWar(state, x, y);
+  });
   // Guerres orphelines (un chef mort sans héritier titré) : elles s'éteignent.
   for (const w of Object.values(state.wars)) {
     const a = state.characters[w.attackerId];
@@ -871,6 +883,13 @@ export function declareWar(
   if (!chk.ok && !force) return undefined;
   const a = state.characters[attackerId];
   a.prestige -= chk.prestigeCost;
+  // Déclarer la guerre à un allié rompt l'alliance (et les pactes) : c'est une trahison.
+  if (
+    hasFamilyPact(state, attackerId, defenderId) ||
+    hasSuccessionPact(state, attackerId, defenderId)
+  )
+    breakPacts(state, attackerId, defenderId);
+  if (allied(state, attackerId, defenderId)) renounceAlliance(state, attackerId, defenderId);
   const cbLabel = {
     revendication: 'Revendication',
     conquete: 'Conquête',

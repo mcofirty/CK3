@@ -488,12 +488,15 @@ export function effectLabels(
         `${SKILL_LABELS[e.competence.competence]}${e.competence.cible && e.competence.cible !== 'souverain' ? ` de ${name(e.competence.cible)}` : ''} : ${sign(e.competence.valeur)}`,
       );
     if (e.revendication) out.push(`Revendication sur ${name(e.revendication)}`);
-    if (e.guerre)
+    if (e.guerre) {
+      const rid = scope.rival;
+      const ally = !!rid && allied(state, state.playerId, rid);
       out.push(
         e.guerre.attaquant === 'rival'
-          ? `${name('rival')} vous déclare la guerre`
-          : `Guerre contre ${name('rival')}`,
+          ? `${name('rival')} ${ally ? 'rompt votre alliance et ' : ''}vous déclare la guerre`
+          : `Guerre contre ${name('rival')}${ally ? ' (rompt votre alliance : traîtrise)' : ''}`,
       );
+    }
     if (e.complot) out.push(`Complot contre ${name(e.complot.cible)}`);
     if (e.naissance) out.push('Un enfant pourrait naître');
     if (e.deces) out.push(`Mort de ${name(e.deces)}`);
@@ -671,7 +674,8 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
         if (target) {
           const att = state.characters[a];
           if (!att.claims.includes(target.id)) att.claims.push(target.id);
-          if (!allied(state, a, d)) declareWar(ctx, a, d, 'revendication', target.id, true);
+          // Un allié qui déclare la guerre rompt d'abord l'alliance (déclarer la guerre le fait).
+          declareWar(ctx, a, d, 'revendication', target.id, true);
         }
       }
     }
