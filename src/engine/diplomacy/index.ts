@@ -17,6 +17,7 @@ import {
   player,
   skill,
   topLiege,
+  warSide,
 } from '../characters';
 import { gainXp } from '../progression';
 import { chronicle, notify, worldNews, type Ctx } from '../context';
@@ -189,51 +190,87 @@ export function breakAlliance(state: GameState, a: string, b: string): void {
   state.alliances = state.alliances.filter((k) => k !== allyKey(a, b));
 }
 
+/** Ennemi principal de `fromId` dans cette guerre. */
+function warEnemy(state: GameState, fromId: string, warId: string): string | undefined {
+  const w = state.wars[warId];
+  if (!w) return undefined;
+  return w.attackerId === fromId || w.attackerAllies.includes(fromId) ? w.defenderId : w.attackerId;
+}
+
+/**
+ * Appel aux armes : un allié, ou tout autre souverain (plus difficile), éventuellement
+ * convaincu par un subside en or (`gold`, versé s'il accepte).
+ */
 export function callToArmsAcceptance(
   state: GameState,
   fromId: string,
   allyId: string,
   warId: string,
+  gold = 0,
 ): Acceptance {
-  const f: Factor[] = [{ label: 'Base', value: D.callToArms.base }];
-  f.push({ label: 'Opinion', value: opinion(state, allyId, fromId) * D.callToArms.perOpinion });
+  const C = D.callToArms;
+  const f: Factor[] = [{ label: 'Base', value: C.base }];
+  f.push({ label: 'Opinion', value: opinion(state, allyId, fromId) * C.perOpinion });
   const w = state.wars[warId];
-  const enemy =
-    w && (w.attackerId === fromId || w.attackerAllies.includes(fromId))
-      ? w.defenderId
-      : w?.attackerId;
-  if (enemy && allied(state, allyId, enemy)) f.push({ label: 'Allié de l’ennemi', value: -100 });
+  const enemy = warEnemy(state, fromId, warId);
+  const isAlly = allied(state, fromId, allyId);
+  if (!isAlly) f.push({ label: 'Aucune alliance', value: C.noAlliance });
+  else if (marriageTie(state, fromId, allyId))
+    f.push({ label: 'Liens du mariage', value: C.marriageTie });
+  if (enemy) {
+    const hate = opinion(state, allyId, enemy);
+    if (hate < 0) f.push({ label: 'Hostile à l’ennemi', value: -hate * C.perEnemyHatred });
+    if (allied(state, allyId, enemy)) f.push({ label: 'Allié de l’ennemi', value: -100 });
+  }
   if (warsOf(state, allyId).length) f.push({ label: 'Déjà en guerre', value: -30 });
+  if (gold > 0) f.push({ label: `Subside de ${gold} or`, value: gold / C.goldPerPoint });
   f.push(...traitFactors(state.characters[allyId]));
   let blocked: string | undefined;
-  if (!allied(state, fromId, allyId)) blocked = 'Pas d’alliance';
+  const refused = state.callRefused?.[allyId];
+  if (allyId === fromId || !state.characters[allyId]?.alive) blocked = 'Cible invalide';
   if (!w) blocked = 'Guerre introuvable';
-  if (w && (w.attackerAllies.includes(allyId) || w.defenderAllies.includes(allyId)))
-    blocked = 'Déjà engagé';
+  if (w && warSide(state, warId, allyId)) blocked = 'Déjà engagé';
   if (enemy && truceWith(state, allyId, enemy)) blocked = 'Trêve avec l’ennemi';
+  if (enemy && atWar(state, allyId, fromId)) blocked = 'En guerre contre vous';
+  if (gold > state.characters[fromId].gold) blocked = `Il vous faut ${gold} or`;
+  if (!isAlly && refused !== undefined && refused > state.turn)
+    blocked = `A déjà refusé (encore ${refused - state.turn} saison(s))`;
   return finish(f, blocked);
 }
 
-export function callToArms(ctx: Ctx, fromId: string, allyId: string, warId: string): boolean {
+export function callToArms(
+  ctx: Ctx,
+  fromId: string,
+  allyId: string,
+  warId: string,
+  gold = 0,
+): boolean {
   const { state } = ctx;
-  const acc = callToArmsAcceptance(state, fromId, allyId, warId);
+  const acc = callToArmsAcceptance(state, fromId, allyId, warId, gold);
   const w = state.wars[warId];
-  if (!w) return false;
+  if (!w || acc.blocked) return false;
   const side =
     w.attackerId === fromId || w.attackerAllies.includes(fromId) ? 'attacker' : 'defender';
+  const ally = state.characters[allyId];
   if (acc.accept) {
+    if (gold > 0) {
+      state.characters[fromId].gold -= gold;
+      ally.gold += gold;
+    }
     joinWar(state, warId, allyId, side);
     addOpinion(state, allyId, fromId, 'A répondu à l’appel', 5, 20);
+    if (fromId === state.playerId)
+      notify(state, `${ally.name} répond à votre appel et entre en guerre à vos côtés.`);
     return true;
   }
-  if (!acc.blocked) {
+  if (allied(state, fromId, allyId)) {
     breakAlliance(state, fromId, allyId);
     addOpinion(state, fromId, allyId, 'A trahi l’alliance', -40, 40);
     if (fromId === state.playerId)
-      notify(
-        state,
-        `${state.characters[allyId].name} refuse l’appel aux armes : l’alliance est rompue.`,
-      );
+      notify(state, `${ally.name} refuse l’appel aux armes : l’alliance est rompue.`);
+  } else {
+    (state.callRefused ??= {})[allyId] = state.turn + D.callToArms.refusalCooldown;
+    if (fromId === state.playerId) notify(state, `${ally.name} décline votre appel à l’aide.`);
   }
   return false;
 }

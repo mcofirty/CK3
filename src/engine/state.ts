@@ -358,6 +358,10 @@ export interface GameState {
   eventOnce: Record<string, boolean>;
   chronicle: ChronicleEntry[];
   notifications: Notification[];
+  /** Appels à l'aide refusés : souverain → tour où l'on peut le solliciter de nouveau. */
+  callRefused?: Record<string, number>;
+  /** Traités refusés : souverain → tour où l'on peut négocier de nouveau. */
+  tradeRefused?: Record<string, number>;
   /** Nouvelles du monde (royaumes de l'IA), les plus récentes à la fin. */
   worldNews: NewsEntry[];
   battle?: import('./battle/types').BattleState;
@@ -468,4 +472,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;

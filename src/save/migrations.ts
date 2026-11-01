@@ -100,6 +100,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     }
     return next;
   },
+  // Version 9 → 10 : traités de terres et appels à l'aide (délais facultatifs).
+  9: (s) => ({ callRefused: {}, tradeRefused: {}, ...s, version: 10 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

@@ -2438,3 +2438,83 @@ body {
   background: var(--glass);
   font-size: 20px;
 }
+
+/* Appel à l'aide et traités */
+.help-row {
+  border-top: 1px solid var(--line);
+  padding: 10px 0;
+}
+.help-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+.help-head .grow {
+  display: flex;
+  flex-direction: column;
+}
+.trade-box {
+  padding: 8px 10px;
+}
+.trade-counties {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.trade-county {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 2px 6px 2px 2px;
+}
+.trade-county.on {
+  border-color: var(--accent);
+  background: var(--glass-strong);
+}
+.trade-county-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+}
+.trade-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.trade-gold {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 16px;
+}
+.trade-gold-label {
+  flex-basis: 100%;
+}
+.trade-gold .btn {
+  flex: 1;
+}

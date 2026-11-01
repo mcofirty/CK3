@@ -50,6 +50,7 @@ import { CountyEconomy } from './Economy';
 import { CourtActions, courtActionKinds } from './Entourage';
 import { countyDevMax, countyLevyMult, countySlots, isCapital } from '../../engine/economy/local';
 import { CapitalSection } from './Capital';
+import { countyValue } from '../../engine/diplomacy/trade';
 import { PERKS } from '../../data/perks';
 
 export function Inspector({ game }: { game: GameState }) {
@@ -383,6 +384,7 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
   const ruler = countyRuler(game, c);
   const mine = c.holderId === pl;
   const inMyRealm = ruler === pl;
+  const setTradeWith = useStore((s) => s.setTradeWith);
   const army = armyOf(game, pl);
   const path = army ? findPath(game, pl, army.location, id) : [];
   const armiesHere = Object.values(game.armies).filter((a) => a.location === id);
@@ -564,6 +566,19 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
           {path.length
             ? `Envoyer l’armée ici (${path.length} saison${path.length > 1 ? 's' : ''} au plus)`
             : 'Inaccessible à votre armée'}
+        </button>
+      )}
+
+      {!inMyRealm && holder && !holder.liegeId && holder.id !== pl && (
+        <button
+          className="btn block"
+          style={{ marginTop: 8 }}
+          disabled={isCapital(c) || !!c.occupation}
+          onClick={() => setTradeWith({ targetId: holder.id, take: c.id })}
+        >
+          {isCapital(c)
+            ? 'Capitale : elle ne se vend pas'
+            : `Proposer d’acheter ${c.name} (~${countyValue(game, c, pl)} or)`}
         </button>
       )}
 

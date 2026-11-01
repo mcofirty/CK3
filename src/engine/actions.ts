@@ -2,6 +2,7 @@
  * Point d'entrée unique du moteur : applyAction(état, action) → nouvel état.
  * L'état reçu n'est jamais modifié : on travaille sur une copie.
  */
+import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { BALANCE } from '../data/balance';
 import {
   answerDuel,
@@ -118,7 +119,8 @@ export type Action =
   | { type: 'proposeMarriage'; aId: string; bId: string }
   | { type: 'proposeAlliance'; targetId: string }
   | { type: 'sendGift'; targetId: string }
-  | { type: 'callToArms'; allyId: string; warId: string }
+  | { type: 'callToArms'; allyId: string; warId: string; gold?: number }
+  | { type: 'proposeTrade'; offer: TradeOffer }
   | { type: 'demandTribute'; targetId: string }
   | { type: 'startPlot'; plotType: PlotType; targetId: string }
   | { type: 'addAgent'; plotId: string }
@@ -317,8 +319,11 @@ function dispatch(ctx: Ctx, a: Action): void {
     case 'sendGift':
       sendGift(ctx, pl, a.targetId);
       break;
+    case 'proposeTrade':
+      proposeTrade(ctx, pl, a.offer);
+      break;
     case 'callToArms':
-      callToArms(ctx, pl, a.allyId, a.warId);
+      callToArms(ctx, pl, a.allyId, a.warId, Math.max(0, Math.round(a.gold ?? 0)));
       break;
     case 'demandTribute':
       demandTribute(ctx, pl, a.targetId);

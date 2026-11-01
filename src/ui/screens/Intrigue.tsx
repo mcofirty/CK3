@@ -14,47 +14,18 @@ import {
   marriageAcceptance,
   marriageCandidates,
   tributeAcceptance,
-  type Acceptance,
 } from '../../engine/diplomacy';
 import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
 import { capitalOf, independentRulers, realmCounties, realmName } from '../../engine/realm';
 import type { Character, GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
-import {
-  CharLine,
-  Opinion,
-  Portrait,
-  Segmented,
-  Sheet,
-  signed,
-  usePager,
-} from '../components/common';
+import { CharLine, Opinion, Portrait, Segmented, Sheet, usePager } from '../components/common';
 import { DECISIONS } from '../../data/decisions';
 import { PoachCard } from '../components/Entourage';
+import { AcceptanceView } from '../components/Diplomacy';
 import { NewsList, newsAbout } from '../components/News';
 import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
-
-function AcceptanceView({ acc }: { acc: Acceptance }) {
-  return (
-    <div className="small" style={{ marginTop: 6 }}>
-      <b className={acc.accept ? 'good' : 'bad'}>
-        {acc.blocked
-          ? `Impossible : ${acc.blocked}`
-          : acc.accept
-            ? `Acceptera (${signed(acc.score)})`
-            : `Refusera (${signed(acc.score)})`}
-      </b>
-      {!acc.blocked &&
-        acc.factors.map((f, i) => (
-          <div key={i} className="row">
-            <span className="muted grow">{f.label}</span>
-            <span>{signed(f.value)}</span>
-          </div>
-        ))}
-    </div>
-  );
-}
 
 const INTRIGUE_VIEWS = ['diplomatie', 'complots', 'decisions'] as const;
 
@@ -128,6 +99,7 @@ function Diplomacy({ game }: { game: GameState }) {
 
 function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClose: () => void }) {
   const dispatch = useStore((s) => s.dispatch);
+  const setTradeWith = useStore((s) => s.setTradeWith);
   const inspect = useStore((s) => s.inspect);
   const pl = game.playerId;
   const c = game.characters[id];
@@ -175,6 +147,15 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
           onClick={() => dispatch({ type: 'proposeAlliance', targetId: id })}
         >
           Proposer
+        </button>
+      </div>
+      <div className="card">
+        <b>Traité de terres</b>
+        <p className="small muted" style={{ margin: '4px 0 8px' }}>
+          Acheter, vendre ou échanger des comtés, avec de l’or de part et d’autre.
+        </p>
+        <button className="btn small" onClick={() => setTradeWith({ targetId: id })}>
+          Négocier
         </button>
       </div>
       <PoachCard game={game} rulerId={id} />

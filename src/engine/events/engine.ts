@@ -1,4 +1,5 @@
 /** Moteur d'événements narratifs et langage d'effets (section 6). */
+import { cession } from '../diplomacy/trade';
 import { BALANCE } from '../../data/balance';
 import { ALL_EVENTS } from '../../data/events';
 import { SEASON_KEYS } from '../../data/names';
@@ -549,6 +550,14 @@ export function effectLabels(
         `Mariage de ${state.characters[e.mariage.a]?.name} et ${state.characters[e.mariage.b]?.name}`,
       );
     if (e.alliance) out.push(`Alliance avec ${state.characters[e.alliance]?.name}`);
+    if (e.cession) {
+      const c = state.counties[e.cession.comte]?.name;
+      out.push(
+        e.cession.acheteur === state.playerId
+          ? `Vous obtenez ${c} · −${e.cession.prix} or`
+          : `Vous cédez ${c} · +${e.cession.prix} or`,
+      );
+    }
     if (e.paix) out.push(e.paix.issue === 'blanche' ? 'Paix blanche' : 'Fin de la guerre');
     if (e.rejoindre_guerre) out.push('Vous entrez en guerre');
     if (e.tribut)
@@ -800,6 +809,8 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     // Effets internes.
     if (e.mariage) celebrateMarriage(ctx, e.mariage.a, e.mariage.b);
     if (e.alliance) makeAlliance(state, p.id, e.alliance);
+    if (e.cession)
+      cession(ctx, e.cession.comte, e.cession.vendeur, e.cession.acheteur, e.cession.prix);
     if (e.paix && state.wars[e.paix.warId]) endWar(ctx, e.paix.warId, e.paix.issue);
     if (e.rejoindre_guerre && state.wars[e.rejoindre_guerre.warId]) {
       joinWar(

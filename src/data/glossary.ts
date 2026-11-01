@@ -322,7 +322,11 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Appel aux armes',
-        text: 'Demande à un allié de rejoindre une guerre. Il accepte selon son opinion de vous.',
+        text: `Depuis une guerre (onglet Armée › Appeler à l’aide), demandez à un souverain de vous rejoindre. Un allié répond plus volontiers (liens du mariage, hostilité envers l’ennemi commun) ; s’il refuse, l’alliance est rompue. Un souverain sans alliance part de ${B.diplomacy.callToArms.noAlliance} mais peut être convaincu par un subside (1 point par ${B.diplomacy.callToArms.goldPerPoint} or, versé seulement s’il accepte) ; un refus le rend sourd ${B.diplomacy.callToArms.refusalCooldown} saisons.`,
+      },
+      {
+        term: 'Traité de terres',
+        text: `Acheter, vendre ou échanger des comtés tenus en propre (jamais une capitale), avec de l’or de part et d’autre : depuis la fiche d’un souverain (Négocier) ou d’un comté étranger (Proposer d’acheter). Chaque comté vaut ses revenus sur ${B.trade.incomeSeasons} saisons, plus ${B.trade.perDevelopment} or par développement, ${B.trade.perBuildingLevel} par niveau de bâtiment et ${B.trade.perFort} par fortification ; isolé de son domaine, il vaut ${pc(B.trade.exclave)} aux yeux de l’acquéreur, et l’on tient à sa propre terre (×${B.trade.attachment}). « Équilibrer avec de l’or » calcule la soulte qui ferait accepter l’offre. Un refus bloque la négociation ${B.trade.refusalCooldown} saisons ; une offre insultante vexe. L’IA propose parfois d’acheter un de vos comtés frontaliers, ou de vous en vendre un quand elle manque d’or.`,
       },
       {
         term: 'Trêve',

@@ -60,6 +60,9 @@ interface Store {
   setSettings: (s: Partial<Settings>) => void;
   /** Fenêtre des paramètres ouverte. */
   settingsOpen: boolean;
+  /** Traité de terres en cours de rédaction (souverain, comté demandé). */
+  tradeWith: { targetId: string; take?: string } | null;
+  setTradeWith: (t: { targetId: string; take?: string } | null) => void;
   setSettingsOpen: (open: boolean) => void;
   sound: (id: SoundId) => void;
   /** Succès débloqués sur cet appareil, toutes parties confondues. */
@@ -101,6 +104,8 @@ export const useStore = create<Store>((set, get) => ({
     set({ settings });
   },
   settingsOpen: false,
+  tradeWith: null,
+  setTradeWith: (tradeWith) => set({ tradeWith }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   sound: (id) => play(id, get().settings),
   slot: 1,

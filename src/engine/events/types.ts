@@ -195,6 +195,8 @@ export interface Effect {
   ambition?: string;
   mariage?: { a: string; b: string };
   alliance?: string;
+  /** Cession d'un comté contre or (négociée par l'IA). */
+  cession?: { comte: string; vendeur: string; acheteur: string; prix: number };
   paix?: { warId: string; issue: 'attaquant' | 'defenseur' | 'blanche' };
   rejoindre_guerre?: { warId: string; allie: string; camp: 'attaquant' | 'defenseur' };
   tribut?: { de: string; a: string; montant: number };

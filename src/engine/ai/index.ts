@@ -30,6 +30,7 @@ import {
 import { queueEvent } from '../events/engine';
 import type { EventDef } from '../events/types';
 import { aiPlots } from '../intrigue';
+import { aiLandOffer } from '../diplomacy/trade';
 import {
   availableLevies,
   canBuild,
@@ -102,7 +103,36 @@ function aiRuler(ctx: Ctx, r: Character): void {
     const army = armyOf(state, r.id);
     if (army && A.disbandWhenPeace) disbandArmy(ctx, army.id);
   }
-  // Allié du joueur attaqué : appel aux armes reçu par l'IA (automatique).
+  // Marchandage de terres avec le joueur (rare).
+  if (!wars.length && r.id !== state.playerId) {
+    const o = aiLandOffer(ctx, r.id);
+    if (o) {
+      const c = state.counties[o.countyId];
+      const buying = o.buyer === r.id;
+      proposeToPlayer(
+        ctx,
+        {
+          id: `sys_cession_${o.countyId}`,
+          titre: buying ? 'Une offre pour vos terres' : 'Des terres à vendre',
+          texte: buying
+            ? `${displayName(state, r)} convoite ${c.name}, à sa frontière, et vous en offre ${o.price} or.`
+            : `${displayName(state, r)}, à court d’argent, vous propose ${c.name}, à votre frontière, pour ${o.price} or.`,
+          choix: [
+            {
+              libelle: buying
+                ? `Vendre ${c.name} pour ${o.price} or`
+                : `Acheter ${c.name} pour ${o.price} or`,
+              effets: [
+                { cession: { comte: c.id, vendeur: o.seller, acheteur: o.buyer, prix: o.price } },
+              ],
+            },
+            { libelle: 'Décliner', effets: [] },
+          ],
+        },
+        { proposant: r.id, comte: c.id },
+      );
+    }
+  }
   // 2. Une action majeure au plus.
   const reserve = goldReserve(state, r.id);
   const options: { score: number; run: () => void }[] = [];

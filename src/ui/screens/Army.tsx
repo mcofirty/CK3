@@ -5,7 +5,6 @@ import { UNIT_TYPES, UNITS } from '../../data/units';
 import { mercCheck, negotiateChance } from '../../engine/war/campaignExtras';
 import { chanceOf, rallyAcceptance } from '../../engine/entourage';
 import { allied, displayName, isAdult, skill, warSide } from '../../engine/characters';
-import { callToArmsAcceptance } from '../../engine/diplomacy';
 import {
   availableLevies,
   countyRuler,
@@ -30,6 +29,7 @@ import {
   warsOf,
 } from '../../engine/war';
 import { Bar, Segmented, Sheet, Tip, signed } from '../components/common';
+import { CallHelpSheet } from '../components/Diplomacy';
 import { useStore } from '../store';
 
 export function ArmyScreen({ game }: { game: GameState }) {
@@ -42,6 +42,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
   const levies = availableLevies(game, pl).total;
   const raise = canRaise(game, pl);
   const [declare, setDeclare] = useState(false);
+  const [callHelp, setCallHelp] = useState<string | null>(null);
   const [confirmExec, setConfirmExec] = useState<string | null>(null);
   const commanders = [
     game.characters[pl],
@@ -277,20 +278,16 @@ export function ArmyScreen({ game }: { game: GameState }) {
                   {peaceAcceptance(game, w.id, pl, 'blanche').accept ? 'acceptée' : 'refusée'}
                 </p>
               )}
-              {callable.map((a) => {
-                const acc = callToArmsAcceptance(game, pl, a, w.id);
-                return (
-                  <button
-                    key={a}
-                    className="btn small"
-                    style={{ marginTop: 6 }}
-                    onClick={() => dispatch({ type: 'callToArms', allyId: a, warId: w.id })}
-                  >
-                    Appeler {game.characters[a].name} aux armes (
-                    {acc.accept ? 'acceptera' : 'refusera'} : {signed(acc.score)})
-                  </button>
-                );
-              })}
+              <button
+                className="btn small"
+                style={{ marginTop: 8 }}
+                onClick={() => setCallHelp(w.id)}
+              >
+                Appeler à l’aide
+                {callable.length
+                  ? ` (${callable.length} allié${callable.length > 1 ? 's' : ''})`
+                  : ''}
+              </button>
             </div>
           );
         })}
@@ -366,6 +363,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
         </div>
       )}
       {declare && <DeclareWar game={game} onClose={() => setDeclare(false)} />}
+      {callHelp && <CallHelpSheet game={game} warId={callHelp} onClose={() => setCallHelp(null)} />}
     </>
   );
 }

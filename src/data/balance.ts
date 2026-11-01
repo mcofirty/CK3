@@ -431,7 +431,19 @@ export const BALANCE = {
     acceptThreshold: 0,
     marriage: { base: 10, perOpinion: 0.5, rankBonus: 15, allianceInterest: 10 },
     alliance: { base: -10, perOpinion: 0.6, threatInterest: 20 },
-    callToArms: { base: 10, perOpinion: 0.7 },
+    callToArms: {
+      base: 10,
+      perOpinion: 0.7,
+      /** Appeler un souverain sans alliance : possible, mais plus difficile. */
+      noAlliance: -30,
+      marriageTie: 10,
+      /** Hostilité envers l'ennemi commun (par point d'opinion négative). */
+      perEnemyHatred: 0.4,
+      /** Subside promis : 1 point par tant d'or. */
+      goldPerPoint: 5,
+      /** Délai avant de solliciter de nouveau un souverain qui a refusé (saisons). */
+      refusalCooldown: 4,
+    },
     tribute: { base: -40, perPowerRatio: 30, perOpinion: 0.3, amount: 60 },
     traitModifiers: {
       genereux: 10,
@@ -533,6 +545,32 @@ export const BALANCE = {
     lootLoss: 0.08,
     assaultLoss: 0.05,
     revoltLoss: 0.05,
+  },
+
+  /** Traités : achat, vente et échange de comtés (engine/diplomacy/trade.ts). */
+  trade: {
+    /** Valeur d'un comté en or : revenus de tant de saisons + développement + bâtiments. */
+    incomeSeasons: 16,
+    perDevelopment: 25,
+    perBuildingLevel: 40,
+    perFort: 20,
+    /** Comté non contigu au domaine de celui qui le reçoit : il vaut moins à ses yeux. */
+    exclave: 0.6,
+    /** Céder sa terre coûte plus que sa valeur (attachement, prestige). */
+    attachment: 1.3,
+    /** Points d'acceptation : 1 point par tant d'or de valeur nette. */
+    goldPerPoint: 5,
+    perOpinion: 0.3,
+    /** Un souverain IA garde au moins tant de comtés en propre. */
+    minKeep: 2,
+    refusalCooldown: 4,
+    /** Offre insultante (score sous ce seuil) : vexation. */
+    insultScore: -40,
+    insultOpinion: -10,
+    newLordContentment: -8,
+    /** Propositions de l'IA au joueur (achat ou vente d'un comté frontalier), par saison. */
+    aiOfferChance: 0.02,
+    aiPriceRange: [0.95, 1.2] as const,
   },
 
   /** Faits de saison chez les souverains de l'IA (data/abroad.ts). */
