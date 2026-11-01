@@ -483,6 +483,14 @@ export const BALANCE = {
     aiPlotChance: 0.05,
   },
 
+  /** Faits de saison chez les souverains de l'IA (data/abroad.ts). */
+  abroad: {
+    /** Chance par souverain indépendant et par saison. */
+    chancePerRuler: 0.12,
+    /** Développement minimal après un fait (le maximum est economy.developmentMax). */
+    minDevelopment: 1,
+  },
+
   ai: {
     goldReserveSeasons: 2,
     buildChance: 0.35,

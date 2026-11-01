@@ -31,6 +31,7 @@ import {
 } from '../components/common';
 import { DECISIONS } from '../../data/decisions';
 import { PoachCard } from '../components/Entourage';
+import { NewsList, newsAbout } from '../components/News';
 import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
 
@@ -176,6 +177,7 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         </button>
       </div>
       <PoachCard game={game} rulerId={id} />
+      <RulerNews game={game} id={id} />
       <div className="card">
         <b>Réclamer un tribut ({BALANCE.diplomacy.tribute.amount} or)</b>
         <AcceptanceView acc={tribute} />
@@ -189,6 +191,17 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         </button>
       </div>
     </Sheet>
+  );
+}
+
+function RulerNews({ game, id }: { game: GameState; id: string }) {
+  const list = newsAbout(game, id).slice(-8);
+  if (!list.length) return null;
+  return (
+    <div className="card">
+      <b>Dernières nouvelles de cette cour</b>
+      <NewsList game={game} list={list} />
+    </div>
   );
 }
 

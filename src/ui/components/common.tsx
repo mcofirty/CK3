@@ -503,10 +503,16 @@ const TINCTURES = [
   '#a4581c',
 ];
 const METALS = ['#d9b23a', '#ece6d6'];
+const FIELDS = TINCTURES.slice(0, 6);
+
+/** Couleur d'une maison : celle du champ de son blason (premier tirage de la graine). */
+export function houseColor(seed: number): string {
+  return new Rng(seed).pick(FIELDS);
+}
 
 export function CoatOfArms({ seed, size = 40 }: { seed: number; size?: number }) {
   const r = new Rng(seed);
-  const field = r.pick(TINCTURES.slice(0, 6));
+  const field = r.pick(FIELDS);
   const metal = r.pick(METALS);
   const div = r.int(0, 5);
   const charge = r.int(0, 4);
@@ -586,9 +592,9 @@ export function Portrait({
   else if (age > 46 && r.chance(0.6)) hair = '#8f877c';
   const eye = r.pick(EYES);
   const dyn = c.dynastyId ? state.dynasties[c.dynastyId] : undefined;
-  const dynI = dyn ? new Rng(dyn.seed).int(0, 5) : 6;
-  const bg = dyn ? TINCTURES[dynI] : '#6f6458';
-  const garment = dyn ? GARMENTS[dynI % GARMENTS.length] : r.pick(GARMENTS);
+  // Fond = couleur de la maison (champ du blason), vêtements assortis.
+  const bg = dyn ? houseColor(dyn.seed) : '#6f6458';
+  const garment = dyn ? GARMENTS[FIELDS.indexOf(bg) % GARMENTS.length] : r.pick(GARMENTS);
   const rank = rankOfChar(state, c.id);
   const child = age < 16;
   const sick = c.traits.includes('malade');

@@ -60,6 +60,12 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     ...s,
     version: 5,
   }),
+  // Version 5 → 6 : nouvelles du monde. Les anciennes parties gardent leur carte.
+  5: (s) => ({
+    worldNews: [],
+    ...s,
+    version: 6,
+  }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

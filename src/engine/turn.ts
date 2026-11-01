@@ -10,6 +10,7 @@ import { seasonPlots } from './intrigue';
 import { seasonCourt } from './court';
 import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
+import { seasonAbroad } from './abroad';
 import { checkAchievements, computeEnding } from './endings';
 import { realmCounties } from './realm';
 import { seasonPlague } from './plague';
@@ -109,6 +110,7 @@ export function startSeason(ctx: Ctx): void {
   seasonCouncil(ctx);
   seasonPlots(ctx);
   runAi(ctx);
+  seasonAbroad(ctx);
   autoFillCouncil(state);
   seasonEntourage(ctx);
   seasonCourt(ctx);

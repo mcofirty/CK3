@@ -1,7 +1,8 @@
 /**
  * Génération procédurale de la carte, propre à chaque partie (à partir de la graine).
- * 30 comtés (cellules de Voronoï) dans une terre à la forme variable, entourée de mer ;
- * adjacences, relief, 1 ou 2 rivières, 7 duchés, 2 royaumes et 5 domaines de départ.
+ * 48 comtés (cellules de Voronoï) dans une terre à la forme variable, entourée de mer ;
+ * adjacences, relief, 2 ou 3 rivières, 12 duchés, 3 royaumes et 8 domaines de départ
+ * de tailles inégales (de grands royaumes voisins de petites seigneuries).
  */
 import { NAMES } from '../data/names';
 import type { Rng } from './rng';
@@ -32,11 +33,15 @@ export interface MapData {
 }
 
 type P = [number, number];
-const W = 1000;
-const H = 1300;
-const LAND = 30;
-const REALMS = 5;
-const DUCHIES = 7;
+const W = 1260;
+const H = 1640;
+const LAND = 48;
+const KINGDOMS = 3;
+/** Tailles cibles des domaines de départ (un seul de 6 est attribué au joueur). */
+export const REALM_SIZES = [9, 8, 6, 6, 6, 5, 4, 4];
+const REALMS = REALM_SIZES.length;
+const DUCHY_SIZES = [5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3];
+const DUCHIES = DUCHY_SIZES.length;
 
 function clip(poly: P[], a: number, b: number, c: number): P[] {
   const out: P[] = [];
@@ -84,9 +89,9 @@ function attempt(rng: Rng): MapData | null {
     return Math.sqrt(dx * dx + dy * dy) / wob;
   };
 
-  const cols = 7;
-  const rows = 9;
-  const jitter = rng.range(30, 50);
+  const cols = 9;
+  const rows = 11;
+  const jitter = rng.range(38, 62);
   const cand: P[] = [];
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++)
@@ -159,7 +164,7 @@ function attempt(rng: Rng): MapData | null {
 
   // Relief : 1 ou 2 massifs, collines au pied des montagnes, marais côtiers, forêts.
   const terrain: Terrain[] = land.map(() => 'plaine');
-  const massifs = rng.int(1, 2);
+  const massifs = rng.int(2, 3);
   for (let m = 0; m < massifs; m++) {
     const s = rng.int(0, LAND - 1);
     terrain[s] = 'montagne';
@@ -175,11 +180,11 @@ function attempt(rng: Rng): MapData | null {
     else if (adj[i].some((n) => terrain[n] === 'montagne') ? r < 0.85 : r < marsh + forest + 0.18)
       terrain[i] = 'colline';
   }
-  if (terrain.filter((t) => t === 'plaine').length < 6) return null;
+  if (terrain.filter((t) => t === 'plaine').length < 10) return null;
 
   // Rivières : 1 ou 2 chaînes d'arêtes depuis la côte.
   const riverPairs: [number, number][] = [];
-  const nRivers = rng.int(1, 2);
+  const nRivers = rng.int(2, 3);
   for (let rv = 0; rv < nRivers; rv++) {
     const starts = coastal
       .map((c, i) => (c && terrain[i] !== 'montagne' ? i : -1))
@@ -187,7 +192,7 @@ function attempt(rng: Rng): MapData | null {
     if (!starts.length) break;
     let a = rng.pick(starts);
     let prev = -1;
-    const len = rng.int(4, 7);
+    const len = rng.int(3, 6);
     for (let step = 0; step < len; step++) {
       const options = adj[a].filter(
         (n) =>
@@ -259,12 +264,25 @@ function attempt(rng: Rng): MapData | null {
     return owner;
   };
 
-  const duchyOwner = grow(farthest(DUCHIES), [5, 5, 4, 4, 4, 4, 4]);
-  const realmOwner = grow(farthest(REALMS), [6, 6, 6, 6, 6]);
+  const duchyOwner = grow(farthest(DUCHIES), DUCHY_SIZES);
+  const realmOwner = grow(farthest(REALMS), rng.shuffle([...REALM_SIZES]));
   if (!duchyOwner || !realmOwner) return null;
+  const realmCount = [...Array(REALMS).keys()].map((r) => realmOwner.filter((o) => o === r).length);
+  if (realmCount.some((n) => n < 3 || n > 10)) return null;
+  // Au moins un domaine de taille moyenne pour le joueur.
+  if (!realmCount.some((n) => n >= 5 && n <= 7)) return null;
+  // Chaque domaine d'un seul tenant.
   for (let r = 0; r < REALMS; r++) {
-    const n = realmOwner.filter((o) => o === r).length;
-    if (n < 5 || n > 7) return null;
+    const ms = land.map((_, i) => i).filter((i) => realmOwner[i] === r);
+    const got = new Set([ms[0]]);
+    const q = [ms[0]];
+    while (q.length)
+      for (const n of adj[q.shift()!])
+        if (realmOwner[n] === r && !got.has(n)) {
+          got.add(n);
+          q.push(n);
+        }
+    if (got.size !== ms.length) return null;
   }
 
   const duchyY = [...Array(DUCHIES).keys()].map((d) => {
@@ -276,9 +294,12 @@ function attempt(rng: Rng): MapData | null {
     const ms = land.filter((_, i) => duchyOwner[i] === d);
     return ms.reduce((s, p) => s + p[0], 0) / ms.length;
   });
+  // Royaumes : tiers des duchés le long d'un axe.
   const key = vertical ? duchyY : duchyX;
-  const median = [...key].sort((a, b) => a - b)[3];
-  const duchyKingdom = key.map((v) => (v <= median ? 0 : 1));
+  const order = [...key.keys()].sort((a, b) => key[a] - key[b]);
+  const duchyKingdom = key.map((_, d) =>
+    Math.min(KINGDOMS - 1, Math.floor((order.indexOf(d) * KINGDOMS) / DUCHIES)),
+  );
 
   // Noms uniques.
   const used = new Set<string>();
@@ -317,7 +338,7 @@ function attempt(rng: Rng): MapData | null {
     kingdom: `k${duchyKingdom[d]}`,
     counties: counties.filter((c) => c.duchy === `d${d}`).map((c) => c.id),
   }));
-  const kingdoms = [0, 1].map((k) => ({
+  const kingdoms = [...Array(KINGDOMS).keys()].map((k) => ({
     id: `k${k}`,
     name: placeName(),
     duchies: duchies.filter((d) => d.kingdom === `k${k}`).map((d) => d.id),

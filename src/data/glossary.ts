@@ -491,6 +491,14 @@ const concepts: GlossarySection[] = [
         text: 'Le journal de la maison : naissances, décès, successions, guerres, titres, mariages, hauts faits. Le Livre de la dynastie résume chaque règne, ses ambitions et ses exploits.',
       },
       {
+        term: 'Nouvelles du monde',
+        text: `Onglet Monde de la Chronique : guerres et paix, morts et successions, mariages, alliances, titres fondés, révoltes, et faits de saison chez les autres souverains (récoltes, tournois, fondations, brigands, pirates, incendies…), environ ${pc(B.abroad.chancePerRuler)} de chance par cour et par saison. Ces faits changent vraiment leur trésor, leurs levées et leurs comtés. Filtrez par voisins, guerres, cours ou terres ; la fiche d’un souverain montre ses dernières nouvelles. Les guerres de vos voisins arrivent aussi dans vos avis.`,
+      },
+      {
+        term: 'Couleur de maison',
+        text: 'Chaque maison a une couleur, celle du champ de son blason : elle sert de fond aux portraits de ses membres. Un fond gris signale un personnage sans maison.',
+      },
+      {
         term: 'Royaumes étrangers',
         text: 'Autour de la carte jouable : les royaumes d’outre-mer (émissaires, marchands, pillards, invasions) et les terres inexplorées, impossibles à visiter.',
       },
@@ -511,7 +519,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Onglets',
-        text: 'Cour (souverain, entourage, conseil, maison), Royaume (carte, économie), Armée, Intrigues (diplomatie, complots, décisions) et Chronique (chronique, livre, nouvelles, succès).',
+        text: 'Cour (souverain, entourage, conseil, maison), Royaume (carte, économie), Armée, Intrigues (diplomatie, complots, décisions) et Chronique (journal, monde, avis, livre, succès).',
       },
       {
         term: 'Gestes',

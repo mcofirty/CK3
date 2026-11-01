@@ -4,6 +4,7 @@ import type { GameState } from '../../engine/state';
 import { downloadExport } from '../../save/storage';
 import { AchievementList, DynastyBook } from '../components/Book';
 import { Segmented, usePager } from '../components/common';
+import { WorldNews } from '../components/News';
 import { useStore } from '../store';
 
 const KIND_ICON: Record<string, string> = {
@@ -19,7 +20,7 @@ const KIND_ICON: Record<string, string> = {
   divers: '•',
 };
 
-const CHRONICLE_VIEWS = ['chronique', 'livre', 'nouvelles', 'succes'] as const;
+const CHRONICLE_VIEWS = ['chronique', 'monde', 'nouvelles', 'livre', 'succes'] as const;
 
 export function ChronicleScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<(typeof CHRONICLE_VIEWS)[number]>('chronique');
@@ -38,9 +39,10 @@ export function ChronicleScreen({ game }: { game: GameState }) {
       <Segmented
         style={{ marginBottom: 12 }}
         options={[
-          { value: 'chronique', label: 'Chronique' },
+          { value: 'chronique', label: 'Journal' },
+          { value: 'monde', label: 'Monde' },
+          { value: 'nouvelles', label: 'Avis' },
           { value: 'livre', label: 'Livre' },
-          { value: 'nouvelles', label: 'Nouvelles' },
           { value: 'succes', label: 'Succès' },
         ]}
         value={view}
@@ -59,6 +61,7 @@ export function ChronicleScreen({ game }: { game: GameState }) {
             </div>
           ))}
         {view === 'livre' && <DynastyBook game={game} />}
+        {view === 'monde' && <WorldNews game={game} />}
         {view === 'succes' && (
           <div className="card">
             <AchievementList unlocked={globalAch} current={game.achievements} />

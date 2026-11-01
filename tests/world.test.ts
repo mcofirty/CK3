@@ -13,9 +13,14 @@ describe('Variété des parties', () => {
     const names = new Set<string>();
     for (let i = 0; i < 25; i++) {
       const m = generateMap(rng);
-      expect(m.counties).toHaveLength(30);
-      expect(m.realms).toHaveLength(5);
-      for (const r of m.realms) expect(r.length).toBeGreaterThanOrEqual(5);
+      expect(m.counties).toHaveLength(48);
+      expect(m.realms).toHaveLength(8);
+      expect(m.kingdoms).toHaveLength(3);
+      for (const r of m.realms) expect(r.length).toBeGreaterThanOrEqual(3);
+      // Des domaines de tailles inégales, dont au moins un moyen pour le joueur.
+      const sizes = m.realms.map((r) => r.length);
+      expect(Math.max(...sizes) - Math.min(...sizes)).toBeGreaterThanOrEqual(2);
+      expect(sizes.some((n) => n >= 5 && n <= 7)).toBe(true);
       // Graphe connexe et adjacences symétriques.
       const byId = new Map(m.counties.map((c) => [c.id, c]));
       for (const c of m.counties)
@@ -39,6 +44,7 @@ describe('Variété des parties', () => {
       expect(s.origin?.id).toBe(o.id);
       const own = Object.values(s.counties).filter((c) => countyRuler(s, c) === s.playerId);
       expect(own.length).toBeGreaterThanOrEqual(5);
+      expect(own.length).toBeLessThanOrEqual(8);
       expect(s.pendingEvents[0].eventId).toBe('intro_origine');
       if (o.guerreVoisin)
         expect(Object.values(s.wars).some((w) => w.defenderId === s.playerId)).toBe(true);

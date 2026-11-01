@@ -19,7 +19,7 @@ import {
   topLiege,
 } from '../characters';
 import { gainXp } from '../progression';
-import { chronicle, notify, type Ctx } from '../context';
+import { chronicle, notify, worldNews, type Ctx } from '../context';
 import { capitalOf, countyRuler, independentRulers, rankOf, rankValue } from '../realm';
 import type { Character, CouncilPost, GameState } from '../state';
 import { joinWar, militaryStrength, truceWith, warsOf } from '../war';
@@ -122,6 +122,19 @@ export function celebrateMarriage(ctx: Ctx, aId: string, bId: string): void {
     }
     chronicle(state, `Mariage de ${mine.name} et ${displayName(state, theirs)}.`, 'mariage');
     gainXp(state, state.characters[state.playerId], 'diplomatie', BALANCE.progression.marriageXp);
+  } else if (
+    theirs.dynastyId !== pd &&
+    (prestigious ||
+      independentRulers(state).some(
+        (r) => r === mine.id || state.characters[r]?.childrenIds.includes(mine.id),
+      ))
+  ) {
+    worldNews(
+      state,
+      `Mariage de ${displayName(state, mine)} et ${displayName(state, theirs)}${r1 !== r2 ? ' : deux cours se rapprochent' : ''}.`,
+      'mariage',
+      r1,
+    );
   }
 }
 
@@ -163,7 +176,13 @@ export function makeAlliance(state: GameState, a: string, b: string): void {
       `Alliance conclue avec ${displayName(state, state.characters[other])}.`,
       'divers',
     );
-  }
+  } else
+    worldNews(
+      state,
+      `Alliance entre ${displayName(state, state.characters[a])} et ${displayName(state, state.characters[b])}.`,
+      'alliance',
+      a,
+    );
 }
 
 export function breakAlliance(state: GameState, a: string, b: string): void {

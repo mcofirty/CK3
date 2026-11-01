@@ -18,7 +18,7 @@ import {
   warSide,
 } from '../characters';
 import { heirsOf } from '../characters/lifecycle';
-import { notify, type Ctx } from '../context';
+import { notify, worldNews, type Ctx } from '../context';
 import {
   allianceAcceptance,
   celebrateMarriage,
@@ -483,6 +483,13 @@ function aiVassals(ctx: Ctx): void {
           notify(
             state,
             `Révolte ! ${state.characters[leader].name} et sa faction prennent les armes.`,
+          );
+        else
+          worldNews(
+            state,
+            `Révolte chez ${state.characters[liege].name} : ${state.characters[leader].name} et ${faction.length - 1 ? `${faction.length - 1} autre${faction.length > 2 ? 's' : ''} vassa${faction.length > 2 ? 'ux' : 'l'}` : 'ses fidèles'} réclament leur indépendance.`,
+            'revolte',
+            liege,
           );
       }
     }

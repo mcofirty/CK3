@@ -2364,3 +2364,29 @@ body {
 .glossary-entry p {
   margin: 2px 0 0;
 }
+
+/* Nouvelles du monde */
+.news-filter {
+  min-height: 44px;
+  font-size: 15px;
+  padding: 6px 14px;
+  color: inherit;
+  cursor: pointer;
+}
+.news-filter.on {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
+}
+.news-year-title {
+  margin: 12px 0 4px;
+  font-size: 16px;
+}
+.news-item {
+  margin: 4px 0;
+  font-size: 16px;
+}
+.news-guerre .news-icon,
+.news-revolte .news-icon {
+  color: var(--bad, #b3261e);
+}

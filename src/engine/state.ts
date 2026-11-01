@@ -275,6 +275,24 @@ export interface ChronicleEntry {
     | 'divers';
 }
 
+/** Nouvelle du monde : ce qui se passe chez les autres souverains. */
+export interface NewsEntry {
+  turn: number;
+  text: string;
+  kind:
+    | 'guerre'
+    | 'paix'
+    | 'deces'
+    | 'succession'
+    | 'mariage'
+    | 'alliance'
+    | 'titre'
+    | 'revolte'
+    | 'fait';
+  /** Souverain principalement concerné. */
+  rulerId?: string;
+}
+
 /** Instance d'événement en attente de choix. */
 export interface EventInstance {
   uid: string;
@@ -331,6 +349,8 @@ export interface GameState {
   eventOnce: Record<string, boolean>;
   chronicle: ChronicleEntry[];
   notifications: Notification[];
+  /** Nouvelles du monde (royaumes de l'IA), les plus récentes à la fin. */
+  worldNews: NewsEntry[];
   battle?: import('./battle/types').BattleState;
   /** Batailles du joueur encore à jouer cette saison. */
   pendingBattles: { countyId: string; attackerArmyId: string; defenderArmyId: string }[];
@@ -439,4 +459,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;

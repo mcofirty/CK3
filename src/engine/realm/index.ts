@@ -6,7 +6,7 @@ import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } fro
 import { gainXp, record } from '../progression';
 import { courtPayroll } from '../entourage/roster';
 import { countyDevMult, countyIncomeMult, countyLevyMult, edictSum } from '../economy/local';
-import { chronicle, clamp, notify, type Ctx } from '../context';
+import { chronicle, clamp, notify, worldNews, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
 import { armyUpkeep, emptyUnits, totalMen } from '../units';
 
@@ -25,6 +25,22 @@ export function independentRulers(state: GameState): string[] {
     if (h && !h.liegeId) set.add(h.id);
   }
   return [...set];
+}
+
+/** Le domaine de ce souverain touche-t-il celui du joueur ? */
+export function bordersPlayer(state: GameState, rulerId: string): boolean {
+  const ruler = (id: string) => {
+    let c = state.characters[id];
+    for (let g = 0; c?.liegeId && g < 8; g++) c = state.characters[c.liegeId];
+    return c?.id;
+  };
+  const top = ruler(rulerId);
+  if (!top || top === state.playerId) return top === state.playerId;
+  return Object.values(state.counties).some(
+    (c) =>
+      ruler(c.holderId) === top &&
+      c.adjacent.some((n) => ruler(state.counties[n]?.holderId ?? '') === state.playerId),
+  );
 }
 
 export function vassalsOf(state: GameState, rulerId: string): string[] {
@@ -486,6 +502,16 @@ export function createTitle(ctx: Ctx, rulerId: string, titleId: string): boolean
     state.dynasties[r.dynastyId].renown += isKingdom
       ? C.renownPerTitle.royaume * 10
       : C.renownPerTitle.duche * 10;
-  chronicle(state, `${r.name} fonde le ${name}.`, 'titre');
+  if (rulerId === state.playerId) chronicle(state, `${r.name} fonde le ${name}.`, 'titre');
+  else
+    worldNews(
+      state,
+      `${r.name} ${state.dynasties[r.dynastyId ?? '']?.name ?? ''} fonde le ${name}.`.replace(
+        '  ',
+        ' ',
+      ),
+      'titre',
+      rulerId,
+    );
   return true;
 }

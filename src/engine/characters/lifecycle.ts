@@ -1,7 +1,7 @@
 /** Cycle de vie : santé, naissances, éducation, décès, succession. */
 import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
-import { chronicle, notify, recordRuler, seasonOf, type Ctx } from '../context';
+import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
 import { isIndependent } from '../realm';
 import type { Character, GameState } from '../state';
 import {
@@ -191,6 +191,7 @@ export function killCharacter(ctx: Ctx, id: string, cause: string): void {
   const { state } = ctx;
   const c = state.characters[id];
   if (!c || !c.alive) return;
+  const sovereign = isIndependent(state, id);
   c.alive = false;
   c.deathTurn = state.turn;
   c.deathCause = cause;
@@ -203,6 +204,13 @@ export function killCharacter(ctx: Ctx, id: string, cause: string): void {
       'deces',
     );
     if (id !== state.playerId) notify(state, `${c.name} est mort${c.female ? 'e' : ''} ${cause}.`);
+  } else if (sovereign) {
+    worldNews(
+      state,
+      `${displayName(state, c)}, souverain${c.female ? 'e' : ''}, meurt ${cause} à ${ageOf(state, c)} ans.`,
+      'deces',
+      id,
+    );
   }
   // Conseil.
   for (const seat of Object.values(state.council))
@@ -381,6 +389,15 @@ export function succession(ctx: Ctx, id: string): void {
     heir.dynastyId === state.playerDynastyId
   ) {
     chronicle(state, `${heir.name} hérite des terres de ${dead.name}.`, 'succession');
+  } else if (independent && isIndependent(state, heir.id)) {
+    const young = ageOf(state, heir) < 16;
+    const newHouse = heir.dynastyId !== dead.dynastyId;
+    worldNews(
+      state,
+      `${displayName(state, heir)} succède à ${dead.name}${young ? ', encore enfant : une régence s’ouvre' : ''}${newHouse ? ' ; une nouvelle maison monte sur le trône' : ''}.`,
+      'succession',
+      heir.id,
+    );
   }
 }
 

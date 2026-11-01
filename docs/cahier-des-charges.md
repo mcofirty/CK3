@@ -99,6 +99,8 @@ Relations : l'opinion va de -100 à +100, avec le détail des raisons affiché. 
 
 La carte compte environ 30 comtés reliés par un graphe d'adjacence, regroupés en 6 à 8 duchés et 2 royaumes à fonder.
 
+_Révision du 1er novembre 2026, à la demande du propriétaire : la carte générée compte désormais 48 comtés, 12 duchés et 3 royaumes à fonder, partagés au départ entre 8 souverains de tailles inégales (de 3 à 10 comtés, le joueur recevant un domaine moyen de 5 à 7). Les autres cours vivent leur vie (faits de saison, guerres, successions, mariages, révoltes), rapportée dans les nouvelles du monde. Les parties déjà commencées gardent leur carte._
+
 Chaque comté possède :
 
 - un nom, un terrain (plaine, colline, forêt, marais, montagne) et d'éventuelles rivières sur ses frontières ;
@@ -496,7 +498,7 @@ Hors périmètre de cette version :
 - Multijoueur, serveur, compte utilisateur, monétisation, publication sur l'App Store.
 - Musique. (Révision du 31/10/2026, à la demande du propriétaire : des effets sonores synthétisés et des vibrations ont été ajoutés, désactivables.)
 - Religions et cultures multiples, hérésies, croisades.
-- Carte de plus de 40 comtés, batailles navales.
+- Carte de plus de 60 comtés, batailles navales. (Révision du 01/11/2026 : limite portée de 40 à 60 comtés, la carte en compte 48.)
 - Tout nom, texte, carte, image ou son issu des jeux Paradox.
 
 ## 15. Consignes de travail pour Claude Code

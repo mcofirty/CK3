@@ -24,9 +24,10 @@ import { TRAITS } from '../../data/traits';
 import { gainXp, record } from '../progression';
 import { seasonMercenaries, tryNegotiate } from './campaignExtras';
 import { killCharacter } from '../characters/lifecycle';
-import { chronicle, clamp, newId, notify, seasonOf, type Ctx } from '../context';
+import { chronicle, clamp, newId, notify, seasonOf, worldNews, type Ctx } from '../context';
 import {
   availableLevies,
+  bordersPlayer,
   capitalOf,
   countyRuler,
   countySupplyBonus,
@@ -843,7 +844,11 @@ export function declareWar(
       `${displayName(state, a)} déclare la guerre à ${displayName(state, d)} (${war.name}).`,
       'guerre',
     );
-  else notify(state, `${a.name} déclare la guerre à ${d.name} (${war.name}).`);
+  else {
+    const text = `${displayName(state, a)} déclare la guerre à ${displayName(state, d)} (${war.name}).`;
+    worldNews(state, text, 'guerre', attackerId);
+    if (bordersPlayer(state, attackerId) || bordersPlayer(state, defenderId)) notify(state, text);
+  }
   addOpinion(state, defenderId, attackerId, 'M’a déclaré la guerre', -30, 40);
   return war;
 }
@@ -986,7 +991,11 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
       ? `Paix blanche : fin de la guerre « ${w.name} ».`
       : `Fin de la guerre « ${w.name} » : victoire de ${state.characters[winnerId!].name}. ${detail}`;
   if (participants.includes(state.playerId)) chronicle(state, text.trim(), 'guerre');
-  else notify(state, text.trim());
+  else {
+    worldNews(state, text.trim(), 'paix', winnerId ?? w.attackerId);
+    if (bordersPlayer(state, w.attackerId) || bordersPlayer(state, w.defenderId))
+      notify(state, text.trim());
+  }
 }
 
 /** Score de guerre vu d'un participant (positif = favorable). */

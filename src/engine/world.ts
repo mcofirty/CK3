@@ -72,6 +72,7 @@ export function emptyState(seed: number, difficulty: Difficulty): GameState {
     eventOnce: {},
     chronicle: [],
     notifications: [],
+    worldNews: [],
     pendingBattles: [],
     phase: 'saison',
     nextId: 0,
@@ -106,7 +107,11 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     if (e.declencheur.type !== 'aleatoire') continue;
     state.eventBias[e.id] = rng.chance(0.12) ? 0 : Math.round(rng.range(0.4, 1.8) * 100) / 100;
   }
-  const playerRealm = rng.int(0, MAP_DATA.realms.length - 1);
+  // Le joueur reçoit un domaine de taille moyenne ; les autres vont du petit au grand.
+  const fair = MAP_DATA.realms
+    .map((r, i) => (r.length >= 5 && r.length <= 7 ? i : -1))
+    .filter((i) => i >= 0);
+  const playerRealm = fair.length ? rng.pick(fair) : rng.int(0, MAP_DATA.realms.length - 1);
 
   // Comtés, duchés, royaumes.
   for (const k of MAP_DATA.kingdoms)
