@@ -30,6 +30,7 @@ import {
   usePager,
 } from '../components/common';
 import { DECISIONS } from '../../data/decisions';
+import { PoachCard } from '../components/Entourage';
 import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
 
@@ -174,6 +175,7 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
           Proposer
         </button>
       </div>
+      <PoachCard game={game} rulerId={id} />
       <div className="card">
         <b>Réclamer un tribut ({BALANCE.diplomacy.tribute.amount} or)</b>
         <AcceptanceView acc={tribute} />

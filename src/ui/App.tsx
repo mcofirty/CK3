@@ -4,7 +4,7 @@ import { displayName, opinion } from '../engine/characters';
 import { yearOf } from '../engine/context';
 import { wards } from '../engine/diplomacy';
 import { checkAll, effectLabels, eventDef, eventText, renderText } from '../engine/events/engine';
-import { vassalsOf } from '../engine/realm';
+import { economyOf, vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
 import {
@@ -267,6 +267,19 @@ function attention(g: GameState): string[] {
   const seatsEmpty = Object.values(g.council).filter((s) => !s.holderId).length;
   if (seatsEmpty) res.push(`${seatsEmpty} siège(s) du conseil vacant(s).`);
   if (g.characters[pl].gold < 0) res.push('Votre trésor est dans le rouge.');
+  else {
+    const eco = economyOf(g, pl);
+    if (g.characters[pl].gold + eco.goldNet < 0)
+      res.push(
+        `Votre trésor passera dans le rouge à la saison prochaine (${Math.round(g.characters[pl].gold)} or, ${eco.goldNet > 0 ? '+' : ''}${Math.round(eco.goldNet)} par saison).`,
+      );
+  }
+  if (
+    (g.candidates ?? []).length &&
+    g.turn % 4 === 0 &&
+    Object.values(g.council).some((s) => !s.holderId)
+  )
+    res.push('Des candidats de passage sont à la cour et un poste du conseil est vacant.');
   return res;
 }
 

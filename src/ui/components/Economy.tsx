@@ -18,6 +18,7 @@ import { countyMaxLevies, economyOf } from '../../engine/realm';
 import type { GameState, TaxLevel } from '../../engine/state';
 import { useStore } from '../store';
 import { Bar, Segmented, signed } from './common';
+import { TreasuryCard } from './Entourage';
 
 const L = BALANCE.local;
 /** Nombre signé, une décimale si besoin, virgule française. */
@@ -181,6 +182,8 @@ export function EconomyView({ game }: { game: GameState }) {
           ))}
         </div>
       </div>
+
+      <TreasuryCard game={game} />
 
       <div className="card">
         <h3>Impôts et peuple</h3>

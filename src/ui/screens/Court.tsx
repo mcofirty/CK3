@@ -31,12 +31,13 @@ import {
 } from '../components/common';
 import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../components/Progression';
 import { perkPoints } from '../../engine/progression';
+import { CandidatesCard, CourtCard, WardsCard } from '../components/Entourage';
 import { useStore } from '../store';
 
-const COURT_VIEWS = ['souverain', 'famille', 'conseil', 'arbre'] as const;
+const COURT_VIEWS = ['souverain', 'entourage', 'conseil', 'arbre'] as const;
 
 export function CourtScreen({ game }: { game: GameState }) {
-  const [view, setView] = useState<'souverain' | 'famille' | 'conseil' | 'arbre'>('souverain');
+  const [view, setView] = useState<(typeof COURT_VIEWS)[number]>('souverain');
   const dir = usePager(COURT_VIEWS, view, setView);
   return (
     <>
@@ -44,7 +45,7 @@ export function CourtScreen({ game }: { game: GameState }) {
         style={{ marginBottom: 12 }}
         options={[
           { value: 'souverain', label: 'Souverain' },
-          { value: 'famille', label: 'Famille' },
+          { value: 'entourage', label: 'Entourage' },
           { value: 'conseil', label: 'Conseil' },
           { value: 'arbre', label: 'Maison' },
         ]}
@@ -53,7 +54,7 @@ export function CourtScreen({ game }: { game: GameState }) {
       />
       <div className={`view enter-${dir}`} key={view}>
         {view === 'souverain' && <RulerView game={game} />}
-        {view === 'famille' && <FamilyView game={game} />}
+        {view === 'entourage' && <EntourageView game={game} />}
         {view === 'conseil' && <CouncilView game={game} />}
         {view === 'arbre' && <TreeView game={game} />}
       </div>
@@ -195,6 +196,18 @@ function RulerView({ game }: { game: GameState }) {
   );
 }
 
+/** Cour, recrutement, pupilles, puis famille et éducation. */
+function EntourageView({ game }: { game: GameState }) {
+  return (
+    <>
+      <CourtCard game={game} />
+      <CandidatesCard game={game} />
+      <WardsCard game={game} />
+      <FamilyView game={game} />
+    </>
+  );
+}
+
 function FamilyView({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const p = game.characters[game.playerId];
@@ -312,8 +325,24 @@ function CouncilView({ game }: { game: GameState }) {
       targetId: 'targetId' in patch ? patch.targetId : patch.task ? undefined : seat.targetId,
     });
   };
+  const vacant = COUNCIL_POSTS.filter((p) => !game.council[p].holderId);
+  const pager = useStore((st) => st.pager);
   return (
     <>
+      {vacant.length > 0 && (
+        <div className="card">
+          <b>
+            {vacant.length === 1 ? 'Un poste est vacant' : `${vacant.length} postes sont vacants`}
+          </b>
+          <p className="small muted" style={{ margin: '4px 0 8px' }}>
+            Personne à votre cour n’a les compétences requises ? Des candidats de passage se
+            présentent chaque printemps.
+          </p>
+          <button className="btn small primary" onClick={() => pager?.go(1)}>
+            Recruter à la cour
+          </button>
+        </div>
+      )}
       {COUNCIL_POSTS.map((post) => {
         const info = COUNCIL_INFO[post];
         const seat = game.council[post];

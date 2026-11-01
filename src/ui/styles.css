@@ -2287,3 +2287,39 @@ body {
   border-color: var(--bad);
   color: var(--bad);
 }
+
+/* ---------- Entourage ---------- */
+.court-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+}
+.court-row > .list-item {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+}
+.candidate {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.court-action {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.court-action:first-child {
+  border-top: 0;
+}
+@media (max-width: 380px) {
+  .court-row {
+    flex-wrap: wrap;
+  }
+  .court-row > .list-item {
+    flex: 1 1 100%;
+  }
+  .court-row > .btn,
+  .court-row > .col {
+    margin: 0 0 8px auto;
+  }
+}

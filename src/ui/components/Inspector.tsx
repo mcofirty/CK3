@@ -46,6 +46,7 @@ import { Bar, CharLine, CharLink, CoatOfArms, CountyLink, Portrait, Sheet, signe
 import { realmColor, visibleMen } from './MapView';
 import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
 import { CountyEconomy } from './Economy';
+import { CourtActions, courtActionKinds } from './Entourage';
 import { countyLevyMult } from '../../engine/economy/local';
 import { PERKS } from '../../data/perks';
 
@@ -231,6 +232,10 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
           })}
         </div>
       </Section>
+
+      {c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
+        <CourtActionsSection game={game} c={c} />
+      )}
 
       {c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
         <Section title="Comploter">
@@ -780,5 +785,15 @@ function PlotActions({ game, id }: { game: GameState; id: string }) {
         Ajoutez des agents et suivez le complot dans Intrigues → Complots.
       </p>
     </>
+  );
+}
+
+/** Section « À la cour » de la fiche : n'apparaît que s'il y a une action possible. */
+function CourtActionsSection({ game, c }: { game: GameState; c: GameState['characters'][string] }) {
+  if (!courtActionKinds(game, c).length) return null;
+  return (
+    <Section title="À la cour">
+      <CourtActions game={game} c={c} />
+    </Section>
   );
 }

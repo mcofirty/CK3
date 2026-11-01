@@ -90,3 +90,5 @@ Chaque choix affiche automatiquement ses effets connus avant validation.
 **Conditions** : `comte_contentement_max` / `comte_contentement_min`, `comte_impots` (`faible`, `normal`, `eleve`, `ecrasant`), `contentement_moyen_max` / `contentement_moyen_min` (domaine), `edit` / `pas_edit` (identifiant d'édit, voir `src/data/edicts.ts`), `dette` (le souverain a des emprunts).
 
 **Effets** : `contentement` (comté du rôle `comte`, sinon tout le domaine), `impots` (fixe le taux du comté du rôle `comte`).
+
+**Arrivées à la cour (v5)** : `nouveau_courtisan` accepte `competence` (`{ competence, valeur }`), `femme`, `trait` et `pupille` (enfant confié à la cour). Effet interne `pupille` (avenir d'un pupille adulte).

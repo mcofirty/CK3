@@ -3,6 +3,7 @@ import { BALANCE } from '../../data/balance';
 import { MERCENARIES } from '../../data/mercenaries';
 import { UNIT_TYPES, UNITS } from '../../data/units';
 import { mercCheck, negotiateChance } from '../../engine/war/campaignExtras';
+import { chanceOf, rallyAcceptance } from '../../engine/entourage';
 import { allied, displayName, isAdult, skill, warSide } from '../../engine/characters';
 import { callToArmsAcceptance } from '../../engine/diplomacy';
 import {
@@ -317,6 +318,19 @@ export function ArmyScreen({ game }: { game: GameState }) {
                 >
                   Exiger un comté
                 </button>
+              )}
+              {!Object.values(game.counties).some((k) => k.holderId === c.id) && (
+                <Tip
+                  text={`Lui proposer de vous servir (${BALANCE.entourage.rally.fee} or, une seule tentative) : chance ${Math.round(chanceOf(rallyAcceptance(game, c.id).score) * 100)} %.`}
+                >
+                  <button
+                    className="btn small"
+                    disabled={!!rallyAcceptance(game, c.id).blocked}
+                    onClick={() => dispatch({ type: 'rallyPrisoner', id: c.id })}
+                  >
+                    Rallier
+                  </button>
+                </Tip>
               )}
               {!Object.values(game.counties).some((k) => k.holderId === c.id) && (
                 <Tip text="Il vit à votre cour : tant qu’il y reste, sa famille ne peut pas vous attaquer.">
