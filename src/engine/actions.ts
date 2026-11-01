@@ -2,6 +2,15 @@
  * Point d'entrée unique du moteur : applyAction(état, action) → nouvel état.
  * L'état reçu n'est jamais modifié : on travaille sur une copie.
  */
+import {
+  applyClause,
+  breakPacts,
+  fuseCrowns,
+  offerProtection,
+  proposePact,
+  setAgnatic,
+  type MarriageClause,
+} from './crowns';
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { BALANCE } from '../data/balance';
 import {
@@ -96,7 +105,13 @@ export type Action =
   | { type: 'dismiss'; unit: UnitType; companies: number }
   | { type: 'loot'; armyId: string }
   | { type: 'assault'; armyId: string }
-  | { type: 'declareWar'; targetId: string; cb: CasusBelliType; countyId?: string }
+  | {
+      type: 'declareWar';
+      targetId: string;
+      cb: CasusBelliType;
+      countyId?: string;
+      claimantId?: string;
+    }
   | { type: 'peace'; warId: string; kind: 'exiger' | 'blanche' | 'capituler' }
   | { type: 'ransom'; characterId: string; kind: 'or' | 'comte' | 'liberer' | 'otage' | 'executer' }
   | { type: 'takeDecision'; id: string }
@@ -116,7 +131,18 @@ export type Action =
   | { type: 'repayLoan'; loanId: string }
   | { type: 'offerAmbition' }
   | { type: 'abandonAmbition' }
-  | { type: 'proposeMarriage'; aId: string; bId: string }
+  | {
+      type: 'proposeMarriage';
+      aId: string;
+      bId: string;
+      clause?: MarriageClause;
+      dowry?: number;
+    }
+  | { type: 'fuseCrowns'; unionId: string }
+  | { type: 'setAgnatic'; on: boolean }
+  | { type: 'offerProtection'; targetId: string }
+  | { type: 'proposePact'; kind: 'famille' | 'succession'; targetId: string; gold?: number }
+  | { type: 'breakPacts'; targetId: string }
   | { type: 'proposeAlliance'; targetId: string }
   | { type: 'sendGift'; targetId: string }
   | { type: 'callToArms'; allyId: string; warId: string; gold?: number }
@@ -232,7 +258,7 @@ function dispatch(ctx: Ctx, a: Action): void {
       if (state.armies[a.armyId]?.ownerId === pl) state.armies[a.armyId].assault = true;
       break;
     case 'declareWar': {
-      const w = declareWar(ctx, pl, a.targetId, a.cb, a.countyId);
+      const w = declareWar(ctx, pl, a.targetId, a.cb, a.countyId, false, a.claimantId);
       if (w) callAllies(ctx, w);
       break;
     }
@@ -305,11 +331,30 @@ function dispatch(ctx: Ctx, a: Action): void {
       const x = state.characters[a.aId];
       const y = state.characters[a.bId];
       if (!x || !y) break;
-      const acc = marriageAcceptance(state, x, y);
-      if (acc.accept) celebrateMarriage(ctx, x.id, y.id);
-      else notify(state, `La demande en mariage pour ${x.name} est refusée.`);
+      const clause = a.clause ?? 'aucune';
+      const dowry = Math.max(0, Math.round(a.dowry ?? 0));
+      const acc = marriageAcceptance(state, x, y, clause, dowry);
+      if (acc.accept) {
+        celebrateMarriage(ctx, x.id, y.id);
+        applyClause(state, x, y, clause, dowry);
+      } else notify(state, `La demande en mariage pour ${x.name} est refusée.`);
       break;
     }
+    case 'fuseCrowns':
+      fuseCrowns(state, pl, a.unionId);
+      break;
+    case 'setAgnatic':
+      setAgnatic(state, pl, a.on);
+      break;
+    case 'offerProtection':
+      offerProtection(ctx, pl, a.targetId);
+      break;
+    case 'proposePact':
+      proposePact(ctx, a.kind, pl, a.targetId, Math.max(0, Math.round(a.gold ?? 0)));
+      break;
+    case 'breakPacts':
+      breakPacts(state, pl, a.targetId);
+      break;
     case 'proposeAlliance': {
       const acc = allianceAcceptance(state, pl, a.targetId);
       if (acc.accept) makeAlliance(state, pl, a.targetId);

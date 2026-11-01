@@ -33,6 +33,7 @@ import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../compone
 import { perkPoints } from '../../engine/progression';
 import { CandidatesCard, CourtCard, WardsCard } from '../components/Entourage';
 import { useStore } from '../store';
+import { AgnaticLaw, ClaimsCard, UnionsCard } from '../components/Crowns';
 import { houseColorOf } from '../../engine/heraldry';
 
 const COURT_VIEWS = ['souverain', 'entourage', 'conseil', 'arbre'] as const;
@@ -147,7 +148,10 @@ function RulerView({ game }: { game: GameState }) {
             {heir ? `${heir.name} (${ageOf(game, heir)} ans)` : <span className="bad">aucun</span>}
           </dd>
           <dt>Loi de succession</dt>
-          <dd>{p.successionLaw === 'partage' ? 'Partage' : 'Primogéniture'}</dd>
+          <dd>
+            {p.successionLaw === 'partage' ? 'Partage' : 'Primogéniture'}
+            {p.agnatic ? ', agnatique' : ''}
+          </dd>
           <dt>Revendications</dt>
           <dd>
             {p.claims
@@ -168,6 +172,7 @@ function RulerView({ game }: { game: GameState }) {
             </button>
           </Tip>
         )}
+        <AgnaticLaw game={game} />
       </div>
       {titles.length > 0 && (
         <div className="card">
@@ -456,6 +461,8 @@ function TreeView({ game }: { game: GameState }) {
   };
   return (
     <>
+      <UnionsCard game={game} />
+      <ClaimsCard game={game} />
       <div className="card">
         <h3>Héritages de la maison</h3>
         <LegacyTree game={game} />

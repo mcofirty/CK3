@@ -124,6 +124,8 @@ Domaine propre : le nombre de comtés tenus directement est limité par la Gesti
 
 Bâtiments (8 au départ) : Marché, Ferme, Caserne, Écuries, Archerie, Muraille, Chapelle, Route. Chacun coûte de l'or, se construit en un nombre de saisons donné et a 2 niveaux.
 
+_Révision du 1er novembre 2026, à la demande du propriétaire : mariages entre souverains. Unions personnelles (un héritier qui reçoit un second royaume le tient à part, avec ses privilèges, jusqu'à la fusion des couronnes ; le partage rend la couronne au cadet) ; loi agnatique ; droits dynastiques transmis par le sang (forts quand la maison visée est fragile), guerre de droit dynastique et prétendants ; contrat de mariage (renonciation, matrilinéaire, hommage, dot) ; protection d'un souverain lié par la famille, pactes de famille et successoraux, parjure._
+
 ## 6. Événements narratifs
 
 Les événements sont des données (fichiers JSON), interprétées par un petit moteur d'effets ; ajouter un événement ne demande aucune ligne de code.

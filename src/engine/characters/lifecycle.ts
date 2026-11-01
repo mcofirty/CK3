@@ -2,7 +2,8 @@
 import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
 import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
-import { ensureCapitals, isIndependent } from '../realm';
+import { ensureCapitals, isIndependent, realmCounties, realmName } from '../realm';
+import { createUnion, grantHouseClaims, inheritUnions, pactHeir } from '../crowns';
 import { newHouseColor } from '../heraldry';
 import { Rng } from '../rng';
 import type { Character, GameState } from '../state';
@@ -56,7 +57,11 @@ export function birthChance(state: GameState, mother: Character, father: Charact
 /** Naissance d'un enfant (utilisée aussi par l'effet « naissance »). */
 export function giveBirth(ctx: Ctx, mother: Character, father: Character): Character {
   const { state, rng } = ctx;
-  const dynastyId = father.dynastyId ?? mother.dynastyId;
+  // Mariage matrilinéaire : l'enfant appartient à la maison de sa mère.
+  const dynastyId =
+    mother.matrilineal && mother.dynastyId
+      ? mother.dynastyId
+      : (father.dynastyId ?? mother.dynastyId);
   const courtId = father.dynastyId === dynastyId ? father.courtId : mother.courtId;
   const child = createCharacter(ctx, {
     age: 0,
@@ -70,6 +75,8 @@ export function giveBirth(ctx: Ctx, mother: Character, father: Character): Chara
     education: false,
   });
   child.birthTurn = state.turn;
+  // Droits par le sang sur la maison régnante de l'autre parent.
+  grantHouseClaims(state, child);
   // Traits héréditaires.
   for (const t of HEREDITARY_TRAITS) {
     const carriers = [mother, father].filter((p) => p.traits.includes(t)).length;
@@ -243,7 +250,9 @@ export function titlesOf(state: GameState, id: string): string[] {
 /** Ordre de succession : enfants par âge, puis frères et sœurs et leurs enfants, puis la dynastie. */
 export function heirsOf(state: GameState, c: Character): Character[] {
   const res: Character[] = [];
-  const add = (x: Character) => x.alive && x.id !== c.id && !res.includes(x) && res.push(x);
+  // Loi agnatique : les femmes sont exclues de la succession.
+  const add = (x: Character) =>
+    x.alive && x.id !== c.id && !(c.agnatic && x.female) && !res.includes(x) && res.push(x);
   livingChildren(state, c).forEach(add);
   for (const k of c.childrenIds.map((id) => state.characters[id]).filter(Boolean))
     if (!k.alive) livingChildren(state, k).forEach(add);
@@ -268,6 +277,9 @@ export function succession(ctx: Ctx, id: string): void {
   const wasPlayer = id === state.playerId;
   const independent = !dead.liegeId;
   let heir = heirs[0];
+  // Pacte successoral : faute d'héritier, l'allié recueille l'héritage.
+  const pactPartner = !heir && independent ? pactHeir(state, id) : undefined;
+  if (pactPartner) heir = pactPartner;
   if (!heir) {
     if (wasPlayer) {
       state.gameOver = {
@@ -290,6 +302,12 @@ export function succession(ctx: Ctx, id: string): void {
   }
   const counties = Object.values(state.counties).filter((c) => c.holderId === id);
   const heirWasLanded = Object.values(state.counties).some((c) => c.holderId === heir.id);
+  // Un souverain qui hérite d'un autre royaume indépendant : union personnelle.
+  const unionCrown =
+    independent && heirWasLanded && isIndependent(state, heir.id) && counties.length > 0
+      ? realmName(state, id).replace(/^(Royaume|Duché|Comté) de /, '')
+      : undefined;
+  const deadRealm = unionCrown ? realmCounties(state, id).map((c) => c.id) : [];
   const titles = titlesOf(state, id);
   const children = livingChildren(state, dead).filter((k) => k.id !== heir.id);
   const law = dead.successionLaw;
@@ -305,8 +323,17 @@ export function succession(ctx: Ctx, id: string): void {
     sorted.find((c) => titles.some((t) => state.duchies[t]?.counties.includes(c.id))) ??
     sorted[0];
   const shares = new Map<string, string>();
+  // Partage : une couronne tenue en union revient au cadet, qui règne seul.
+  let cadet: string | undefined;
+  const deadUnions = (state.unions ?? []).filter((u) => u.rulerId === id);
+  if (law === 'partage' && children.length && heirIsChild(dead, heir) && deadUnions.length) {
+    cadet = children[0].id;
+    for (const u of deadUnions)
+      for (const cid of u.counties)
+        if (state.counties[cid]?.holderId === id) shares.set(cid, cadet);
+  }
   if (law === 'partage' && children.length && heirIsChild(dead, heir)) {
-    const others = sorted.filter((c) => c !== capital);
+    const others = sorted.filter((c) => c !== capital && !shares.has(c.id));
     // L'aîné garde la capitale et la moitié des autres comtés ; le reste est partagé.
     const keep = Math.ceil(others.length / 2);
     others.forEach((c, i) => {
@@ -334,7 +361,7 @@ export function succession(ctx: Ctx, id: string): void {
   for (const [, to] of shares) {
     if (to === heir.id) continue;
     const k = state.characters[to];
-    k.liegeId = independent ? heir.id : liege;
+    k.liegeId = to === cadet && independent ? undefined : independent ? heir.id : liege;
     if (k.liegeId === k.id) k.liegeId = undefined;
     k.courtId = k.id;
     // Pas de vassalité à deux niveaux : les vassaux du cadet passent à l'héritier.
@@ -342,6 +369,32 @@ export function succession(ctx: Ctx, id: string): void {
       if (v.alive && v.liegeId === k.id) v.liegeId = k.liegeId;
     addOpinion(state, to, heir.id, 'Partage de l’héritage', -10, 16);
   }
+  // Couronnes : unions du défunt transmises, nouvelle union si l'héritier règne déjà.
+  if (cadet) {
+    // Les vassaux de la couronne du cadet le suivent.
+    const crown = new Set(deadUnions.flatMap((u) => u.counties));
+    for (const v of Object.values(state.characters))
+      if (
+        v.alive &&
+        v.liegeId === id &&
+        Object.values(state.counties).some((c) => c.holderId === v.id && crown.has(c.id))
+      )
+        v.liegeId = cadet;
+  }
+  inheritUnions(state, id, heir.id, cadet);
+  if (unionCrown)
+    createUnion(
+      state,
+      heir.id,
+      unionCrown,
+      deadRealm.filter((cid) => !shares.has(cid) || shares.get(cid) === heir.id),
+    );
+  if (pactPartner)
+    chronicle(
+      state,
+      `${heir.name} hérite de ${dead.name} en vertu d’un pacte successoral.`,
+      'succession',
+    );
   if (!heir.liegeId) heir.gold += dead.gold;
   heir.prestige += dead.prestige * 0.5;
   heir.piety += dead.piety * 0.5;

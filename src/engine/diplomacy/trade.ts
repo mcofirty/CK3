@@ -19,6 +19,7 @@ import {
 import type { County, GameState } from '../state';
 import { transferCounty } from '../war';
 import type { Acceptance, Factor } from './index';
+import { hasFamilyPact } from '../crowns';
 
 const T = BALANCE.trade;
 
@@ -83,13 +84,11 @@ export function tradeBalance(state: GameState, fromId: string, offer: TradeOffer
   const received =
     offer.giveGold +
     offer.giveCounties.reduce((s, id) => s + countyValue(state, state.counties[id], t), 0);
+  // Entre parents liés par un pacte, on tient moins jalousement à sa terre.
+  const attach = hasFamilyPact(state, fromId, t) ? 1 : T.attachment;
   const given =
     offer.takeGold +
-    offer.takeCounties.reduce(
-      (s, id) => s + countyValue(state, state.counties[id], t) * T.attachment,
-      0,
-    );
-  void fromId;
+    offer.takeCounties.reduce((s, id) => s + countyValue(state, state.counties[id], t) * attach, 0);
   return { received: Math.round(received), given: Math.round(given) };
 }
 
@@ -104,6 +103,8 @@ export function tradeAcceptance(state: GameState, fromId: string, offer: TradeOf
     f.push({ label: `Ce qu’il reçoit (${received} or)`, value: received / T.goldPerPoint });
   if (given) f.push({ label: `Ce qu’il cède (${given} or)`, value: -given / T.goldPerPoint });
   f.push({ label: 'Opinion', value: opinion(state, t, fromId) * T.perOpinion });
+  if (hasFamilyPact(state, fromId, t))
+    f.push({ label: 'Pacte de famille', value: BALANCE.crowns.familyPact.tradeBonus });
   f.push(...traitTrade(state, t));
   let blocked: string | undefined;
   const empty =

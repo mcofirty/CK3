@@ -6,6 +6,7 @@ import { BALANCE } from '../../data/balance';
 import { BUILDINGS } from '../../data/buildings';
 import { EDICT_BY_ID, type EdictDef } from '../../data/edicts';
 import { clamp } from '../context';
+import { distantFactor } from '../crowns';
 import type { ConscriptionLevel, County, GameState, TaxLevel } from '../state';
 
 const L = BALANCE.local;
@@ -151,6 +152,8 @@ export function contentmentDelta(
   const chapels = c.buildings.filter((b) => b.type === 'chapelle').reduce((s, b) => s + b.level, 0);
   if (chapels && BUILDINGS.chapelle) push('Chapelle', chapels * L.chapelContentment);
   if (c.occupation) push('Occupation ennemie', L.occupiedContentment);
+  const far = distantFactor(state, c);
+  if (far) push('Souverain lointain (union)', BALANCE.crowns.distantContentment * far);
   if (c.plague) push('Épidémie', L.plagueContentment);
   push('Retour au calme', (L.contentmentRest - contentmentOf(c)) * L.contentmentReturn);
   return { total: reasons.reduce((s, r) => s + r.value, 0), reasons };

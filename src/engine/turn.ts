@@ -11,6 +11,7 @@ import { seasonCourt } from './court';
 import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
 import { seasonAbroad } from './abroad';
+import { seasonPretenders, seasonUnions } from './crowns';
 import { checkAchievements, computeEnding } from './endings';
 import { ensureCapitals, realmCounties } from './realm';
 import { seasonPlague } from './plague';
@@ -112,6 +113,8 @@ export function startSeason(ctx: Ctx): void {
   seasonPlots(ctx);
   runAi(ctx);
   seasonAbroad(ctx);
+  seasonUnions(state);
+  seasonPretenders(ctx);
   autoFillCouncil(state);
   seasonEntourage(ctx);
   seasonCourt(ctx);

@@ -1,5 +1,6 @@
 /** Moteur d'événements narratifs et langage d'effets (section 6). */
 import { cession } from '../diplomacy/trade';
+import { setUnionPrivileges, settlePretender } from '../crowns';
 import { BALANCE } from '../../data/balance';
 import { ALL_EVENTS } from '../../data/events';
 import { SEASON_KEYS } from '../../data/names';
@@ -550,6 +551,20 @@ export function effectLabels(
         `Mariage de ${state.characters[e.mariage.a]?.name} et ${state.characters[e.mariage.b]?.name}`,
       );
     if (e.alliance) out.push(`Alliance avec ${state.characters[e.alliance]?.name}`);
+    if (e.union_privileges)
+      out.push(
+        e.union_privileges.mode === 'confirmes'
+          ? `−${BALANCE.crowns.privilegesGold} or · contentement +${BALANCE.crowns.privilegesContentment} · fusion plus lointaine`
+          : `Vassaux de la couronne ${BALANCE.crowns.imposeOpinion} d’opinion · contentement ${BALANCE.crowns.imposeContentment} · fusion plus proche`,
+      );
+    if (e.pretendant)
+      out.push(
+        e.pretendant.action === 'accueillir'
+          ? `Rejoint votre cour avec ses droits · ${state.characters[e.pretendant.souverain]?.name} −20 d’opinion`
+          : e.pretendant.action === 'livrer'
+            ? `${state.characters[e.pretendant.souverain]?.name} +25 d’opinion`
+            : 'Il repart en exil',
+      );
     if (e.cession) {
       const c = state.counties[e.cession.comte]?.name;
       out.push(
@@ -811,6 +826,10 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     if (e.alliance) makeAlliance(state, p.id, e.alliance);
     if (e.cession)
       cession(ctx, e.cession.comte, e.cession.vendeur, e.cession.acheteur, e.cession.prix);
+    if (e.union_privileges)
+      setUnionPrivileges(state, e.union_privileges.union, e.union_privileges.mode);
+    if (e.pretendant)
+      settlePretender(state, e.pretendant.id, e.pretendant.action, e.pretendant.souverain);
     if (e.paix && state.wars[e.paix.warId]) endWar(ctx, e.paix.warId, e.paix.issue);
     if (e.rejoindre_guerre && state.wars[e.rejoindre_guerre.warId]) {
       joinWar(

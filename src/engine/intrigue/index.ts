@@ -1,4 +1,5 @@
 /** Complots du joueur et de l'IA (section 7). */
+import { hasFamilyPact } from '../crowns';
 import { BALANCE } from '../../data/balance';
 import {
   addOpinion,
@@ -123,6 +124,9 @@ export function canStartPlot(
   const t = state.characters[targetId];
   if (!t?.alive) return { ok: false, reason: 'Cible invalide' };
   if (targetId === ownerId) return { ok: false, reason: 'Cible invalide' };
+  const tTop = t.liegeId ?? t.courtId ?? t.id;
+  if (hasFamilyPact(state, ownerId, targetId) || hasFamilyPact(state, ownerId, tTop))
+    return { ok: false, reason: 'Pacte de famille : pas de complot contre ses parents' };
   if (Object.values(state.plots).some((p) => p.ownerId === ownerId))
     return { ok: false, reason: 'Un seul complot à la fois' };
   if (type === 'revolte') {
@@ -298,6 +302,7 @@ export function aiPlots(ctx: Ctx, rulerId: string): void {
   if (grudge) p += BALANCE.relations.vengeanceChance;
   if (!rng.chance(p)) return;
   const pl = state.playerId;
+  if (hasFamilyPact(state, rulerId, pl)) return;
   let type: PlotType = 'discrediter';
   if (grudge || (op < -40 && (hasTrait(r, 'cruel') || hasTrait(r, 'ambitieux'))))
     type = 'assassiner';

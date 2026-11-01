@@ -6,6 +6,7 @@ import MAP from '../data/map.json';
 import { emptyStats } from '../engine/context';
 import { ensureCapitals, independentRulers } from '../engine/realm';
 import { assignHouseColors } from '../engine/heraldry';
+import { grantHouseClaims } from '../engine/crowns';
 import { Rng } from '../engine/rng';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
@@ -102,6 +103,14 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   },
   // Version 9 → 10 : traités de terres et appels à l'aide (délais facultatifs).
   9: (s) => ({ callRefused: {}, tradeRefused: {}, ...s, version: 10 }),
+  // Version 10 → 11 : couronnes (unions, pactes) ; droits par le sang des vivants.
+  10: (s) => {
+    const next: AnySave = { unions: [], familyPacts: [], successionPacts: [], ...s, version: 11 };
+    const g = next as unknown as GameState;
+    if (g.characters && g.counties && g.dynasties)
+      for (const c of Object.values(g.characters)) if (c.alive) grantHouseClaims(g, c);
+    return next;
+  },
 };
 
 function upgradeBattle(b: AnySave): AnySave {

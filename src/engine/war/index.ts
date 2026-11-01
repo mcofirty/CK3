@@ -44,6 +44,7 @@ import {
 import type { Army, CasusBelliType, County, GameState, UnitType, War } from '../state';
 import { addUnits, armyStrength, emptyUnits, totalMen } from '../units';
 import { hurtPopulation, isCapital } from '../economy/local';
+import { dynasticCheck, hasFamilyPact, resolveDynasticWar } from '../crowns';
 
 const W = BALANCE.war;
 
@@ -806,10 +807,13 @@ export function canDeclareWar(
   defenderId: string,
   cb: CasusBelliType,
   countyId?: string,
+  claimantId?: string,
 ): WarCheck {
   const a = state.characters[attackerId];
   const reasons: string[] = [];
   let prestigeCost = 0;
+  if (hasFamilyPact(state, attackerId, defenderId))
+    reasons.push('Pacte de famille : il faut d’abord le rompre');
   if (attackerId === defenderId) reasons.push('Cible invalide');
   if (atWar(state, attackerId, defenderId)) reasons.push('Déjà en guerre');
   if (truceWith(state, attackerId, defenderId)) reasons.push('Trêve en cours');
@@ -823,6 +827,11 @@ export function canDeclareWar(
     reasons.push('Un otage de votre maison est retenu à sa cour');
   if (cb === 'independance') {
     if (a.liegeId !== defenderId) reasons.push('Seul un vassal peut réclamer son indépendance');
+  } else if (cb === 'dynastique') {
+    if (a.liegeId) reasons.push('Un vassal ne peut pas déclarer cette guerre');
+    const chk = dynasticCheck(state, attackerId, defenderId, claimantId);
+    reasons.push(...chk.reasons);
+    prestigeCost = chk.prestige;
   } else {
     if (a.liegeId) reasons.push('Un vassal ne peut pas déclarer cette guerre');
     const county = countyId ? state.counties[countyId] : undefined;
@@ -854,9 +863,10 @@ export function declareWar(
   cb: CasusBelliType,
   countyId?: string,
   force = false,
+  claimantId?: string,
 ): War | undefined {
   const { state } = ctx;
-  const chk = canDeclareWar(state, attackerId, defenderId, cb, countyId);
+  const chk = canDeclareWar(state, attackerId, defenderId, cb, countyId, claimantId);
   if (!chk.ok && !force) return undefined;
   const a = state.characters[attackerId];
   a.prestige -= chk.prestigeCost;
@@ -865,17 +875,27 @@ export function declareWar(
     conquete: 'Conquête',
     independance: 'Indépendance',
     defense: 'Défense',
+    dynastique: 'Droit dynastique',
   }[cb];
+  // Droit dynastique : l'objectif est la capitale du souverain visé.
+  if (cb === 'dynastique' && !countyId) countyId = capitalOf(state, defenderId)?.id;
   const target = countyId ? state.counties[countyId] : undefined;
+  const claimant = claimantId ? state.characters[claimantId] : undefined;
   const war: War = {
     id: newId(state, 'w'),
-    name: target ? `${cbLabel} de ${target.name}` : `${cbLabel} de ${displayName(state, a)}`,
+    name:
+      cb === 'dynastique' && claimant
+        ? `Succession de ${realmName(state, defenderId).replace(/^(Royaume|Duché|Comté) de /, '')}`
+        : target
+          ? `${cbLabel} de ${target.name}`
+          : `${cbLabel} de ${displayName(state, a)}`,
     attackerId,
     defenderId,
     attackerAllies: [],
     defenderAllies: [],
     cb,
     targetCountyId: countyId,
+    claimantId: cb === 'dynastique' ? claimantId : undefined,
     score: 0,
     objectiveHeldSeasons: 0,
     startTurn: state.turn,
@@ -976,6 +996,8 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
         }
       }
       detail = `${att.name} obtient son indépendance.`;
+    } else if (w.cb === 'dynastique' && w.claimantId) {
+      detail = resolveDynasticWar(state, w.attackerId, w.defenderId, w.claimantId);
     } else {
       const gained: string[] = [];
       if (

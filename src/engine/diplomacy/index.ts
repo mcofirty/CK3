@@ -20,6 +20,7 @@ import {
   warSide,
 } from '../characters';
 import { gainXp } from '../progression';
+import { clauseFactors, hasFamilyPact, type MarriageClause } from '../crowns';
 import { chronicle, notify, worldNews, type Ctx } from '../context';
 import { capitalOf, countyRuler, independentRulers, rankOf, rankValue } from '../realm';
 import type { Character, CouncilPost, GameState } from '../state';
@@ -70,7 +71,13 @@ export function marriageBlock(state: GameState, a: Character, b: Character): str
 }
 
 /** Acceptation d'un mariage proposé par le joueur ; `b` est à la cour de son souverain. */
-export function marriageAcceptance(state: GameState, a: Character, b: Character): Acceptance {
+export function marriageAcceptance(
+  state: GameState,
+  a: Character,
+  b: Character,
+  clause: MarriageClause = 'aucune',
+  dowry = 0,
+): Acceptance {
   const pl = state.playerId;
   const theirRuler = topLiege(state, b.id);
   const f: Factor[] = [{ label: 'Base', value: D.marriage.base }];
@@ -93,7 +100,9 @@ export function marriageAcceptance(state: GameState, a: Character, b: Character)
   f.push(...traitFactors(state.characters[theirRuler] ?? b));
   const pb = perkBonus(state, state.characters[pl], 'acceptance');
   if (pb) f.push({ label: 'Talents et héritages', value: pb });
-  return finish(f, marriageBlock(state, a, b));
+  const cl = clauseFactors(state, a, b, clause, dowry);
+  f.push(...cl.factors);
+  return finish(f, marriageBlock(state, a, b) ?? cl.blocked);
 }
 
 /** Célèbre un mariage ; le conjoint rejoint la cour de la maison du joueur. */
@@ -217,6 +226,8 @@ export function callToArmsAcceptance(
   if (!isAlly) f.push({ label: 'Aucune alliance', value: C.noAlliance });
   else if (marriageTie(state, fromId, allyId))
     f.push({ label: 'Liens du mariage', value: C.marriageTie });
+  if (hasFamilyPact(state, fromId, allyId))
+    f.push({ label: 'Pacte de famille', value: BALANCE.crowns.familyPact.callBonus });
   if (enemy) {
     const hate = opinion(state, allyId, enemy);
     if (hate < 0) f.push({ label: 'Hostile à l’ennemi', value: -hate * C.perEnemyHatred });

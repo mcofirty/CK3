@@ -50,6 +50,7 @@ import { CountyEconomy } from './Economy';
 import { CourtActions, courtActionKinds } from './Entourage';
 import { countyDevMax, countyLevyMult, countySlots, isCapital } from '../../engine/economy/local';
 import { CapitalSection } from './Capital';
+import { claimInfo } from '../../engine/crowns';
 import { countyValue } from '../../engine/diplomacy/trade';
 import { PERKS } from '../../data/perks';
 
@@ -311,6 +312,31 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
               <CountyLink key={k} state={game} id={k} />
             ))}
           </div>
+        </Section>
+      )}
+
+      {(c.houseClaims?.length ?? 0) > 0 && c.alive && (
+        <Section title="Droits par le sang">
+          {c.houseClaims!.map((h) => {
+            const info = claimInfo(game, c.id, h);
+            return (
+              <p key={h} className="small" style={{ margin: '2px 0' }}>
+                Maison {game.dynasties[h]?.name ?? '—'}
+                {info ? (
+                  <>
+                    {' '}
+                    — <CharLink state={game} id={info.rulerId} /> ·{' '}
+                    <span className={info.strong ? 'good' : 'muted'}>
+                      droit {info.strong ? 'fort' : 'faible'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="muted"> — ne règne plus</span>
+                )}
+              </p>
+            );
+          })}
+          {c.renounced && <p className="tiny muted">A renoncé aux droits de sa descendance.</p>}
         </Section>
       )}
 

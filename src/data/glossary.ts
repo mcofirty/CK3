@@ -196,7 +196,31 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Loi de succession',
-        text: `Partage : les comtés sont répartis entre les enfants, l’aîné gardant la capitale. Primogéniture : tout va à l’aîné (coûte ${B.characters.primogenitureCost} de prestige à instaurer).`,
+        text: `Partage : les comtés sont répartis entre les enfants, l’aîné gardant la capitale ; une couronne tenue en union revient au cadet. Primogéniture : tout va à l’aîné (coûte ${B.characters.primogenitureCost} de prestige à instaurer). Le conjoint n’hérite jamais : les terres d’une souveraine vont à ses enfants.`,
+      },
+      {
+        term: 'Loi agnatique',
+        text: `Les femmes sont exclues de la succession (${B.crowns.agnaticCost} prestige à instaurer, abolition gratuite) : une fille ne peut faire passer vos terres à la maison de son mari. Sous cette loi, une femme qui règne malgré tout rend les droits sur sa maison « forts ».`,
+      },
+      {
+        term: 'Union personnelle',
+        text: `Un souverain qui hérite d’un autre royaume (enfant de deux souverains, pacte successoral, droit dynastique victorieux) porte deux couronnes : chacune garde ses coutumes. La couronne où il ne réside pas grogne (contentement ${B.crowns.distantContentment} par saison, vassaux ${B.crowns.distantOpinion}). Ses Grands demandent d’abord leurs privilèges : les confirmer (${B.crowns.privilegesGold} or, grogne réduite, fusion plus lointaine) ou imposer votre autorité (vassaux ${B.crowns.imposeOpinion}, fusion plus proche). Après ${B.crowns.fuseSeasons / 4} ans de règne commun, « Unir les couronnes » (${B.crowns.fuseCost} prestige, +${B.crowns.fuseRenown} renommée) fond les deux royaumes ; les vassaux de l’ancienne couronne le prennent mal.`,
+      },
+      {
+        term: 'Droits dynastiques',
+        text: `Un enfant reçoit des droits sur la maison régnante de son parent étranger, et hérite de ceux de ses parents (${B.crowns.maxClaims} au plus). Un droit est fort quand la maison visée est fragile (souverain enfant, captif, sans enfant) ; sinon faible. Depuis Cour › Maison, faites valoir les droits d’un membre de votre maison ou de votre cour par la guerre (droit fort : gratuit ; faible : ${B.crowns.weakClaimPrestige} prestige) : victorieux, il monte sur le trône et devient votre vassal, ou vous ceignez la couronne vous-même. Des prétendants viennent parfois demander asile.`,
+      },
+      {
+        term: 'Contrat de mariage',
+        text: `Renonciation : votre parent renonce aux droits de sa descendance sur votre maison (${B.crowns.clauseRenunciation}). Matrilinéaire : les enfants d’une femme de votre maison portent votre nom (${B.crowns.clauseMatrilineal}, ${B.crowns.clauseMatrilinealLower} face à une maison de moindre rang). Hommage : le souverain qui épouse votre famille devient votre vassal (${B.crowns.clauseHomage}, selon le rapport de force). Une dot ajoute 1 point par ${B.crowns.dowryGoldPerPoint} or.`,
+      },
+      {
+        term: 'Protection',
+        text: 'Un souverain lié à votre famille (mariage, sang) peut devenir votre vassal en gardant terres et titres. Il accepte selon le rapport de force, la menace qui pèse sur lui (voisin hostile, droits forts contre sa maison), l’étendue de ses terres, son opinion et son caractère.',
+      },
+      {
+        term: 'Pactes de famille et successoral',
+        text: `Pacte de famille (entre alliés liés par la famille) : appel aux armes facilité (+${B.crowns.familyPact.callBonus}), ni guerre ni complot entre vous, terres échangées plus volontiers. Pacte successoral : si l’un meurt sans héritier, l’autre hérite (union personnelle). Rompre un pacte est un parjure : ${B.crowns.perjuryPrestige} prestige, ${B.crowns.perjuryRenown} renommée, toutes les cours vous en tiennent rigueur.`,
       },
       {
         term: 'Héritier',

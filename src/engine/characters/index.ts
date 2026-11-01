@@ -1,4 +1,5 @@
 /** Personnages : compétences, santé, opinion, noms, création. */
+import { distantFactor } from '../crowns';
 import { BALANCE } from '../../data/balance';
 import { NAMES } from '../../data/names';
 import { LEGACIES, PERKS, type PerkKey } from '../../data/perks';
@@ -288,6 +289,19 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
     .map((c) => c.id);
   if (to.claims.some((cl) => myCounties.includes(cl)))
     push('Revendique mes terres', O.claimOnHolding);
+  // Vassal d'une couronne où le souverain ne réside pas (union personnelle).
+  if (from.liegeId === toId) {
+    const far = Math.max(
+      0,
+      ...Object.values(state.counties)
+        .filter((c) => c.holderId === fromId)
+        .map((c) => distantFactor(state, c)),
+    );
+    if (far) push('Souverain lointain', BALANCE.crowns.distantOpinion * far);
+  }
+  // Droits dynastiques sur ma maison.
+  if (from.dynastyId && to.houseClaims?.includes(from.dynastyId) && !from.liegeId)
+    push('Prétend à ma couronne', -15);
   if (to.imprisonedBy === fromId) push('Mon prisonnier', -10);
   if (from.imprisonedBy === toId) push('Me retient prisonnier', -50);
   for (const m of from.opinions[toId] ?? []) {

@@ -195,6 +195,10 @@ export interface Effect {
   ambition?: string;
   mariage?: { a: string; b: string };
   alliance?: string;
+  /** Union personnelle : privilèges confirmés ou autorité imposée. */
+  union_privileges?: { union: string; mode: 'confirmes' | 'imposes' };
+  /** Prétendant demandant asile. */
+  pretendant?: { id: string; action: 'accueillir' | 'livrer' | 'congedier'; souverain: string };
   /** Cession d'un comté contre or (négociée par l'IA). */
   cession?: { comte: string; vendeur: string; acheteur: string; prix: number };
   paix?: { warId: string; issue: 'attaquant' | 'defenseur' | 'blanche' };

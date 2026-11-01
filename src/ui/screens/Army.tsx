@@ -394,6 +394,9 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
         value={cb}
         onChange={setCb}
       />
+      <p className="tiny muted" style={{ margin: '6px 0 0' }}>
+        Droit dynastique (succession d’une autre maison) : Cour › Maison › Droits dynastiques.
+      </p>
       <p className="small muted">
         {cb === 'revendication' &&
           'Sur un comté que vous revendiquez (héritée, ou fabriquée par votre chancelier).'}

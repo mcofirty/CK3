@@ -63,6 +63,14 @@ export interface Character {
   educationFocus?: SkillKey;
   /** Revendications sur des comtés. */
   claims: string[];
+  /** Droits dynastiques : maisons dont il peut revendiquer l'héritage (par le sang). */
+  houseClaims?: string[];
+  /** A renoncé, par contrat de mariage, aux droits de sa descendance sur sa maison natale. */
+  renounced?: boolean;
+  /** Mariage matrilinéaire : ses enfants appartiennent à sa maison. */
+  matrilineal?: boolean;
+  /** Loi agnatique : les femmes sont exclues de la succession. */
+  agnatic?: boolean;
   /** Tour du dernier déplacement de capitale. */
   capitalMovedTurn?: number;
   successionLaw: SuccessionLaw;
@@ -228,7 +236,8 @@ export interface Army {
   negotiated?: string;
 }
 
-export type CasusBelliType = 'revendication' | 'conquete' | 'independance' | 'defense';
+export type CasusBelliType =
+  'revendication' | 'conquete' | 'independance' | 'defense' | 'dynastique';
 
 export interface War {
   id: string;
@@ -240,6 +249,8 @@ export interface War {
   cb: CasusBelliType;
   /** Comté objectif (revendication / conquête). */
   targetCountyId?: string;
+  /** Droit dynastique : celui dont on fait valoir les droits. */
+  claimantId?: string;
   /** Score de guerre du point de vue de l'attaquant, -100 à +100. */
   score: number;
   objectiveHeldSeasons: number;
@@ -282,6 +293,18 @@ export interface ChronicleEntry {
     | 'evenement'
     | 'intrigue'
     | 'divers';
+}
+
+/** Union personnelle : un royaume hérité, gouverné à part jusqu'à la fusion des couronnes. */
+export interface PersonalUnion {
+  id: string;
+  rulerId: string;
+  /** Nom de la couronne héritée. */
+  name: string;
+  /** Comtés de cette couronne. */
+  counties: string[];
+  since: number;
+  privileges?: 'confirmes' | 'imposes';
 }
 
 /** Nouvelle du monde : ce qui se passe chez les autres souverains. */
@@ -358,6 +381,11 @@ export interface GameState {
   eventOnce: Record<string, boolean>;
   chronicle: ChronicleEntry[];
   notifications: Notification[];
+  /** Unions personnelles : deux couronnes sur une même tête. */
+  unions?: PersonalUnion[];
+  /** Pactes de famille et pactes successoraux (paires triées "a|b"). */
+  familyPacts?: string[];
+  successionPacts?: string[];
   /** Appels à l'aide refusés : souverain → tour où l'on peut le solliciter de nouveau. */
   callRefused?: Record<string, number>;
   /** Traités refusés : souverain → tour où l'on peut négocier de nouveau. */
@@ -472,4 +500,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;

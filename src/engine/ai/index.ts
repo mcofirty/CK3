@@ -31,6 +31,7 @@ import { queueEvent } from '../events/engine';
 import type { EventDef } from '../events/types';
 import { aiPlots } from '../intrigue';
 import { aiLandOffer } from '../diplomacy/trade';
+import { pressableClaims } from '../crowns';
 import {
   availableLevies,
   canBuild,
@@ -144,7 +145,15 @@ function aiRuler(ctx: Ctx, r: Character): void {
       options.push({
         score: (A.warBaseChance + agg * 0.15) * (target.ratio / BALANCE.war.forceRatioToDeclare),
         run: () => {
-          const w = declareWar(ctx, r.id, target.defender, target.cb, target.county);
+          const w = declareWar(
+            ctx,
+            r.id,
+            target.defender,
+            target.cb,
+            target.county,
+            false,
+            target.claimant,
+          );
           if (w) callAllies(ctx, w);
         },
       });
@@ -185,31 +194,44 @@ function aiRuler(ctx: Ctx, r: Character): void {
 }
 
 /** Cible de guerre : revendication (ou conquête) avec un rapport de force suffisant. */
-function pickWarTarget(
-  state: GameState,
-  r: Character,
-):
-  | { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number }
-  | undefined {
+interface AiWarTarget {
+  defender: string;
+  cb: 'revendication' | 'conquete' | 'dynastique';
+  county: string;
+  ratio: number;
+  claimant?: string;
+}
+
+function pickWarTarget(state: GameState, r: Character): AiWarTarget | undefined {
   const myAllies = state.alliances
     .filter((k) => k.split('|').includes(r.id))
     .map((k) => k.split('|').find((x) => x !== r.id)!);
   const myStr = sideStrength(state, [r.id, ...myAllies]);
-  let best:
-    | { defender: string; cb: 'revendication' | 'conquete'; county: string; ratio: number }
-    | undefined;
-  const tryTarget = (county: County, cb: 'revendication' | 'conquete') => {
+  let best: AiWarTarget | undefined;
+  const tryTarget = (
+    county: County,
+    cb: 'revendication' | 'conquete' | 'dynastique',
+    claimant?: string,
+  ) => {
     const def = countyRuler(state, county);
     if (def === r.id) return;
-    if (!canDeclareWar(state, r.id, def, cb, county.id).ok) return;
+    if (!canDeclareWar(state, r.id, def, cb, county.id, claimant).ok) return;
     const defAllies = state.alliances
       .filter((k) => k.split('|').includes(def))
       .map((k) => k.split('|').find((x) => x !== def)!);
     const ratio = myStr / Math.max(1, sideStrength(state, [def, ...defAllies]));
     const need = BALANCE.war.forceRatioToDeclare * (1 - aggression(r) * 0.2);
-    if (ratio >= need && (!best || ratio > best.ratio))
-      best = { defender: def, cb, county: county.id, ratio };
+    // Un droit dynastique fort justifie un risque plus grand.
+    const bonus = cb === 'dynastique' ? 1.25 : 1;
+    if (ratio * bonus >= need && (!best || ratio * bonus > best.ratio))
+      best = { defender: def, cb, county: county.id, ratio: ratio * bonus, claimant };
   };
+  // Droits dynastiques forts de la maison ou de la cour.
+  for (const info of pressableClaims(state, r.id)) {
+    if (!info.strong) continue;
+    const cap = capitalOf(state, info.rulerId);
+    if (cap) tryTarget(cap, 'dynastique', info.claimantId);
+  }
   for (const cid of r.claims) {
     const c = state.counties[cid];
     if (c) tryTarget(c, 'revendication');

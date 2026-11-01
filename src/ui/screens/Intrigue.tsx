@@ -23,6 +23,8 @@ import { CharLine, Opinion, Portrait, Segmented, Sheet, usePager } from '../comp
 import { DECISIONS } from '../../data/decisions';
 import { PoachCard } from '../components/Entourage';
 import { AcceptanceView } from '../components/Diplomacy';
+import { MarriageClauses, PactsCard } from '../components/Crowns';
+import type { MarriageClause } from '../../engine/crowns';
 import { NewsList, newsAbout } from '../components/News';
 import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
@@ -158,6 +160,7 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
           Négocier
         </button>
       </div>
+      <PactsCard game={game} rulerId={id} />
       <PoachCard game={game} rulerId={id} />
       <RulerNews game={game} id={id} />
       <div className="card">
@@ -195,6 +198,8 @@ function MarriageSheet({ game, onClose }: { game: GameState; onClose: () => void
   );
   const [who, setWho] = useState<Character | null>(singles[0] ?? null);
   const [target, setTarget] = useState<Character | null>(null);
+  const [clause, setClause] = useState<MarriageClause>('aucune');
+  const [dowry, setDowry] = useState(0);
   const cands = who ? marriageCandidates(game, who) : [];
   return (
     <Sheet onClose={onClose}>
@@ -238,7 +243,16 @@ function MarriageSheet({ game, onClose }: { game: GameState; onClose: () => void
           <b>
             {who.name} ⚭ {displayName(game, target)}
           </b>
-          <AcceptanceView acc={marriageAcceptance(game, who, target)} />
+          <MarriageClauses
+            clause={clause}
+            dowry={dowry}
+            maxGold={Math.max(0, Math.floor(game.characters[game.playerId].gold / 10) * 10)}
+            onChange={(c, d) => {
+              setClause(c);
+              setDowry(d);
+            }}
+          />
+          <AcceptanceView acc={marriageAcceptance(game, who, target, clause, dowry)} />
           <div className="row" style={{ marginTop: 8 }}>
             <button className="btn small ghost" onClick={() => setTarget(null)}>
               Autre parti
@@ -246,7 +260,7 @@ function MarriageSheet({ game, onClose }: { game: GameState; onClose: () => void
             <button
               className="btn small primary right"
               onClick={() => {
-                dispatch({ type: 'proposeMarriage', aId: who.id, bId: target.id });
+                dispatch({ type: 'proposeMarriage', aId: who.id, bId: target.id, clause, dowry });
                 onClose();
               }}
             >

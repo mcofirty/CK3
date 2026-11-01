@@ -547,6 +547,63 @@ export const BALANCE = {
     revoltLoss: 0.05,
   },
 
+  /** Couronnes : unions personnelles, droits dynastiques, pactes (engine/crowns.ts). */
+  crowns: {
+    /** Union personnelle : saisons de règne commun avant de pouvoir fondre les couronnes. */
+    fuseSeasons: 40,
+    fuseCost: 300,
+    fuseRenown: 100,
+    fuseVassalOpinion: -20,
+    /** Royaume sans le souverain : contentement par saison et opinion des vassaux. */
+    distantContentment: -1.5,
+    distantOpinion: -10,
+    /** Privilèges : confirmer (or, moins de grogne, fusion plus lointaine) ou imposer. */
+    privilegesGold: 100,
+    privilegesContentment: 10,
+    confirmedDistantFactor: 0.5,
+    confirmedFuseExtra: 20,
+    imposeOpinion: -20,
+    imposeContentment: -10,
+    imposedFuseReduce: 20,
+    /** Loi agnatique (les femmes n'héritent pas). */
+    agnaticCost: 150,
+    /** Droits dynastiques. */
+    maxClaims: 4,
+    weakClaimPrestige: 150,
+    strongClaimPrestige: 0,
+    pretenderChance: 0.03,
+    /** Clauses de mariage (points d'acceptation). */
+    clauseRenunciation: -10,
+    clauseMatrilineal: -25,
+    clauseMatrilinealLower: -10,
+    clauseHomage: -40,
+    dowryGoldPerPoint: 5,
+    /** Protection (vassalisation par la famille). */
+    protection: {
+      base: -40,
+      perOpinion: 0.5,
+      perStrengthRatio: 20,
+      threatened: 25,
+      perCounty: -2,
+      familyTie: 15,
+      opinionAfter: 10,
+    },
+    /** Pacte de famille et pacte successoral. */
+    familyPact: { base: 0, perOpinion: 0.5, familyTie: 10, callBonus: 40, tradeBonus: 10 },
+    successionPact: {
+      base: -30,
+      perOpinion: 0.5,
+      familyPact: 20,
+      theyHaveNoHeir: -20,
+      youHaveNoHeir: 20,
+      goldPerPoint: 5,
+    },
+    /** Rompre un pacte : parjure. */
+    perjuryPrestige: -150,
+    perjuryRenown: -50,
+    perjuryOpinion: -10,
+  },
+
   /** Traités : achat, vente et échange de comtés (engine/diplomacy/trade.ts). */
   trade: {
     /** Valeur d'un comté en or : revenus de tant de saisons + développement + bâtiments. */
