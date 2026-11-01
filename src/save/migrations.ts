@@ -4,6 +4,7 @@
  */
 import MAP from '../data/map.json';
 import { emptyStats } from '../engine/context';
+import { ensureCapitals } from '../engine/realm';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
 type AnySave = Record<string, unknown> & { version?: number };
@@ -66,6 +67,12 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     ...s,
     version: 6,
   }),
+  // Version 6 → 7 : capitales (County.seatOf) et population (County.vitality, 1 par défaut).
+  6: (s) => {
+    const next: AnySave = { ...s, version: 7 };
+    if (next.counties && next.characters) ensureCapitals(next as unknown as GameState);
+    return next;
+  },
 };
 
 function upgradeBattle(b: AnySave): AnySave {

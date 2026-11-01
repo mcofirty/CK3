@@ -5,7 +5,16 @@ import { TRAITS } from '../../data/traits';
 import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } from '../characters';
 import { gainXp, record } from '../progression';
 import { courtPayroll } from '../entourage/roster';
-import { countyDevMult, countyIncomeMult, countyLevyMult, edictSum } from '../economy/local';
+import {
+  contentmentOf,
+  countyDevMax,
+  countyDevMult,
+  countyIncomeMult,
+  countyLevyMult,
+  countySlots,
+  edictSum,
+  isCapital,
+} from '../economy/local';
 import { chronicle, clamp, notify, worldNews, type Ctx } from '../context';
 import type { BuildingType, County, GameState, LedgerLine, UnitCounts } from '../state';
 import { armyUpkeep, emptyUnits, totalMen } from '../units';
@@ -67,14 +76,103 @@ export function realmCounties(state: GameState, rulerId: string): County[] {
   return Object.values(state.counties).filter((c) => countyRuler(state, c) === rulerId);
 }
 
+/** Capitale d'un seigneur : le comté où il siège (sinon le meilleur de ses comtés). */
 export function capitalOf(state: GameState, rulerId: string): County | undefined {
   const own = Object.values(state.counties).filter((c) => c.holderId === rulerId);
-  const titled = own.find((c) => state.duchies[c.duchyId]?.holderId === rulerId);
   return (
-    titled ??
-    own.sort((a, b) => b.development - a.development)[0] ??
+    own.find((c) => c.seatOf === rulerId) ??
+    bestSeat(state, rulerId, own) ??
     realmCounties(state, rulerId)[0]
   );
+}
+
+/** Siège naturel : un comté d'un duché qu'il tient, le plus développé, de préférence libre. */
+function bestSeat(state: GameState, rulerId: string, own: County[]): County | undefined {
+  const score = (c: County) =>
+    (state.duchies[c.duchyId]?.holderId === rulerId ? 100 : 0) +
+    c.development * 2 +
+    (c.occupation ? -50 : 0);
+  return [...own].sort((a, b) => score(b) - score(a))[0];
+}
+
+/** Chaque seigneur titré a une capitale ; les sièges périmés sont retirés. */
+export function ensureCapitals(state: GameState): void {
+  const seated = new Set<string>();
+  for (const c of Object.values(state.counties)) {
+    if (c.seatOf && c.seatOf !== c.holderId) c.seatOf = undefined;
+    if (c.seatOf) {
+      if (seated.has(c.seatOf)) c.seatOf = undefined;
+      else seated.add(c.seatOf);
+    }
+  }
+  const holders = new Set(Object.values(state.counties).map((c) => c.holderId));
+  for (const id of holders) {
+    if (!id || seated.has(id)) continue;
+    const own = Object.values(state.counties).filter((c) => c.holderId === id);
+    const seat = bestSeat(state, id, own);
+    if (seat) seat.seatOf = id;
+  }
+}
+
+/** La capitale de ce seigneur est-elle occupée par l'ennemi ? */
+export function capitalOccupied(state: GameState, rulerId: string): County | undefined {
+  const cap = Object.values(state.counties).find((c) => c.seatOf === rulerId && isCapital(c));
+  return cap?.occupation ? cap : undefined;
+}
+
+export interface MoveCapitalCheck {
+  ok: boolean;
+  reason?: string;
+  gold: number;
+  prestige: number;
+}
+
+export function canMoveCapital(
+  state: GameState,
+  rulerId: string,
+  countyId: string,
+): MoveCapitalCheck {
+  const C = BALANCE.capital;
+  const r = state.characters[rulerId];
+  const c = state.counties[countyId];
+  const res = { gold: C.moveGold, prestige: C.movePrestige };
+  if (!r || !c) return { ok: false, reason: 'Comté inconnu', ...res };
+  if (c.holderId !== rulerId)
+    return { ok: false, reason: 'Il faut tenir ce comté en propre', ...res };
+  if (isCapital(c)) return { ok: false, reason: 'C’est déjà votre capitale', ...res };
+  if (c.occupation) return { ok: false, reason: 'Comté occupé', ...res };
+  if (r.capitalMovedTurn !== undefined && state.turn - r.capitalMovedTurn < C.moveCooldownSeasons)
+    return {
+      ok: false,
+      reason: `Capitale déplacée récemment (encore ${Math.ceil((C.moveCooldownSeasons - (state.turn - r.capitalMovedTurn)) / 4)} an(s))`,
+      ...res,
+    };
+  if (r.gold < C.moveGold) return { ok: false, reason: `Il faut ${C.moveGold} or`, ...res };
+  if (r.prestige < C.movePrestige)
+    return { ok: false, reason: `Il faut ${C.movePrestige} prestige`, ...res };
+  return { ok: true, ...res };
+}
+
+/** Transfère la cour : l'ancienne capitale grogne, la nouvelle se réjouit. */
+export function moveCapital(state: GameState, rulerId: string, countyId: string): boolean {
+  const chk = canMoveCapital(state, rulerId, countyId);
+  if (!chk.ok) return false;
+  const C = BALANCE.capital;
+  const r = state.characters[rulerId];
+  r.gold -= chk.gold;
+  r.prestige -= chk.prestige;
+  r.capitalMovedTurn = state.turn;
+  for (const c of Object.values(state.counties)) {
+    if (c.seatOf !== rulerId) continue;
+    c.seatOf = undefined;
+    c.contentment = clamp(contentmentOf(c) + C.moveOldContentment, 0, 100);
+  }
+  const n = state.counties[countyId];
+  n.seatOf = rulerId;
+  n.contentment = clamp(contentmentOf(n) + C.moveNewContentment, 0, 100);
+  if (rulerId === state.playerId)
+    chronicle(state, `${r.name} établit sa capitale à ${n.name}.`, 'titre');
+  return true;
 }
 
 export type Rank = 'roi' | 'duc' | 'comte' | 'aucun';
@@ -130,7 +228,10 @@ function sumBuilding(
 }
 
 export function fortLevel(c: County): number {
-  return clamp(c.baseFort + sumBuilding(c, 'fort'), 0, 3);
+  const C = BALANCE.capital;
+  return isCapital(c)
+    ? clamp(c.baseFort + sumBuilding(c, 'fort') + C.fort, 0, C.fortMax)
+    : clamp(c.baseFort + sumBuilding(c, 'fort'), 0, 3);
 }
 export function hasRoad(c: County): boolean {
   return buildingLevel(c, 'route') > 0;
@@ -177,7 +278,7 @@ export function canBuild(
   const res = { cost, seasons: lv.seasons, level };
   if (c.holderId !== rulerId) return { ok: false, reason: 'Comté hors du domaine propre', ...res };
   if (c.construction) return { ok: false, reason: 'Un chantier est déjà en cours', ...res };
-  if (cur === 0 && c.buildings.length >= c.slots)
+  if (cur === 0 && c.buildings.length >= countySlots(c))
     return { ok: false, reason: 'Plus d’emplacement libre', ...res };
   if (c.occupation) return { ok: false, reason: 'Comté occupé', ...res };
   if (ruler.gold < cost) return { ok: false, reason: `Il faut ${cost} or`, ...res };
@@ -240,7 +341,22 @@ export function economyOf(state: GameState, id: string): Economy {
   if (heldCounties(state, id).length > demesneLimit(state, id)) {
     gold.push({ label: 'Domaine propre trop étendu', value: -demesne * (1 - E.overDemesneIncome) });
   }
-  gold.push({ label: 'Domaine propre', value: demesne });
+  // Part due à la capitale (cour, marchés, artisans), affichée à part.
+  const cap = own.find(isCapital);
+  const capBonus = cap
+    ? countyIncome(cap) *
+      countyIncomeMult(cap) *
+      (1 - 1 / BALANCE.capital.incomeMult) *
+      incomeMultiplier(state, id)
+    : 0;
+  gold.push({ label: 'Domaine propre', value: demesne - capBonus });
+  if (capBonus) gold.push({ label: `Capitale (${cap!.name}) : cour et marchés`, value: capBonus });
+  const fallen = capitalOccupied(state, id);
+  if (fallen)
+    gold.push({
+      label: `Capitale occupée (${fallen.name})`,
+      value: -demesne * BALANCE.capital.occupiedIncomeLoss,
+    });
   const taxCouncil = id === state.playerId ? councilTaxBonus(state) : 0;
   if (taxCouncil)
     gold.push({ label: 'Intendant : collecte des impôts', value: demesne * taxCouncil });
@@ -392,7 +508,7 @@ export function seasonRealm(ctx: Ctx): void {
     }
     // Développement.
     const holder = state.characters[c.holderId];
-    if (holder && c.development < E.developmentMax && !c.occupation) {
+    if (holder && c.development < countyDevMax(c) && !c.occupation) {
       let p = E.devGrowthBase + skill(holder, 'savoir') * E.devGrowthPerSavoir + countyDevBonus(c);
       if (holder.id === state.playerId || holder.liegeId === state.playerId) {
         const seat = state.council.intendant;

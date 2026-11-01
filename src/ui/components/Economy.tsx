@@ -9,12 +9,15 @@ import {
   contentmentOf,
   countyDevMult,
   countyLevyMult,
+  isCapital,
   moodOf,
+  populationOf,
   revoltChance,
   TAX_LABELS,
   TAX_LEVELS,
 } from '../../engine/economy/local';
 import { countyMaxLevies, economyOf } from '../../engine/realm';
+import { fmtPop, RealmPopulation } from './Capital';
 import type { GameState, TaxLevel } from '../../engine/state';
 import { useStore } from '../store';
 import { Bar, Segmented, signed } from './common';
@@ -187,6 +190,7 @@ export function EconomyView({ game }: { game: GameState }) {
 
       <div className="card">
         <h3>Impôts et peuple</h3>
+        <RealmPopulation game={game} rulerId={game.playerId} />
         <div className="row small" style={{ marginBottom: 4 }}>
           <span className="grow muted">Contentement moyen du domaine</span>
           <b style={{ color: moodColor(avg) }}>{Math.round(avg)}</b>
@@ -217,7 +221,10 @@ export function EconomyView({ game }: { game: GameState }) {
               <span className="eco-mood">{moodOf(c).icon}</span>
               <span className="grow">
                 <span className="row small">
-                  <b className="grow">{c.name}</b>
+                  <b className="grow">
+                    {isCapital(c) ? '★ ' : ''}
+                    {c.name}
+                  </b>
                   <span>{led.total.toFixed(1)} or</span>
                 </span>
                 <span className="eco-bar">
@@ -226,7 +233,7 @@ export function EconomyView({ game }: { game: GameState }) {
                 <span className="small muted">
                   Impôts {TAX_LABELS[c.tax ?? 'normal'].toLowerCase()} · conscription{' '}
                   {CONSCRIPTION_LABELS[c.conscription ?? 'normale'].toLowerCase()} · {Math.round(v)}{' '}
-                  ({signed(Math.round(d * 10) / 10)})
+                  ({signed(Math.round(d * 10) / 10)}) · {fmtPop(populationOf(c))} âmes
                 </span>
               </span>
               <span className="muted">›</span>

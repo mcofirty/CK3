@@ -483,6 +483,58 @@ export const BALANCE = {
     aiPlotChance: 0.05,
   },
 
+  /** Capitale : le comté où siège un seigneur (un par seigneur). */
+  capital: {
+    incomeMult: 1.25,
+    leviesMult: 1.25,
+    devGrowthMult: 1.5,
+    /** Plafond de développement relevé. */
+    devMaxBonus: 2,
+    extraSlots: 1,
+    /** Fortification supplémentaire (la capitale peut atteindre 4). */
+    fort: 1,
+    fortMax: 4,
+    /** Score de guerre pour l'occupation d'une capitale (au lieu de war.occupation). */
+    occupationScore: 30,
+    /** Part des revenus du domaine perdue tant que la capitale est occupée. */
+    occupiedIncomeLoss: 0.25,
+    /** Capitale occupée depuis tant de saisons : l'IA capitule si son score est assez bas. */
+    capitulateSeasons: 2,
+    capitulateScore: -15,
+    /** Score suffisant pour exiger la reddition d'un ennemi dont la capitale est tombée. */
+    demandScore: 20,
+    /** Capitale perdue à la paix. */
+    lostPrestige: -100,
+    sackVitality: 0.1,
+    /** Déplacer sa capitale. */
+    moveGold: 150,
+    movePrestige: 100,
+    moveCooldownSeasons: 40,
+    moveOldContentment: -10,
+    moveNewContentment: 5,
+  },
+
+  /** Population : âmes = (base + développement × par niveau) × terrain × capitale × vitalité. */
+  population: {
+    base: 1500,
+    perDevelopment: 1200,
+    terrain: { plaine: 1.2, colline: 1, foret: 0.8, marais: 0.7, montagne: 0.6 },
+    capitalMult: 1.6,
+    /** Vitalité : 1 = population normale ; elle module revenus et levées. */
+    vitalityMin: 0.4,
+    vitalityMax: 1.08,
+    /** Cible de la vitalité selon le contentement (0,95 à 1,05). */
+    targetBase: 0.95,
+    targetPerContentment: 0.001,
+    /** Retour vers la cible, par saison. */
+    recovery: 0.04,
+    plagueLoss: 0.06,
+    occupationLoss: 0.03,
+    lootLoss: 0.08,
+    assaultLoss: 0.05,
+    revoltLoss: 0.05,
+  },
+
   /** Faits de saison chez les souverains de l'IA (data/abroad.ts). */
   abroad: {
     /** Chance par souverain indépendant et par saison. */

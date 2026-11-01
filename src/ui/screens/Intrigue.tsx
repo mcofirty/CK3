@@ -17,7 +17,7 @@ import {
   type Acceptance,
 } from '../../engine/diplomacy';
 import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
-import { independentRulers, realmCounties, realmName } from '../../engine/realm';
+import { capitalOf, independentRulers, realmCounties, realmName } from '../../engine/realm';
 import type { Character, GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
 import {
@@ -141,7 +141,8 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         <div className="grow">
           <h2 style={{ margin: 0 }}>{displayName(game, c)}</h2>
           <div className="small muted">
-            {realmName(game, id)} · {Math.round(c.gold)} or
+            {realmName(game, id)} · capitale {capitalOf(game, id)?.name ?? '—'} ·{' '}
+            {Math.round(c.gold)} or
           </div>
         </div>
         <Opinion state={game} from={id} to={pl} />

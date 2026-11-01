@@ -47,7 +47,8 @@ import { realmColor, visibleMen } from './MapView';
 import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
 import { CountyEconomy } from './Economy';
 import { CourtActions, courtActionKinds } from './Entourage';
-import { countyLevyMult } from '../../engine/economy/local';
+import { countyDevMax, countyLevyMult, countySlots, isCapital } from '../../engine/economy/local';
+import { CapitalSection } from './Capital';
 import { PERKS } from '../../data/perks';
 
 export function Inspector({ game }: { game: GameState }) {
@@ -402,6 +403,7 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
             {terrain.label} · duché de {duchy.name} · royaume de {kingdom.name}
           </div>
           <div className="row wrap" style={{ gap: 4, marginTop: 6 }}>
+            {isCapital(c) && <span className="chip her">★ Capitale</span>}
             {inMyRealm && <span className="chip">{mine ? 'Domaine propre' : 'Votre royaume'}</span>}
             {c.occupation && <span className="chip bad">Occupé</span>}
             {c.siege && <span className="chip">Assiégé</span>}
@@ -456,9 +458,13 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
         )}
       </Section>
 
+      <CapitalSection game={game} c={c} />
+
       <Section title="Économie et défense">
-        <div className="small muted">Développement {c.development} / 10</div>
-        <Bar value={c.development} max={10} color="var(--gold)" />
+        <div className="small muted">
+          Développement {c.development} / {countyDevMax(c)}
+        </div>
+        <Bar value={c.development} max={countyDevMax(c)} color="var(--gold)" />
         <dl className="kv" style={{ marginTop: 8 }}>
           <dt>Revenus du comté</dt>
           <dd>{countyIncome(c).toFixed(1)} or / saison</dd>
@@ -474,6 +480,12 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
               <dd className="small">×{incomeMultiplier(game, pl).toFixed(2)}</dd>
             </>
           )}
+          {isCapital(c) && (
+            <>
+              <dt className="small">· capitale (cour, marchés)</dt>
+              <dd className="small">×{BALANCE.capital.incomeMult.toFixed(2)}</dd>
+            </>
+          )}
           <dt>Levées</dt>
           <dd>
             {Math.round(c.levyPool)} / {Math.round(countyMaxLevies(c) * countyLevyMult(game, c))}{' '}
@@ -481,7 +493,8 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
           </dd>
           <dt>Fortification</dt>
           <dd>
-            {fortLevel(c)} / 3 — siège de {1 + fortLevel(c)} saison(s)
+            {fortLevel(c)} / {isCapital(c) ? BALANCE.capital.fortMax : 3} — siège de{' '}
+            {1 + fortLevel(c)} saison(s)
           </dd>
           <dt>Route</dt>
           <dd>{hasRoad(c) ? 'oui (2 comtés par saison)' : 'non'}</dd>
@@ -553,7 +566,7 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
         </button>
       )}
 
-      <Section title={`Bâtiments (${c.buildings.length} / ${c.slots})`}>
+      <Section title={`Bâtiments (${c.buildings.length} / ${countySlots(c)})`}>
         {c.buildings.length === 0 && !c.construction && (
           <p className="muted small">Aucun bâtiment.</p>
         )}

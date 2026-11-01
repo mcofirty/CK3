@@ -3,14 +3,17 @@ import { BALANCE } from '../../data/balance';
 import { EDICT_BY_ID } from '../../data/edicts';
 import { clamp, newId, notify, type Ctx } from '../context';
 import { countyIncome, incomeMultiplier } from '../realm';
-import type { ConscriptionLevel, GameState, TaxLevel } from '../state';
+import type { ConscriptionLevel, County, GameState, TaxLevel } from '../state';
 import {
   contentIncomeMult,
   contentmentDelta,
   contentmentOf,
   countyIncomeMult,
+  hurtPopulation,
   revoltChance,
   TAX_LABELS,
+  vitalityOf,
+  vitalityTarget,
 } from './local';
 
 const L = BALANCE.local;
@@ -19,12 +22,24 @@ const L = BALANCE.local;
 // Saison
 // ---------------------------------------------------------------------------
 
+/** La population se remet lentement (selon le contentement) ; l'occupation la saigne. */
+export function seasonPopulation(c: County): void {
+  const P = BALANCE.population;
+  const v = vitalityOf(c);
+  const target = vitalityTarget(c);
+  let next = v + Math.sign(target - v) * Math.min(Math.abs(target - v), P.recovery);
+  if (c.occupation) next *= 1 - P.occupationLoss;
+  if (c.plague) next *= 1 - P.plagueLoss;
+  c.vitality = Math.round(clamp(next, P.vitalityMin, P.vitalityMax) * 1000) / 1000;
+}
+
 /** Fin de saison : le contentement évolue, la colère peut éclater. */
 export function seasonLocalEconomy(ctx: Ctx): void {
   const { state, rng } = ctx;
   let revolt = false;
   for (const c of Object.values(state.counties)) {
     c.contentment = clamp(contentmentOf(c) + contentmentDelta(state, c).total, 0, 100);
+    seasonPopulation(c);
     const p = revoltChance(c);
     if (!p || !rng.chance(p)) continue;
     if (c.holderId === state.playerId) {
@@ -35,6 +50,7 @@ export function seasonLocalEconomy(ctx: Ctx): void {
     } else {
       // Ailleurs, la révolte coûte du développement puis s'apaise d'elle-même.
       if (c.development > 1) c.development -= 1;
+      hurtPopulation(c, BALANCE.population.revoltLoss);
       c.contentment = clamp(contentmentOf(c) + 15, 0, 100);
     }
   }

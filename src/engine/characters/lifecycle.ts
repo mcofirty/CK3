@@ -2,7 +2,7 @@
 import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
 import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
-import { isIndependent } from '../realm';
+import { ensureCapitals, isIndependent } from '../realm';
 import type { Character, GameState } from '../state';
 import {
   addOpinion,
@@ -299,7 +299,9 @@ export function succession(ctx: Ctx, id: string): void {
   }
   const sorted = counties.sort((a, b) => b.development - a.development);
   const capital =
-    sorted.find((c) => titles.some((t) => state.duchies[t]?.counties.includes(c.id))) ?? sorted[0];
+    sorted.find((c) => c.seatOf === id) ??
+    sorted.find((c) => titles.some((t) => state.duchies[t]?.counties.includes(c.id))) ??
+    sorted[0];
   const shares = new Map<string, string>();
   if (law === 'partage' && children.length && heirIsChild(dead, heir)) {
     const others = sorted.filter((c) => c !== capital);
@@ -315,6 +317,9 @@ export function succession(ctx: Ctx, id: string): void {
     c.holderId = to;
     c.siege = undefined;
   }
+  // La capitale passe à l'héritier s'il n'en avait pas ; sinon il garde la sienne.
+  if (capital) capital.seatOf = heirWasLanded ? undefined : heir.id;
+  ensureCapitals(state);
   // Statut féodal de l'héritier et des cadets.
   const liege = dead.liegeId;
   // Un héritier déjà titré garde son rang ; sinon il prend la place du défunt.

@@ -28,8 +28,10 @@ import { chronicle, clamp, newId, notify, seasonOf, worldNews, type Ctx } from '
 import {
   availableLevies,
   bordersPlayer,
+  capitalOccupied,
   capitalOf,
   countyRuler,
+  ensureCapitals,
   countySupplyBonus,
   fortLevel,
   hasRoad,
@@ -41,6 +43,7 @@ import {
 } from '../realm';
 import type { Army, CasusBelliType, County, GameState, UnitType, War } from '../state';
 import { addUnits, armyStrength, emptyUnits, totalMen } from '../units';
+import { hurtPopulation, isCapital } from '../economy/local';
 
 const W = BALANCE.war;
 
@@ -588,6 +591,12 @@ export function adjustScore(state: GameState, war: War, rulerId: string, points:
 /** Sièges, ravitaillement et usure, objectifs tenus. */
 export function seasonCampaign(ctx: Ctx): void {
   const { state, rng } = ctx;
+  // Guerres orphelines (un chef mort sans héritier titré) : elles s'éteignent.
+  for (const w of Object.values(state.wars)) {
+    const a = state.characters[w.attackerId];
+    const d = state.characters[w.defenderId];
+    if (!a?.alive || !d?.alive) endWar(ctx, w.id, 'blanche');
+  }
   const winter = seasonOf(state.turn) === 3;
   for (const a of Object.values(state.armies)) {
     const c = state.counties[a.location];
@@ -608,6 +617,7 @@ export function seasonCampaign(ctx: Ctx): void {
       } else if (a.assault) {
         const loss = W.assaultLosses + W.assaultLossesPerFort * fortLevel(c);
         for (const u of UNIT_TYPES) a.men[u] = Math.round(a.men[u] * (1 - loss));
+        hurtPopulation(c, BALANCE.population.assaultLoss);
         c.siege.progress = required;
         a.assault = false;
         if (a.ownerId === state.playerId)
@@ -693,21 +703,56 @@ function occupy(state: GameState, c: County, ownerId: string): void {
     warBetween(state, ownerId, countyRuler(state, c)) ?? warBetween(state, ownerId, c.holderId);
   if (!war) return;
   c.occupation = { warId: war.id, byRulerId: ownerId, since: state.turn };
-  const pts = war.targetCountyId === c.id ? W.occupationObjective : W.occupation;
-  adjustScore(state, war, ownerId, pts);
-  if (ownerId === state.playerId) notify(state, `${c.name} est occupé par vos troupes.`);
-  else if (countyRuler(state, c) === state.playerId)
-    notify(state, `${c.name} est tombé aux mains de l’ennemi.`);
+  adjustScore(state, war, ownerId, occupationPoints(war, c));
+  const lord = countyRuler(state, c);
+  const seat = isCapital(c);
+  if (ownerId === state.playerId)
+    notify(
+      state,
+      seat
+        ? `La capitale ennemie, ${c.name}, tombe entre vos mains ! Sa cour est en déroute.`
+        : `${c.name} est occupé par vos troupes.`,
+    );
+  else if (lord === state.playerId || c.holderId === state.playerId)
+    notify(
+      state,
+      seat
+        ? `Votre capitale, ${c.name}, est tombée ! Les revenus s’effondrent ; reprenez-la vite.`
+        : `${c.name} est tombé aux mains de l’ennemi.`,
+    );
+  else if (seat && c.holderId === lord)
+    worldNews(
+      state,
+      `${c.name}, capitale de ${displayName(state, state.characters[lord])}, tombe aux mains de ${displayName(state, state.characters[ownerId])}.`,
+      'guerre',
+      ownerId,
+    );
+}
+
+/** Points de score pour l'occupation d'un comté (objectif, capitale ou simple comté). */
+function occupationPoints(war: War, c: County): number {
+  const base = war.targetCountyId === c.id ? W.occupationObjective : W.occupation;
+  return isCapital(c) ? Math.max(base, BALANCE.capital.occupationScore) : base;
+}
+
+/**
+ * Capitale de ce souverain tenue par l'ennemi depuis assez longtemps dans cette guerre :
+ * de quoi exiger (ou offrir) une capitulation.
+ */
+export function capitalFallen(state: GameState, w: War, rulerId: string): boolean {
+  const cap = capitalOccupied(state, rulerId);
+  return (
+    !!cap &&
+    cap.occupation!.warId === w.id &&
+    state.turn - cap.occupation!.since >= BALANCE.capital.capitulateSeasons
+  );
 }
 
 function liberate(state: GameState, c: County, ownerId: string): void {
   const occ = c.occupation;
   if (!occ) return;
   const war = state.wars[occ.warId];
-  if (war) {
-    const pts = war.targetCountyId === c.id ? W.occupationObjective : W.occupation;
-    adjustScore(state, war, occ.byRulerId, -pts);
-  }
+  if (war) adjustScore(state, war, occ.byRulerId, -occupationPoints(war, c));
   c.occupation = undefined;
   if (ownerId === state.playerId) notify(state, `${c.name} est libéré.`);
 }
@@ -730,6 +775,7 @@ export function loot(ctx: Ctx, armyId: string): boolean {
   a.supply = Math.min(100, a.supply + W.lootSupply);
   c.lootedTurn = state.turn;
   c.development = Math.max(1, c.development - W.lootDevelopment);
+  hurtPopulation(c, BALANCE.population.lootLoss);
   c.contentment = Math.max(
     0,
     (c.contentment ?? BALANCE.local.contentmentStart) + BALANCE.local.lootContentment,
@@ -875,6 +921,15 @@ export type PeaceOutcome = 'attaquant' | 'defenseur' | 'blanche';
 export function transferCounty(state: GameState, countyId: string, newHolder: string): void {
   const c = state.counties[countyId];
   const old = c.holderId;
+  // Capitale perdue : prestige, ville mise à sac ; le vaincu s'installe ailleurs.
+  if (isCapital(c)) {
+    const o = state.characters[old];
+    if (o) o.prestige += BALANCE.capital.lostPrestige;
+    hurtPopulation(c, BALANCE.capital.sackVitality);
+    c.seatOf = undefined;
+    if (old === state.playerId)
+      notify(state, `Votre capitale, ${c.name}, est perdue. La cour doit s’installer ailleurs.`);
+  }
   c.holderId = newHolder;
   c.occupation = undefined;
   c.siege = undefined;
@@ -891,6 +946,7 @@ export function transferCounty(state: GameState, countyId: string, newHolder: st
   }
   for (const ch of Object.values(state.characters))
     ch.claims = ch.claims.filter((x) => !(x === countyId && ch.id === newHolder));
+  ensureCapitals(state);
   // Un vassal sans terre rejoint la cour de son ancien suzerain.
   const oldC = state.characters[old];
   if (oldC && !heldCounties(state, old).length && oldC.liegeId) {
@@ -1022,11 +1078,12 @@ export function peaceAcceptance(
   if (kind === 'capituler')
     return { accept: true, reasons: ['L’ennemi accepte toujours votre reddition'] };
   if (kind === 'exiger') {
-    const ok = my >= W.peaceThreshold;
-    return {
-      accept: ok,
-      reasons: [`Score de guerre ${Math.round(my)} (il faut ${W.peaceThreshold})`],
-    };
+    const enemy = w.attackerId === fromId ? w.defenderId : w.attackerId;
+    const fallen = capitalFallen(state, w, enemy);
+    const need = fallen ? BALANCE.capital.demandScore : W.peaceThreshold;
+    const reasons = [`Score de guerre ${Math.round(my)} (il faut ${need})`];
+    if (fallen) reasons.push('Sa capitale est entre vos mains : il est prêt à capituler');
+    return { accept: my >= need, reasons };
   }
   const reasons = [`Score de guerre ${Math.round(my)} de votre point de vue`];
   if (my >= 0) reasons.push('L’ennemi ne perd rien à signer');

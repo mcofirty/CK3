@@ -12,7 +12,7 @@ import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
 import { seasonAbroad } from './abroad';
 import { checkAchievements, computeEnding } from './endings';
-import { realmCounties } from './realm';
+import { ensureCapitals, realmCounties } from './realm';
 import { seasonPlague } from './plague';
 import { seasonProgression } from './progression';
 import { applyEventBattle } from './war/eventBattle';
@@ -104,6 +104,7 @@ export function startSeason(ctx: Ctx): void {
   const { state } = ctx;
   for (const c of Object.values(state.characters))
     if (c.recruitedThisSeason) c.recruitedThisSeason = 0;
+  ensureCapitals(state);
   seasonIncome(ctx);
   seasonProgression(ctx);
   seasonRealm(ctx);

@@ -51,7 +51,7 @@ import {
 import { chooseEvent } from './events/engine';
 import { addAgent, startPlot } from './intrigue';
 import { takeLegacy, takePerk } from './progression';
-import { createTitle, startBuilding, vassalsOf } from './realm';
+import { createTitle, moveCapital, startBuilding, vassalsOf } from './realm';
 import { Rng } from './rng';
 import type {
   BuildingType,
@@ -84,6 +84,7 @@ export type Action =
   | { type: 'endSeason' }
   | { type: 'chooseEvent'; uid: string; choice: number }
   | { type: 'build'; countyId: string; building: BuildingType }
+  | { type: 'moveCapital'; countyId: string }
   | { type: 'setCouncil'; post: CouncilPost; holderId?: string; task: string; targetId?: string }
   | { type: 'setEducator'; childId: string; educatorId?: string; focus: SkillKey }
   | { type: 'raiseArmy' }
@@ -166,6 +167,10 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'build':
       startBuilding(ctx, pl, a.countyId, a.building);
+      break;
+    case 'moveCapital':
+      if (moveCapital(state, pl, a.countyId))
+        notify(state, `La cour s’installe à ${state.counties[a.countyId].name}.`);
       break;
     case 'setCouncil': {
       const seat = state.council[a.post];

@@ -101,6 +101,8 @@ La carte compte environ 30 comtés reliés par un graphe d'adjacence, regroupés
 
 _Révision du 1er novembre 2026, à la demande du propriétaire : la carte générée compte désormais 48 comtés, 12 duchés et 3 royaumes à fonder, partagés au départ entre 8 souverains de tailles inégales (de 3 à 10 comtés, le joueur recevant un domaine moyen de 5 à 7). Les autres cours vivent leur vie (faits de saison, guerres, successions, mariages, révoltes), rapportée dans les nouvelles du monde. Les parties déjà commencées gardent leur carte._
 
+_Révision du 1er novembre 2026, à la demande du propriétaire : capitale et population. Chaque seigneur siège dans une capitale (revenus et levées +25 %, développement plus rapide et plafond 12, un emplacement et une fortification de plus, population ×1,6), qu'il peut déplacer contre or et prestige. Chaque comté a une population (développement × terrain × capitale × vitalité) ; la vitalité baisse avec épidémies, occupation, pillages, assauts, révoltes et famines, remonte avec le contentement, et module revenus et levées. Occuper une capitale rapporte 30 points de guerre et ampute les revenus de son seigneur ; tenue deux saisons, elle permet d'exiger la reddition dès 20 de score, et l'IA en mauvaise posture capitule. Une capitale perdue à la paix coûte 100 de prestige._
+
 Chaque comté possède :
 
 - un nom, un terrain (plaine, colline, forêt, marais, montagne) et d'éventuelles rivières sur ses frontières ;

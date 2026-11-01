@@ -7,7 +7,7 @@ import { ABROAD, type AbroadHappening } from '../data/abroad';
 import { BALANCE } from '../data/balance';
 import { displayName } from './characters';
 import { clamp, seasonOf, worldNews, type Ctx } from './context';
-import { contentmentOf } from './economy/local';
+import { contentmentOf, countyDevMax, hurtPopulation } from './economy/local';
 import { independentRulers, realmCounties } from './realm';
 import type { County } from './state';
 
@@ -48,8 +48,9 @@ export function seasonAbroad(ctx: Ctx): void {
       county.development = clamp(
         county.development + e.development,
         A.minDevelopment,
-        BALANCE.economy.developmentMax,
+        countyDevMax(county),
       );
+    if (e.population) hurtPopulation(county, -e.population);
     if (e.levyLoss) county.levyPool = Math.max(0, Math.round(county.levyPool * (1 - e.levyLoss)));
     if (e.contentment) county.contentment = clamp(contentmentOf(county) + e.contentment, 0, 100);
     const house = r.dynastyId ? (state.dynasties[r.dynastyId]?.name ?? '') : '';

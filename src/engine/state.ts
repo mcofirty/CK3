@@ -63,6 +63,8 @@ export interface Character {
   educationFocus?: SkillKey;
   /** Revendications sur des comtés. */
   claims: string[];
+  /** Tour du dernier déplacement de capitale. */
+  capitalMovedTurn?: number;
   successionLaw: SuccessionLaw;
   imprisonedBy?: string;
   /** Graine pour le portrait. */
@@ -178,6 +180,11 @@ export interface County {
   conscription?: ConscriptionLevel;
   /** Contentement du peuple, 0 à 100. */
   contentment?: number;
+  // --- Capitale et population ---
+  /** Seigneur dont ce comté est la capitale (valable s'il le tient en propre). */
+  seatOf?: string;
+  /** Vitalité de la population (1 = normale) : pertes de guerre, épidémies, famines. */
+  vitality?: number;
 }
 
 export interface Duchy {
@@ -459,4 +466,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;

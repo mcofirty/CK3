@@ -4,7 +4,7 @@ import { displayName, opinion } from '../engine/characters';
 import { yearOf } from '../engine/context';
 import { wards } from '../engine/diplomacy';
 import { checkAll, effectLabels, eventDef, eventText, renderText } from '../engine/events/engine';
-import { economyOf, vassalsOf } from '../engine/realm';
+import { capitalOccupied, economyOf, vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
 import {
@@ -264,6 +264,11 @@ function attention(g: GameState): string[] {
   for (const k of wards(g))
     if (!k.educatorId && (g.turn - k.birthTurn) / 4 >= 3)
       res.push(`${k.name} n’a pas d’éducateur.`);
+  const fallen = capitalOccupied(g, pl);
+  if (fallen)
+    res.push(
+      `Votre capitale, ${fallen.name}, est occupée : revenus amputés, capitulation possible.`,
+    );
   const seatsEmpty = Object.values(g.council).filter((s) => !s.holderId).length;
   if (seatsEmpty) res.push(`${seatsEmpty} siège(s) du conseil vacant(s).`);
   if (g.characters[pl].gold < 0) res.push('Votre trésor est dans le rouge.');

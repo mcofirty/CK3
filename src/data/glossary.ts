@@ -175,7 +175,23 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Capitale',
-        text: 'Le comté central de votre domaine, développé et fortifié de départ.',
+        text: `Le comté où siège un seigneur (★), un seul par seigneur. Revenus et levées +${pc(B.capital.incomeMult - 1)}, développement ${pc(B.capital.devGrowthMult - 1)} plus rapide et plafond relevé de ${B.capital.devMaxBonus}, +${B.capital.extraSlots} emplacement de bâtiment, +${B.capital.fort} fortification (jusqu’à ${B.capital.fortMax}), population ×${B.population.capitalMult}. Elle passe à l’héritier.`,
+      },
+      {
+        term: 'Capitale occupée et capitulation',
+        text: `Occuper la capitale ennemie rapporte ${B.capital.occupationScore} points de guerre et prive son seigneur de ${pc(B.capital.occupiedIncomeLoss)} des revenus du domaine. Tenue ${B.capital.capitulateSeasons} saisons, sa reddition peut être exigée dès ${B.capital.demandScore} de score, et une IA en mauvaise posture capitule d’elle-même. Perdue à la paix, elle coûte ${-B.capital.lostPrestige} prestige ; la ville est mise à sac et la cour s’installe ailleurs.`,
+      },
+      {
+        term: 'Déplacer sa capitale',
+        text: `Depuis la fiche d’un comté tenu en propre : ${B.capital.moveGold} or et ${B.capital.movePrestige} prestige. L’ancienne capitale perd ses avantages et grogne (${B.capital.moveOldContentment} contentement), la nouvelle se réjouit. Pas d’autre déménagement avant ${B.capital.moveCooldownSeasons / 4} ans.`,
+      },
+      {
+        term: 'Population',
+        text: `Le nombre d’âmes d’un comté : (${B.population.base} + ${B.population.perDevelopment} par niveau de développement) × terrain (plaine ×${B.population.terrain.plaine}, montagne ×${B.population.terrain.montagne}…) × capitale × vitalité.`,
+      },
+      {
+        term: 'Vitalité',
+        text: `L’état de la population (100 % = normale, de ${pc(B.population.vitalityMin)} à ${pc(B.population.vitalityMax)}). Elle multiplie revenus et levées du comté. Épidémie (−${pc(B.population.plagueLoss)} par saison), occupation (−${pc(B.population.occupationLoss)}), pillage (−${pc(B.population.lootLoss)}), assaut, révolte et famine la font chuter ; elle remonte de ${pc(B.population.recovery)} par saison vers une cible fixée par le contentement.`,
       },
       {
         term: 'Loi de succession',
@@ -191,11 +207,11 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Développement',
-        text: 'Le niveau d’un comté (1 à 10). Il augmente ses revenus et ses levées et monte avec le Savoir du seigneur, les bâtiments, les talents et un contentement élevé ; il baisse avec le pillage, les épidémies et les révoltes.',
+        text: 'Le niveau d’un comté (1 à 10, 12 pour une capitale). Il augmente ses revenus et ses levées et monte avec le Savoir du seigneur, les bâtiments, les talents et un contentement élevé ; il baisse avec le pillage, les épidémies et les révoltes.',
       },
       {
         term: 'Fortification',
-        text: 'De 0 à 3 (terrain, muraille). Un siège dure 1 saison + 1 par niveau.',
+        text: 'De 0 à 3 (terrain, muraille), 4 pour une capitale. Un siège dure 1 saison + 1 par niveau.',
       },
       {
         term: 'Route',

@@ -58,10 +58,52 @@ export function edictSum(
   return edictsOf(state, rulerId).reduce((s, e) => s + (e[key] ?? 0), 0);
 }
 
+// --- Capitale et population ---
+const CAP = BALANCE.capital;
+const POP = BALANCE.population;
+
+/** Le comté est-il la capitale de son seigneur ? */
+export const isCapital = (c: County): boolean => !!c.seatOf && c.seatOf === c.holderId;
+
+export const vitalityOf = (c: County): number => c.vitality ?? 1;
+
+/** Population « normale » d'un comté (vitalité 1). */
+export function basePopulation(c: County): number {
+  return (
+    (POP.base + c.development * POP.perDevelopment) *
+    POP.terrain[c.terrain] *
+    (isCapital(c) ? POP.capitalMult : 1)
+  );
+}
+
+/** Nombre d'âmes, arrondi à la centaine. */
+export function populationOf(c: County): number {
+  return Math.round((basePopulation(c) * vitalityOf(c)) / 100) * 100;
+}
+
+/** Vitalité vers laquelle la population tend, selon le contentement. */
+export function vitalityTarget(c: County): number {
+  return POP.targetBase + contentmentOf(c) * POP.targetPerContentment;
+}
+
+/** Applique une perte (ou un gain) de population, en part de la vitalité. */
+export function hurtPopulation(c: County, loss: number): void {
+  c.vitality = clamp(vitalityOf(c) * (1 - loss), POP.vitalityMin, POP.vitalityMax);
+}
+
+export const countySlots = (c: County): number => c.slots + (isCapital(c) ? CAP.extraSlots : 0);
+export const countyDevMax = (c: County): number =>
+  BALANCE.economy.developmentMax + (isCapital(c) ? CAP.devMaxBonus : 0);
+
 // --- Multiplicateurs d'un comté ---
-/** Revenus du comté : impôts × contentement. */
+/** Revenus du comté : impôts × contentement × population × capitale. */
 export function countyIncomeMult(c: County): number {
-  return L.taxes[taxOf(c)].income * contentIncomeMult(c);
+  return (
+    L.taxes[taxOf(c)].income *
+    contentIncomeMult(c) *
+    vitalityOf(c) *
+    (isCapital(c) ? CAP.incomeMult : 1)
+  );
 }
 
 /** Levées maximales : impôts × conscription × contentement × édits du seigneur. */
@@ -70,6 +112,8 @@ export function countyLevyMult(state: GameState, c: County): number {
     L.taxes[taxOf(c)].levies *
     L.conscription[conscriptionOf(c)].levies *
     contentLeviesMult(c) *
+    vitalityOf(c) *
+    (isCapital(c) ? CAP.leviesMult : 1) *
     (1 + edictSum(state, c.holderId, 'levies'))
   );
 }
@@ -80,6 +124,7 @@ export function countyDevMult(state: GameState, c: County): number {
     0.1,
     L.conscription[conscriptionOf(c)].development *
       contentDevMult(c) *
+      (isCapital(c) ? CAP.devGrowthMult : 1) *
       (1 + edictSum(state, c.holderId, 'development')),
   );
 }

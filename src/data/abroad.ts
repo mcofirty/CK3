@@ -14,6 +14,8 @@ export interface AbroadEffect {
   /** Part des levées du comté perdue (0,2 = −20 %) ou regagnée (négatif). */
   levyLoss?: number;
   contentment?: number;
+  /** Population : part gagnée (positif) ou perdue (négatif). */
+  population?: number;
 }
 
 export interface AbroadHappening {
@@ -53,14 +55,14 @@ export const ABROAD: AbroadHappening[] = [
     weight: 3,
     seasons: [3, 0],
     minDevelopment: 2,
-    effect: { development: -1, levyLoss: 0.3, contentment: -12 },
+    effect: { development: -1, levyLoss: 0.3, contentment: -12, population: -0.12 },
   },
   {
     id: 'hiver_rude',
     text: 'Hiver terrible à {comte} : les routes sont coupées, les levées de {souverain} fondent.',
     weight: 6,
     seasons: [3],
-    effect: { levyLoss: 0.15, contentment: -4 },
+    effect: { levyLoss: 0.15, contentment: -4, population: -0.03 },
   },
   {
     id: 'tournoi',
@@ -118,14 +120,14 @@ export const ABROAD: AbroadHappening[] = [
     weight: 4,
     river: true,
     seasons: [0, 2],
-    effect: { gold: -15, levyLoss: 0.08, contentment: -4 },
+    effect: { gold: -15, levyLoss: 0.08, contentment: -4, population: -0.03 },
   },
   {
     id: 'incendie',
     text: 'Un incendie ravage la ville de {comte}.',
     weight: 3,
     minDevelopment: 3,
-    effect: { development: -1, gold: -10, contentment: -6 },
+    effect: { development: -1, gold: -10, contentment: -6, population: -0.04 },
   },
   {
     id: 'foire',
@@ -139,7 +141,7 @@ export const ABROAD: AbroadHappening[] = [
     id: 'essor',
     text: '{comte} prospère : artisans et colons s’y installent.',
     weight: 2,
-    effect: { development: 1, contentment: 4 },
+    effect: { development: 1, contentment: 4, population: 0.04 },
   },
   {
     id: 'scandale',

@@ -9,6 +9,7 @@ import {
   allied,
   atWar,
   createCharacter,
+  displayName,
   hasTrait,
   isAdult,
   livingChildren,
@@ -43,9 +44,11 @@ import {
 } from '../realm';
 import type { Character, County, GameState, UnitType, War } from '../state';
 import { armyUpkeep, totalMen } from '../units';
+import { isCapital } from '../economy/local';
 import {
   armyOf,
   canDeclareWar,
+  capitalFallen,
   declareWar,
   disbandArmy,
   endWar,
@@ -251,15 +254,25 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
     const my = scoreFor(state, w, r.id);
     const enemy = w.attackerId === r.id ? w.defenderId : w.attackerId;
     const age = state.turn - w.startTurn;
-    if (my >= 100 || (my >= BALANCE.war.peaceThreshold && enemy !== state.playerId)) {
+    // Capitale tombée et guerre mal engagée : la cour capitule.
+    if (capitalFallen(state, w, r.id) && my <= BALANCE.capital.capitulateScore) {
+      const text = `${displayName(state, r)} capitule : sa capitale est aux mains de l’ennemi.`;
+      if (enemy === state.playerId) notify(state, text);
+      else worldNews(state, text, 'paix', r.id);
+      endWar(ctx, w.id, w.attackerId === r.id ? 'defenseur' : 'attaquant');
+      continue;
+    }
+    const enemyFallen = capitalFallen(state, w, enemy);
+    const demand = enemyFallen ? BALANCE.capital.demandScore : BALANCE.war.peaceThreshold;
+    if (my >= 100 || (my >= demand && enemy !== state.playerId)) {
       endWar(ctx, w.id, w.attackerId === r.id ? 'attaquant' : 'defenseur');
       continue;
     }
-    if (my >= BALANCE.war.peaceThreshold && enemy === state.playerId) {
+    if (my >= demand && enemy === state.playerId) {
       proposeToPlayer(ctx, {
         id: `sys_exige_${w.id}`,
         titre: 'Exigences de l’ennemi',
-        texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)}) et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
+        texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)})${enemyFallen ? ', votre capitale étant entre ses mains,' : ''} et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
         choix: [
           {
             libelle: 'Accepter ses conditions',
@@ -345,7 +358,10 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
   const ranked = targets
     .map((c) => ({
       c,
-      d: findPath(state, r.id, army!.location, c.id).length + (c === objective ? -2 : 0),
+      d:
+        findPath(state, r.id, army!.location, c.id).length +
+        (c === objective ? -2 : 0) +
+        (isCapital(c) && enemies.includes(c.holderId) ? -2 : 0),
     }))
     .filter((x) => x.d > -2)
     .sort((x, y) => x.d - y.d);

@@ -10,7 +10,7 @@ import { autoFillCouncil } from './diplomacy';
 import { generateCandidates } from './entourage';
 import { UNIT_TYPES, UNITS } from '../data/units';
 import { generateMap, type MapData } from './mapgen';
-import { economyOf, countyMaxLevies, countyRuler } from './realm';
+import { economyOf, countyMaxLevies, countyRuler, ensureCapitals } from './realm';
 import { Rng } from './rng';
 import {
   SAVE_VERSION,
@@ -215,6 +215,7 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     counties.sort((a, b) => centrality(b) - centrality(a));
     const capital = counties[0];
     capital.development += 1;
+    capital.seatOf = ruler.id;
     const rest = counties
       .slice(1)
       .sort((a, b) => dist(a, capital, MAP_DATA) - dist(b, capital, MAP_DATA));
@@ -263,6 +264,8 @@ export function newGame(opts: NewGameOptions = {}): GameState {
     }
   });
 
+  // Chaque vassal siège dans l'un de ses comtés.
+  ensureCapitals(state);
   for (const c of Object.values(state.counties)) c.levyPool = countyMaxLevies(c);
   // Les compagnies de départ ne doivent pas ruiner leur seigneur : on retire les plus chères
   // jusqu'à ce que le revenu net soit positif (un peu négatif pour une origine guerrière).
