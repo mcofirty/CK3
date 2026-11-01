@@ -3,7 +3,7 @@
  * Module pur, sans dépendance au royaume (lu par le calcul des revenus).
  */
 import { BALANCE } from '../../data/balance';
-import { heldCounties, isAdult, skill } from '../characters';
+import { closeFamily, heldCounties, isAdult, skill } from '../characters';
 import { SKILL_KEYS, type Character, type GameState } from '../state';
 
 const E = BALANCE.entourage;
@@ -44,7 +44,32 @@ export function courtCapacity(state: GameState, rulerId: string): number {
   );
 }
 
-/** Courtisans extérieurs adultes : ni famille, ni conjoint, ni otage, ni terres, ni visiteur. */
+/**
+ * Famille au sens large, toujours gratuite à la cour : la maison, le conjoint, la famille proche,
+ * les conjoints des membres de la maison (gendres, brus), la belle-famille et les descendants
+ * d'un membre de la maison portant un autre nom.
+ */
+export function isKin(state: GameState, ruler: Character, c: Character): boolean {
+  if (c.id === ruler.id) return true;
+  if (ruler.dynastyId && c.dynastyId === ruler.dynastyId) return true;
+  if (closeFamily(state, ruler).some((k) => k.id === c.id)) return true;
+  const house = (id?: string) => {
+    const x = id ? state.characters[id] : undefined;
+    return !!x && (x.id === ruler.id || (!!ruler.dynastyId && x.dynastyId === ruler.dynastyId));
+  };
+  if (house(c.spouseId) || house(c.fatherId) || house(c.motherId)) return true;
+  // Belle-famille : parents et fratrie du conjoint du souverain.
+  const sp = ruler.spouseId ? state.characters[ruler.spouseId] : undefined;
+  if (sp) {
+    if (c.id === sp.id || c.fatherId === sp.id || c.motherId === sp.id) return true;
+    if (c.id === sp.fatherId || c.id === sp.motherId) return true;
+    if ((c.fatherId && c.fatherId === sp.fatherId) || (c.motherId && c.motherId === sp.motherId))
+      return true;
+  }
+  return false;
+}
+
+/** Courtisans extérieurs adultes : ni famille (au sens large), ni otage, ni terres, ni visiteur. */
 export function outsiders(state: GameState, rulerId: string): Character[] {
   const r = state.characters[rulerId];
   return Object.values(state.characters).filter(
@@ -56,8 +81,7 @@ export function outsiders(state: GameState, rulerId: string): Character[] {
       !c.hostageOf &&
       !c.imprisonedBy &&
       !c.fosterOf &&
-      c.id !== r?.spouseId &&
-      (!r?.dynastyId || c.dynastyId !== r.dynastyId) &&
+      !(r && isKin(state, r, c)) &&
       isAdult(state, c) &&
       !heldCounties(state, c.id).length,
   );

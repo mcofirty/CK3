@@ -243,7 +243,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Places gratuites de la cour',
-        text: `Votre cour compte ${B.entourage.freeBase} places sans salaire, plus un bonus de rang (duc +1, roi +3) et 1 par ${B.entourage.gestionPerSlot} de Gestion. Au-delà, chaque courtisan extérieur coûte un salaire par saison (environ 1 à 4 or selon sa meilleure compétence). La famille, le conjoint, les pupilles et les otages sont gratuits.`,
+        text: `Votre cour compte ${B.entourage.freeBase} places sans salaire, plus un bonus de rang (duc +1, roi +3) et 1 par ${B.entourage.gestionPerSlot} de Gestion. Au-delà, chaque courtisan extérieur coûte un salaire par saison (environ 1 à 4 or selon sa meilleure compétence). Toute la famille (maison, conjoint, gendres et brus, belle-famille, petits-enfants), les pupilles et les otages sont gratuits.`,
       },
       {
         term: 'Trésorier',

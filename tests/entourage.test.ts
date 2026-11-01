@@ -166,6 +166,30 @@ describe('Capacité de la cour et salaires', () => {
   });
 });
 
+describe('Famille à la cour', () => {
+  it('la famille au sens large ne compte ni ne coûte jamais', () => {
+    const s = clearEvents(newGame({ seed: 110 }));
+    const cap = courtCapacity(s, s.playerId);
+    const [gendre, beauPere, neveu] = addCourtiers(s, 3);
+    const p = s.characters[s.playerId];
+    // Un enfant de la maison, marié à un étranger.
+    const kid = Object.values(s.characters).find(
+      (c) => c.dynastyId === p.dynastyId && c.id !== p.id,
+    )!;
+    s.characters[gendre].spouseId = kid.id;
+    // Le père du conjoint du souverain.
+    if (p.spouseId) s.characters[p.spouseId].fatherId = beauPere;
+    // Un petit-enfant d'une autre dynastie, enfant d'un membre de la maison.
+    s.characters[neveu].fatherId = kid.id;
+    const ids = outsiders(s, s.playerId).map((c) => c.id);
+    expect(ids).not.toContain(gendre);
+    expect(ids).not.toContain(neveu);
+    if (p.spouseId) expect(ids).not.toContain(beauPere);
+    addCourtiers(s, Math.max(0, cap - ids.length) + 2);
+    expect(courtPayroll(s, s.playerId).paid.length).toBe(2);
+  });
+});
+
 describe('Trésorier et impayés', () => {
   it('le trésorier prudent relève les impôts puis réduit la cour quand l’or va passer sous zéro', () => {
     const s = clearEvents(newGame({ seed: 99 }));
