@@ -2323,3 +2323,44 @@ body {
     margin: 0 0 8px auto;
   }
 }
+
+/* ---------- Glossaire ---------- */
+.glossary-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-strong);
+  color: var(--ink);
+  font-size: 16px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.glossary-head {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-top: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-card);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+}
+.glossary-list {
+  padding: 4px 6px 2px;
+}
+.glossary-entry {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.glossary-entry p {
+  margin: 2px 0 0;
+}

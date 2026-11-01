@@ -5,6 +5,7 @@ import { ACHIEVEMENTS } from '../../engine/endings';
 import { yearOf } from '../../engine/context';
 import { downloadExport } from '../../save/storage';
 import { useStore } from '../store';
+import { GLOSSARY, searchGlossary } from '../../data/glossary';
 import { AchievementList } from './Book';
 import { Segmented, Sheet } from './common';
 
@@ -49,7 +50,7 @@ export function SettingsSheet() {
   const slot = useStore((s) => s.slot);
   const globalAch = useStore((s) => s.globalAchievements);
   const sound = useStore((s) => s.sound);
-  const [view, setView] = useState<'main' | 'succes'>('main');
+  const [view, setView] = useState<'main' | 'succes' | 'glossaire'>('main');
   const [saved, setSaved] = useState(false);
   if (!open) return null;
   const close = () => {
@@ -59,7 +60,9 @@ export function SettingsSheet() {
   };
   return (
     <Sheet onClose={close} swapKey={view}>
-      {view === 'succes' ? (
+      {view === 'glossaire' ? (
+        <GlossaryView onBack={() => setView('main')} />
+      ) : view === 'succes' ? (
         <>
           <button className="btn small ghost" onClick={() => setView('main')}>
             ‹ Paramètres
@@ -121,6 +124,15 @@ export function SettingsSheet() {
               value={settings.confirmEnd}
               onChange={(v) => setSettings({ confirmEnd: v })}
             />
+            <button className="setting-row" onClick={() => setView('glossaire')}>
+              <span className="grow">
+                <span className="setting-label">📖 Glossaire</span>
+                <span className="small muted setting-hint">
+                  Toutes les mécaniques et le vocabulaire du jeu
+                </span>
+              </span>
+              <span className="muted">›</span>
+            </button>
             <button className="setting-row" onClick={() => setView('succes')}>
               <span className="grow setting-label">
                 🏆 Succès ({globalAch.length}/{ACHIEVEMENTS.length})
@@ -215,5 +227,69 @@ export function SettingsButton({ onLong }: { onLong?: () => void }) {
         />
       </svg>
     </button>
+  );
+}
+
+function GlossaryView({ onBack }: { onBack: () => void }) {
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState<string | null>(null);
+  const results = searchGlossary(q);
+  const total = GLOSSARY.reduce((n, sec) => n + sec.entries.length, 0);
+  return (
+    <>
+      <button className="btn small ghost" onClick={onBack}>
+        ‹ Paramètres
+      </button>
+      <h2 style={{ marginTop: 10 }}>Glossaire</h2>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        {total} entrées : mécaniques, éléments et vocabulaire du jeu.
+      </p>
+      <input
+        className="glossary-search"
+        type="search"
+        placeholder="Chercher un mot (stress, siège, contentement…)"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        aria-label="Chercher dans le glossaire"
+      />
+      {q.trim() ? (
+        <div className="glossary-list">
+          {results.length === 0 && <p className="muted">Aucun résultat.</p>}
+          {results.map(({ section, entry }) => (
+            <div key={section.id + entry.term} className="glossary-entry">
+              <b>{entry.term}</b> <span className="chip tiny">{section.title}</span>
+              <p className="small">{entry.text}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        GLOSSARY.map((sec) => (
+          <div key={sec.id} className="glossary-section">
+            <button
+              className="glossary-head"
+              aria-expanded={open === sec.id}
+              onClick={() => setOpen(open === sec.id ? null : sec.id)}
+            >
+              <span>
+                {sec.icon} {sec.title}
+              </span>
+              <span className="muted small">
+                {sec.entries.length} {open === sec.id ? '▴' : '▾'}
+              </span>
+            </button>
+            {open === sec.id && (
+              <div className="glossary-list">
+                {sec.entries.map((e) => (
+                  <div key={e.term} className="glossary-entry">
+                    <b>{e.term}</b>
+                    <p className="small">{e.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </>
   );
 }

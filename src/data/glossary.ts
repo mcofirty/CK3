@@ -1,0 +1,664 @@
+/**
+ * Glossaire : les mécaniques, les éléments et le vocabulaire du jeu.
+ * Les sections « générées » lisent les données du jeu : elles restent toujours exactes.
+ */
+import { AMBITIONS } from './ambitions';
+import { BALANCE } from './balance';
+import { BUILDINGS, BUILDING_TYPES } from './buildings';
+import { DECISIONS } from './decisions';
+import { EDICTS } from './edicts';
+import { MERCENARIES } from './mercenaries';
+import { BRANCH_NAMES, LEGACIES, LEGACY_BRANCH_NAMES, PERKS } from './perks';
+import { TACTICS, TACTIC_IDS } from './tactics';
+import { TERRAINS } from './terrain';
+import { TRAITS } from './traits';
+import { COUNTERS, UNITS, UNIT_TYPES } from './units';
+
+export interface GlossaryEntry {
+  term: string;
+  text: string;
+  /** Autres façons de le chercher. */
+  aka?: string;
+}
+export interface GlossarySection {
+  id: string;
+  title: string;
+  icon: string;
+  entries: GlossaryEntry[];
+}
+
+const B = BALANCE;
+const pc = (x: number) => `${Math.round(x * 100)} %`;
+const f = (x: number) => String(x).replace('.', ',');
+
+const concepts: GlossarySection[] = [
+  {
+    id: 'bases',
+    title: 'Bases du jeu',
+    icon: '🧭',
+    entries: [
+      {
+        term: 'Saison',
+        aka: 'tour',
+        text: `Un tour = une saison (printemps, été, automne, hiver), donc 4 par an. Le bouton « Fin de saison » résout les déplacements et les batailles, puis la vie (santé, naissances, décès), les revenus et les événements.`,
+      },
+      {
+        term: 'Durée d’une partie',
+        text: `La chronique s’achève après ${B.game.maxYears} ans, ou plus tôt si la lignée s’éteint ou perd toutes ses terres.`,
+      },
+      {
+        term: 'Or',
+        text: 'La monnaie. Revenus des comtés, impôts des vassaux et du domaine ; dépenses en troupes, salaires de la cour, intérêts des emprunts, entretien des édits. Le détail de la dernière saison s’affiche en touchant l’or dans la barre du haut.',
+      },
+      {
+        term: 'Prestige',
+        text: 'Votre réputation personnelle. Il monte avec les victoires, les titres et les belles actions, et il sert à fonder des titres, changer la loi de succession ou faire accepter vos offres. Il se perd avec les complots découverts et les actes honteux. La moitié passe à l’héritier.',
+      },
+      {
+        term: 'Piété',
+        text: 'Votre dévotion. Elle vient du Savoir, des chapelles, du chapelain, des pèlerinages et des aumônes. Elle ouvre ou ferme certains choix d’événements. La moitié passe à l’héritier.',
+      },
+      {
+        term: 'Renommée',
+        text: `La gloire de la maison, qui s’accumule chaque saison (selon le nombre de comtés tenus), avec les mariages, victoires et ambitions. Elle compte pour le score et s’échange contre des héritages (voir Maison).`,
+      },
+      {
+        term: 'Score de lignée',
+        text: 'Renommée + 10 par comté + 30 par duché + 100 par royaume tenus par la maison + 2 par année écoulée. Il est affiché à la fin de la partie.',
+      },
+      {
+        term: 'Fins de partie',
+        text: 'L’Empire (deux couronnes), la Couronne (un royaume), la Puissance (douze comtés ou plus), la Légende (renommée de 1500), la Survie, l’Extinction (aucun héritier) et la Ruine (plus aucune terre).',
+      },
+      {
+        term: 'Sauvegarde',
+        text: 'Automatique à chaque fin de saison et quand l’app passe en arrière-plan, sur l’un des 3 emplacements. Vous pouvez exporter une partie en fichier JSON depuis les Paramètres et l’importer sur un autre appareil.',
+      },
+      {
+        term: 'Origine',
+        text: 'Chaque partie tire au hasard une origine (maison endettée, trésor de guerre, citadelle…) et une carte différente, avec des royaumes rivaux et des fréquences d’événements propres.',
+      },
+    ],
+  },
+  {
+    id: 'persos',
+    title: 'Personnages',
+    icon: '👤',
+    entries: [
+      {
+        term: 'Compétences',
+        text: 'Cinq notes de 0 à 20 (jusqu’à 25 avec traits et talents) : Diplomatie (opinion, alliances, mariages), Guerre (commandement), Gestion (revenus, places de cour), Ruse (complots, défense contre eux), Savoir (développement, piété, éducation).',
+      },
+      {
+        term: 'Santé',
+        text: 'De 0 à 100. Elle baisse avec l’âge (après 50 ans), les maladies, les blessures et le stress. Sous 30, le risque de décès grimpe.',
+      },
+      {
+        term: 'Majorité',
+        text: `À ${B.characters.adulthood} ans, un enfant devient adulte : il reçoit un trait d’éducation selon son éducateur, des traits de personnalité, et peut se marier, commander ou siéger au conseil.`,
+      },
+      {
+        term: 'Traits',
+        text: 'Quatre catégories : personnalité (Courageux, Juste, Cruel… avec des contraires), éducation (selon la compétence travaillée), héréditaires (Fort, Génie… transmis aux enfants) et acquis (Blessé, Malade, ou gagnés au combat). Ils modifient compétences, santé, opinion des vassaux et choix possibles.',
+      },
+      {
+        term: 'Opinion',
+        text: 'Ce qu’un personnage pense d’un autre, de −100 à +100, avec le détail des raisons (traits communs ou opposés, famille, amitié, guerre, souvenirs…). Les vassaux mécontents paient moins et peuvent former des factions.',
+      },
+      {
+        term: 'Ami, rival, amant',
+        text: 'Des relations personnelles qui naissent à la cour ou par événements. Un ami donne +30 d’opinion, un rival −40, un amant +40. Un amant peut provoquer des scènes avec le conjoint.',
+      },
+      {
+        term: 'Souvenir',
+        aka: 'vengeance, rancune',
+        text: 'Faire périr ou emprisonner quelqu’un laisse un souvenir à sa famille et à ses amis, qui dure longtemps. Un souvenir sanglant peut pousser un rival à comploter contre vous.',
+      },
+      {
+        term: 'Stress',
+        text: `Agir contre sa nature (un souverain Juste qui fait exécuter) l’augmente ; il retombe de ${B.stress.decay} par saison (plus avec certains traits ou talents). Tendu dès ${B.stress.tense}, accablé dès ${B.stress.overwhelmed} (la santé baisse), en crise à ${B.stress.crisis} : un événement impose alors un exutoire (vin, colère, mélancolie…) qui laisse un trait.`,
+      },
+      {
+        term: 'Expérience et talents',
+        text: `Les personnages gagnent de l’expérience par branche (saisons, conseil, batailles, complots, chantiers, mariages). Tous les ${B.progression.xpPerPoint} points d’expérience donnent un point de talent à dépenser dans l’arbre de compétences (30 talents en 5 branches). Les talents appartiennent au personnage et disparaissent à sa mort.`,
+      },
+      {
+        term: 'Héritage de la maison',
+        text: 'Bonus achetés avec la renommée (15 en 5 branches) qui profitent à tous les membres de la dynastie et durent jusqu’à la fin de la partie. Un héritage de rang 2 ou 3 exige celui du rang précédent.',
+      },
+      {
+        term: 'Ambition',
+        text: 'À son avènement, le souverain choisit un grand but parmi trois (agrandir le royaume, ceindre une couronne, remplir le trésor…) avec une échéance. Réussir donne prestige, renommée, expérience et le trait Accompli ; échouer ou y renoncer ajoute du stress.',
+      },
+      {
+        term: 'Éducation',
+        text: 'Les enfants de la maison (et les pupilles) sont éduqués par un membre de la cour sur une compétence choisie. À la majorité, ils gagnent des points dans cette compétence et un trait d’éducation, meilleur si l’éducateur est compétent.',
+      },
+      {
+        term: 'Pupille',
+        text: 'Enfant d’un de vos vassaux confié à votre cour. Il est éduqué avec vos enfants et le vassal vous en est reconnaissant. À 16 ans, vous le renvoyez chez lui avec honneur (le vassal vous en sait gré) ou le gardez comme conseiller (le vassal le prend mal, l’enfant vous est loyal).',
+      },
+      {
+        term: 'Otage',
+        text: 'Un prisonnier gardé à votre cour. Sa famille ne peut plus vous déclarer la guerre tant qu’il y reste, et une trêve s’installe.',
+      },
+      {
+        term: 'Prisonnier et rançon',
+        text: 'Un commandant ou un souverain capturé peut être rançonné (or ou comté), libéré, gardé en otage, rallié à votre cause (une tentative, selon ses traits) ou exécuté (stress et vengeance de sa famille).',
+      },
+    ],
+  },
+  {
+    id: 'royaume',
+    title: 'Royaume et titres',
+    icon: '🏰',
+    entries: [
+      {
+        term: 'Comté',
+        text: 'L’unité de base de la carte, avec un terrain, un développement, des bâtiments, un peuple et des levées. Il est tenu par un seigneur : vous (domaine propre) ou l’un de vos vassaux.',
+      },
+      {
+        term: 'Duché et royaume',
+        text: 'Des titres regroupant des comtés. On peut fonder un duché ou un royaume en tenant assez de leurs comtés (50 % pour un duché, 60 % pour un royaume), contre prestige et or. Chaque titre rapporte prestige et renommée.',
+      },
+      {
+        term: 'Domaine propre',
+        text: 'Les comtés que vous tenez directement, par opposition à ceux de vos vassaux. Il est limité (base 3, plus 1 par 5 de Gestion) : au-delà, vos revenus baissent et vos vassaux grognent.',
+      },
+      {
+        term: 'Vassal et suzerain',
+        text: 'Un vassal tient des comtés de vous et vous verse impôts et levées selon son opinion. Le suzerain est son seigneur direct. Un vassal très mécontent peut rejoindre une faction puis se révolter.',
+      },
+      {
+        term: 'Faction et révolte',
+        text: 'Des vassaux mécontents s’unissent contre leur suzerain. Si leur force dépasse un seuil, ils lèvent des troupes et réclament l’indépendance par la guerre.',
+      },
+      {
+        term: 'Capitale',
+        text: 'Le comté central de votre domaine, développé et fortifié de départ.',
+      },
+      {
+        term: 'Loi de succession',
+        text: `Partage : les comtés sont répartis entre les enfants, l’aîné gardant la capitale. Primogéniture : tout va à l’aîné (coûte ${B.characters.primogenitureCost} de prestige à instaurer).`,
+      },
+      {
+        term: 'Héritier',
+        text: 'Le premier enfant vivant, sinon petits-enfants, frères et sœurs, puis le reste de la dynastie. À votre mort vous incarnez l’héritier ; s’il n’y en a pas, la lignée s’éteint.',
+      },
+      {
+        term: 'Revendication',
+        text: 'Un droit sur un comté d’autrui, hérité, fabriqué par le chancelier ou obtenu par événement. Elle permet de déclarer une guerre de revendication.',
+      },
+      {
+        term: 'Développement',
+        text: 'Le niveau d’un comté (1 à 10). Il augmente ses revenus et ses levées et monte avec le Savoir du seigneur, les bâtiments, les talents et un contentement élevé ; il baisse avec le pillage, les épidémies et les révoltes.',
+      },
+      {
+        term: 'Fortification',
+        text: 'De 0 à 3 (terrain, muraille). Un siège dure 1 saison + 1 par niveau.',
+      },
+      {
+        term: 'Route',
+        text: 'Un bâtiment qui permet à une armée de traverser 2 comtés par saison.',
+      },
+    ],
+  },
+  {
+    id: 'economie',
+    title: 'Économie',
+    icon: '💰',
+    entries: [
+      {
+        term: 'Revenus d’un comté',
+        text: 'Base (développement + bâtiments) × taux d’impôts × effet du contentement × bonus du seigneur (Gestion, talents, édits).',
+      },
+      {
+        term: 'Impôts',
+        text: `Quatre niveaux par comté : faibles (revenus ×${f(B.local.taxes.faible.income)}, contentement ${B.local.taxes.faible.contentment > 0 ? '+' : ''}${B.local.taxes.faible.contentment}/saison), normaux (×1), élevés (×${f(B.local.taxes.eleve.income)}, ${B.local.taxes.eleve.contentment}) et écrasants (×${f(B.local.taxes.ecrasant.income)}, ${B.local.taxes.ecrasant.contentment}). Un bouton règle tout le domaine d’un coup.`,
+      },
+      {
+        term: 'Conscription',
+        text: `Légère, normale ou lourde par comté : une conscription lourde donne ×${f(B.local.conscription.lourde.levies)} levées mais freine le développement (×${f(B.local.conscription.lourde.development)}) et mécontente.`,
+      },
+      {
+        term: 'Contentement',
+        text: `L’humeur du peuple d’un comté, de 0 à 100 (60 au départ). Il pèse sur revenus (×${f(B.local.contentIncome.min)} à ×${f(B.local.contentIncome.max)}), levées et développement. Il évolue chaque saison selon les impôts, la conscription, les édits, les chapelles, l’occupation, les épidémies, puis revient doucement vers le calme.`,
+      },
+      {
+        term: 'Révolte paysanne',
+        aka: 'jacquerie',
+        text: `Sous ${B.local.revoltThreshold} de contentement, le peuple peut se révolter : vous choisissez de céder, d’écraser la révolte en bataille ou de négocier.`,
+      },
+      {
+        term: 'Couche « Peuple »',
+        text: 'Sur la carte, colore vos comtés du rouge (colère) au vert (prospérité).',
+      },
+      {
+        term: 'Entretien des troupes',
+        text: 'Chaque compagnie coûte de l’or par saison, qu’elle soit professionnelle ou levée en campagne. Une trésorerie négative provoque désertions et mécontentement.',
+      },
+      {
+        term: 'Emprunt',
+        text: `Les banquiers prêtent jusqu’à ${B.local.loanCapSeasons} saisons de revenus du domaine, à ${pc(B.local.loanRate)} d’intérêt par saison, remboursable quand vous voulez. Les dettes passent à l’héritier.`,
+      },
+      {
+        term: 'Places gratuites de la cour',
+        text: `Votre cour compte ${B.entourage.freeBase} places sans salaire, plus un bonus de rang (duc +1, roi +3) et 1 par ${B.entourage.gestionPerSlot} de Gestion. Au-delà, chaque courtisan extérieur coûte un salaire par saison (environ 1 à 4 or selon sa meilleure compétence). La famille, le conjoint, les pupilles et les otages sont gratuits.`,
+      },
+      {
+        term: 'Trésorier',
+        text: 'Politique de trésorerie. Prudent (par défaut) : quand l’or prévu passe sous zéro, il relève les impôts de quelques comtés contents, puis laisse partir le courtisan payé le moins utile. Manuel : aucune mesure automatique. Dans tous les cas, un trésor négatif fait partir un courtisan payé par saison.',
+      },
+      {
+        term: 'Tribut et cadeau',
+        text: `Un tribut est de l’or exigé d’un plus faible que vous (${B.diplomacy.tribute.amount} or). Un cadeau (${B.economy.giftCost} or) donne +${B.economy.giftOpinion} d’opinion pendant 4 ans.`,
+      },
+    ],
+  },
+  {
+    id: 'cour',
+    title: 'Cour et conseil',
+    icon: '🪑',
+    entries: [
+      {
+        term: 'Courtisan',
+        text: 'Un personnage qui vit à votre cour sans tenir de terres. Il peut siéger au conseil, commander une armée ou éduquer vos enfants.',
+      },
+      {
+        term: 'Conseil',
+        text: 'Cinq postes occupés par vos courtisans et vassaux, chacun lié à une compétence et à une tâche : Chancelier (Diplomatie : améliorer les relations, fabriquer une revendication), Maréchal (Guerre : entraîner les troupes, augmenter les levées), Intendant (Gestion : collecter les impôts, développer un comté), Maître-espion (Ruse : démasquer les complots, espionner une cour), Chapelain (Savoir : gagner de la piété, éduquer un héritier).',
+      },
+      {
+        term: 'Candidats de passage',
+        text: 'Chaque printemps, 3 à 5 candidats se présentent (chevalier errant, lettré, intendant, émissaire, conseiller de l’ombre, cadet bien né). L’engagement coûte une prime ; il est accepté selon votre prestige, votre Diplomatie et la renommée du talent (un très grand talent est recherché ailleurs). Ils repartent au printemps suivant.',
+      },
+      {
+        term: 'Congédier',
+        text: 'Un courtisan renvoyé quitte la cour, libère sa place et son salaire, et vous en garde une légère rancune.',
+      },
+      {
+        term: 'Débaucher',
+        text: 'Offrir de l’or à un courtisan d’une cour rivale. Il est plus tenté s’il est mécontent de son seigneur, ambitieux ou avare. Réussi ou non, son seigneur vous en veut.',
+      },
+      {
+        term: 'Rallier',
+        text: 'Proposer à un prisonnier sans terre de vous servir (une seule tentative, une prime). Les lâches, avares et ambitieux cèdent plus facilement ; les justes et courageux, moins.',
+      },
+      {
+        term: 'Décisions',
+        text: 'Actions que vous lancez vous-même (tournoi, chasse, festin, pèlerinage…), chacune avec un coût, un délai avant de recommencer et un événement qui en décide l’issue.',
+      },
+    ],
+  },
+  {
+    id: 'intrigues',
+    title: 'Diplomatie et intrigues',
+    icon: '🕊️',
+    entries: [
+      {
+        term: 'Mariage',
+        text: 'Unit deux personnages célibataires et adultes de maisons différentes. Il rapproche deux cours (+20 d’opinion entre souverains), rapporte renommée et prestige s’il est prestigieux. L’acceptation dépend de l’opinion, du rang et de l’âge.',
+      },
+      {
+        term: 'Alliance',
+        text: 'Un pacte entre souverains : vous pouvez appeler votre allié aux armes dans une guerre.',
+      },
+      {
+        term: 'Appel aux armes',
+        text: 'Demande à un allié de rejoindre une guerre. Il accepte selon son opinion de vous.',
+      },
+      {
+        term: 'Trêve',
+        text: `Après une guerre, aucune attaque possible pendant ${B.game.truceSeasons} saisons (davantage avec un otage).`,
+      },
+      {
+        term: 'Complot',
+        text: 'Un seul à la fois. Quatre types : assassiner (la cible meurt, ou l’attentat échoue), discréditer (prestige et opinion en baisse), gagner l’amitié, inciter un vassal rival à la révolte. Cibles possibles : souverains rivaux, leurs vassaux et leur famille proche (enfants compris, mieux protégés par la Ruse du seigneur).',
+      },
+      {
+        term: 'Agents',
+        text: `Jusqu’à ${B.intrigue.maxAgents}, payés ${B.intrigue.agentCost} or chacun : ils accélèrent le complot mais augmentent le risque d’être découvert.`,
+      },
+      {
+        term: 'Découverte',
+        text: `Chaque saison, un complot peut être démasqué (risque affiché). La cible vous en veut (${B.intrigue.discoveredOpinion} d’opinion) et vous perdez ${-B.intrigue.discoveredPrestige} de prestige. Un assassinat réussi pèse sur la conscience (stress) et la famille peut deviner qui a frappé.`,
+      },
+      {
+        term: 'Acceptation',
+        aka: 'chance, verdict',
+        text: 'Pour mariages, alliances, engagements ou pupilles, le jeu affiche un score avec le détail de ses facteurs : à 0 ou plus, l’offre est acceptée. Pour rallier ou débaucher, le score donne une chance de réussite (50 % à 0), tirée au sort.',
+      },
+    ],
+  },
+  {
+    id: 'guerre',
+    title: 'Guerre',
+    icon: '⚔️',
+    entries: [
+      {
+        term: 'Casus belli',
+        aka: 'cb, motif de guerre',
+        text: 'Le motif d’une guerre : revendication (sur un comté revendiqué), conquête (royaume ou Ambitieux, coûte du prestige, comté voisin), indépendance (d’un vassal contre son suzerain) ou défense. Le comté visé est l’objectif de guerre.',
+      },
+      {
+        term: 'Levées',
+        text: 'Hommes appelés des comtés, gratuits tant qu’ils restent chez eux, puis payés en campagne. Elles se reconstituent chaque saison, selon développement, bâtiments, conscription et contentement. Gardées trop longtemps, elles se dispersent.',
+      },
+      {
+        term: 'Compagnies professionnelles',
+        text: 'Soldats entretenus en permanence, recrutés par bloc de 100 hommes dans les comtés dotés des bâtiments requis. Leur nombre de départ est ajusté au revenu pour ne pas ruiner le seigneur.',
+      },
+      {
+        term: 'Mercenaires',
+        text: `Compagnies à louer sur contrat de ${B.mercenaries.contractSeasons} saisons, disponibles tout de suite mais chères. À la fin, elles partent avec leurs survivants et ne reviennent qu’après un délai.`,
+      },
+      {
+        term: 'Armée',
+        text: 'Un seul corps levé par souverain, avec un commandant principal et deux commandants de front. Le souverain qui commande donne +10 de moral mais risque blessure et capture.',
+      },
+      {
+        term: 'Ravitaillement',
+        text: 'Stock de l’armée (0 à 100). Il se reconstitue en terre amie et baisse en terre ennemie, plus vite en hiver. À zéro, l’usure triple.',
+      },
+      {
+        term: 'Usure',
+        text: 'Les armées perdent des hommes chaque saison, davantage en hiver, en terrain difficile ou sans ravitaillement.',
+      },
+      {
+        term: 'Pillage',
+        text: 'Une armée pille un comté ennemi : ravitaillement et or gagnés, mais développement et contentement du comté détruits, et son seigneur vous en veut.',
+      },
+      {
+        term: 'Siège',
+        text: 'Une armée en terre ennemie assiège le comté. Trois façons de le mener : assaut (prise immédiate, pertes lourdes), blocus (usure réduite, siège long) ou négociation (une tentative par comté : la garnison se rend contre de l’or, avec une chance selon votre Diplomatie et la fortification).',
+      },
+      {
+        term: 'Occupation',
+        text: 'Un comté tombé est occupé : il ne rapporte rien et le peuple s’en plaint. Il peut être repris, ou cédé à la paix.',
+      },
+      {
+        term: 'Score de guerre',
+        text: 'De −100 à +100 du point de vue de l’attaquant. Il monte avec les batailles gagnées, les occupations, la capture du souverain adverse et l’objectif tenu. À +50 vous pouvez exiger la paix ; à +100 elle est imposée.',
+      },
+      {
+        term: 'Paix',
+        text: 'Trois formes : exiger (le vainqueur prend son objectif), paix blanche (statu quo) ou capitulation. L’IA propose elle-même la paix quand elle est en difficulté.',
+      },
+    ],
+  },
+  {
+    id: 'bataille',
+    title: 'Bataille',
+    icon: '🛡️',
+    entries: [
+      {
+        term: 'Trois fronts et réserve',
+        text: `La bataille oppose les armées sur trois fronts (aile gauche, centre, aile droite) face à face, avec une réserve. Elle dure ${B.battle.maxRounds} rounds au plus. Un camp est vaincu quand deux de ses fronts sont brisés, ou son centre sans réserve.`,
+      },
+      {
+        term: 'Reconnaissance',
+        text: 'De 0 à 2. Elle dépend du terrain ami, de l’espionnage et d’un commandant Stratège. À 0 vous ne voyez qu’une estimation des effectifs ennemis ; à 2 vous voyez leurs fronts.',
+      },
+      {
+        term: 'Déploiement',
+        text: 'Avant la bataille, vous répartissez vos compagnies entre fronts et réserve, avec quatre préréglages : Équilibré, Centre solide, Ailes de cavalerie, Défense en profondeur.',
+      },
+      {
+        term: 'Ordres',
+        text: 'Chaque front reçoit un ordre par round, joué simultanément avec l’ennemi : Charger (attaque forte, défense faible), Tenir (défense forte, moins de pertes de moral), Tirer (seuls les archers frappent, 3 volées), Feindre la retraite (punit une charge adverse ; cavalerie et Guerre ≥ 12 requis), Se replier (le front rejoint la réserve), Prendre de flanc (un front sans adversaire frappe un front voisin).',
+      },
+      {
+        term: 'Moral',
+        text: 'Chaque front en a. Les pertes, les flancs, les embuscades et la chute d’un voisin le font baisser. À zéro, ou sous 20 % des effectifs, le front est brisé : il fuit.',
+      },
+      {
+        term: 'Réserve',
+        text: 'Hommes gardés derrière les fronts, que l’on peut engager pour renforcer ou reformer un front.',
+      },
+      {
+        term: 'Commandants',
+        text: 'Leur Guerre renforce leur front. Ils risquent d’être blessés, tués ou capturés si leur front est brisé. Certains traits donnent un pouvoir : Stratège (voit les ordres ennemis au premier round), Cavalier émérite, Inébranlable (jamais plus de 20 de moral perdu par round), Inspirant (un ralliement par bataille), Impétueux, Prudent, Lâche, Boucher (l’ennemi perd du moral).',
+      },
+      {
+        term: 'Tactiques',
+        text: `Chaque camp reçoit une main de ${B.battle.tacticHand} tactiques selon la composition de l’armée et le commandant (plus celles données par les talents), et peut en jouer une par round, une seule fois chacune. Voir la liste plus bas.`,
+      },
+      {
+        term: 'Élan',
+        text: 'Le camp qui inflige nettement plus de pertes qu’il n’en subit prend l’ascendant (🔥, jusqu’à 3 niveaux) et attaque un peu plus fort. L’adversaire le perd.',
+      },
+      {
+        term: 'Météo',
+        text: 'Temps clair, pluie (archers ×0,7), brouillard (archers ×0,75, reconnaissance réduite) ou neige (cavalerie ×0,8, moral −5). Elle peut changer en cours de bataille.',
+      },
+      {
+        term: 'Duel',
+        text: 'Un commandant peut en défier un autre. Le vainqueur galvanise son armée, le vaincu risque blessure ou mort ; refuser fait baisser le moral de vos rangs. Le vainqueur gagne du prestige et le trait Héros.',
+      },
+      {
+        term: 'Incident',
+        text: 'Imprévus du champ de bataille : porte-étendard tombé, sergent qui se distingue, chevaux emballés, bénédiction, changement de temps.',
+      },
+      {
+        term: 'Embuscade',
+        text: 'En forêt, un défenseur rusé peut surprendre un front de l’attaquant au premier round.',
+      },
+      {
+        term: 'Rivière',
+        text: 'Un attaquant qui franchit une rivière attaque à ×0,7 aux deux premiers rounds.',
+      },
+      {
+        term: 'Déroute et poursuite',
+        text: 'Le vaincu subit une poursuite, plus meurtrière si le vainqueur a de la cavalerie. Les commandants des fronts brisés peuvent être capturés.',
+      },
+      {
+        term: 'Résolution automatique',
+        text: 'Le bouton Auto fait jouer la bataille par l’IA pour vous.',
+      },
+      {
+        term: 'Mur de piques',
+        text: 'Des piquiers qui tiennent face à une charge de cavalerie la fauchent (pertes ×1,5).',
+      },
+    ],
+  },
+  {
+    id: 'monde',
+    title: 'Événements et monde',
+    icon: '📜',
+    entries: [
+      {
+        term: 'Événement',
+        text: 'Une situation qui demande un choix : chaque option affiche à l’avance ses effets connus. Il y en a 0 à 3 par saison, tirés selon la saison, vos traits, vos conditions et un biais propre à votre partie.',
+      },
+      {
+        term: '🎲 Issue incertaine',
+        text: 'Certaines options sont tirées au sort : la probabilité est affichée avant de choisir (60 % : gain — sinon : perte). Parfois elle dépend d’une compétence (+2,5 % par point au-dessus de 10).',
+      },
+      {
+        term: 'Suite d’événements',
+        text: 'Certains choix ont des conséquences des années plus tard : prophétie en trois actes, prétendant au trône, peste, épée de l’ancêtre…',
+      },
+      {
+        term: 'Bataille d’événement',
+        text: 'Pillards, révoltés ou prétendant : une bataille jouée sur-le-champ avec votre armée levée, ou à défaut des levées d’urgence. Son issue est décidée par l’événement.',
+      },
+      {
+        term: 'Épidémie',
+        text: `Elle naît au hasard et passe de comté en comté (${pc(B.plague.spreadChance)} par voisin et par saison) : développement, levées et santé en pâtissent, et les comtés guéris sont immunisés un temps. La quarantaine l’empêche de se propager.`,
+      },
+      {
+        term: 'Chronique',
+        text: 'Le journal de la maison : naissances, décès, successions, guerres, titres, mariages, hauts faits. Le Livre de la dynastie résume chaque règne, ses ambitions et ses exploits.',
+      },
+      {
+        term: 'Royaumes étrangers',
+        text: 'Autour de la carte jouable : les royaumes d’outre-mer (émissaires, marchands, pillards, invasions) et les terres inexplorées, impossibles à visiter.',
+      },
+      {
+        term: 'Succès',
+        text: 'Vingt objectifs (premier sang, couronne, ambitions…) gardés sur l’appareil, toutes parties confondues.',
+      },
+    ],
+  },
+  {
+    id: 'interface',
+    title: 'Interface',
+    icon: '📱',
+    entries: [
+      {
+        term: 'Barre du haut',
+        text: 'Engrenage des Paramètres, logo (appui long : outils de test), or, prestige, piété, et le bouton « Fin de saison ». Toucher une ressource en détaille la dernière saison.',
+      },
+      {
+        term: 'Onglets',
+        text: 'Cour (souverain, entourage, conseil, maison), Royaume (carte, économie), Armée, Intrigues (diplomatie, complots, décisions) et Chronique (chronique, livre, nouvelles, succès).',
+      },
+      {
+        term: 'Gestes',
+        text: 'Glissez horizontalement pour changer de sous-vue puis d’onglet (depuis le bord de l’écran, même sur la carte), et vers le bas pour fermer une fenêtre. Appui long sur un élément marqué pour une infobulle.',
+      },
+      {
+        term: 'Carte',
+        text: 'Pincez et déplacez pour zoomer ; touchez un comté ou une armée pour sa fiche. Boutons Relief (terrain), Peuple (contentement) et Légende. Les terres hors de portée sont voilées.',
+      },
+      {
+        term: 'Fiches',
+        text: 'Toucher un personnage, un comté ou une armée ouvre sa fiche détaillée ; « Retour » revient à la précédente.',
+      },
+      {
+        term: 'Paramètres',
+        text: 'Thème, animations réduites, sons et vibrations, résumé avant la fin de saison, sauvegarde manuelle, export, succès et ce glossaire.',
+      },
+    ],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Sections générées depuis les données
+// ---------------------------------------------------------------------------
+
+const unitEntries: GlossaryEntry[] = UNIT_TYPES.map((u) => {
+  const s = UNITS[u];
+  const strong = UNIT_TYPES.filter((v) => COUNTERS[u][v] >= 1.3).map((v) =>
+    UNITS[v].label.toLowerCase(),
+  );
+  const weak = UNIT_TYPES.filter((v) => COUNTERS[u][v] <= 0.8).map((v) =>
+    UNITS[v].label.toLowerCase(),
+  );
+  return {
+    term: s.label,
+    aka: s.short,
+    text: `Attaque ${s.attack}, défense ${s.defense}, moral ${s.morale} ; ${s.recruit} or le recrutement d’une compagnie de 100 hommes, ${s.upkeep} or d’entretien par saison${s.building ? ` ; demande un bâtiment (${BUILDINGS[s.building]?.name ?? s.building}) dans un comté du domaine` : ' ; levée gratuitement dans les comtés'}.${strong.length ? ` Forte contre : ${strong.join(', ')}.` : ''}${weak.length ? ` Faible contre : ${weak.join(', ')}.` : ''}`,
+  };
+});
+
+const terrainEntries: GlossaryEntry[] = Object.values(TERRAINS).map((t) => {
+  const fx: string[] = [];
+  if (t.defenderDefense !== 1) fx.push(`défense du défenseur ×${f(t.defenderDefense)}`);
+  if (t.allAttack !== 1) fx.push(`attaque de tous ×${f(t.allAttack)}`);
+  if (t.cavalryAttack !== 1) fx.push(`cavalerie ×${f(t.cavalryAttack)}`);
+  if (t.archerAttack !== 1) fx.push(`archers ×${f(t.archerAttack)}`);
+  if (t.defenderArcherAttack !== 1) fx.push(`archers du défenseur ×${f(t.defenderArcherAttack)}`);
+  if (t.attackerCharge !== 1) fx.push(`charges de l’attaquant ×${f(t.attackerCharge)}`);
+  if (t.attackerMoralePerRound)
+    fx.push(`l’attaquant perd ${t.attackerMoralePerRound} de moral par round`);
+  if (t.ambushRuse !== null) fx.push(`embuscade possible si le défenseur a Ruse ${t.ambushRuse}`);
+  if (t.attrition !== 1) fx.push(`usure en campagne ×${f(t.attrition)}`);
+  return {
+    term: t.label,
+    text: fx.length
+      ? `${fx.join(' ; ')}.`
+      : 'Terrain neutre : aucun bonus ni malus en bataille, usure normale en campagne.',
+  };
+});
+
+const buildingEntries: GlossaryEntry[] = BUILDING_TYPES.map((b) => {
+  const d = BUILDINGS[b];
+  const [l1, l2] = d.levels;
+  return {
+    term: d.name,
+    text: `${d.description} Niveau 1 : ${l1.cost} or, ${l1.seasons} saison(s). Niveau 2 : ${l2.cost} or, ${l2.seasons} saison(s).`,
+  };
+});
+
+const traitEntries: GlossaryEntry[] = Object.values(TRAITS).map((t) => ({
+  term: t.name,
+  text: `${{ personnalite: 'Personnalité', education: 'Éducation', hereditaire: 'Héréditaire', acquis: 'Acquis' }[t.category]}${t.opposite ? ` (contraire : ${TRAITS[t.opposite]?.name})` : ''}. ${t.description}`,
+}));
+
+const perkEntries: GlossaryEntry[] = [
+  ...Object.values(PERKS).map((p) => ({
+    term: p.name,
+    text: `Talent de rang ${p.tier}, branche ${BRANCH_NAMES[p.branch]}. ${p.description}`,
+  })),
+];
+const legacyEntries: GlossaryEntry[] = Object.values(LEGACIES).map((l) => ({
+  term: l.name,
+  text: `Héritage de rang ${l.tier}, branche ${LEGACY_BRANCH_NAMES[l.branch]}, ${B.progression.legacyCost[l.tier - 1]} de renommée. ${l.description}`,
+}));
+const tacticEntries: GlossaryEntry[] = TACTIC_IDS.map((id) => {
+  const t = TACTICS[id];
+  const req: string[] = [];
+  if (t.minShare)
+    req.push(
+      `au moins ${pc(t.minShare.share)} de ${t.minShare.units.map((u) => UNITS[u].label.toLowerCase()).join(' ou ')}`,
+    );
+  if (t.minGuerre) req.push(`Guerre ${t.minGuerre}+`);
+  if (t.minRuse) req.push(`Ruse ${t.minRuse}+`);
+  if (t.sovereign) req.push('souverain présent');
+  return {
+    term: `${t.icon} ${t.name}`,
+    text: `${t.description}${req.length ? ` Demande : ${req.join(', ')}.` : ''}`,
+  };
+});
+const edictEntries: GlossaryEntry[] = EDICTS.map((e) => ({
+  term: `${e.icon} ${e.name}`,
+  text: `${e.description} Proclamation ${e.cost} or${e.upkeep ? `, entretien ${e.upkeep} or par saison` : ''}.`,
+}));
+const ambitionEntries: GlossaryEntry[] = AMBITIONS.map((a) => ({
+  term: `${a.icon} ${a.name}`,
+  text: `${a.description.replace('{n}', 'N')} Délai ${a.years} ans. Récompense : +${a.reward.prestige} prestige${a.reward.renown ? `, +${a.reward.renown} renommée` : ''}.`,
+}));
+const decisionEntries: GlossaryEntry[] = DECISIONS.map((d) => ({
+  term: `${d.icon} ${d.name}`,
+  text: `${d.description} Coût : ${[d.cost.or ? `${d.cost.or} or` : '', d.cost.prestige ? `${d.cost.prestige} prestige` : '', d.cost.piete ? `${d.cost.piete} piété` : ''].filter(Boolean).join(', ')}. Tous les ${d.cooldownYears} an(s).`,
+}));
+const mercEntries: GlossaryEntry[] = MERCENARIES.map((m) => ({
+  term: m.name,
+  text: `${m.origin}. ${m.description} ${m.cost} or.`,
+}));
+
+const generated: GlossarySection[] = [
+  { id: 'unites', title: 'Unités', icon: '🪖', entries: unitEntries },
+  { id: 'terrains', title: 'Terrains', icon: '⛰️', entries: terrainEntries },
+  { id: 'batiments', title: 'Bâtiments', icon: '🏗️', entries: buildingEntries },
+  { id: 'tactiques', title: 'Tactiques de bataille', icon: '🃏', entries: tacticEntries },
+  { id: 'traits', title: 'Traits', icon: '🎭', entries: traitEntries },
+  { id: 'talents', title: 'Talents (personnage)', icon: '🌟', entries: perkEntries },
+  { id: 'heritages', title: 'Héritages (maison)', icon: '🏛️', entries: legacyEntries },
+  { id: 'edits', title: 'Édits du royaume', icon: '📯', entries: edictEntries },
+  { id: 'ambitions', title: 'Ambitions', icon: '🎯', entries: ambitionEntries },
+  { id: 'decisions', title: 'Décisions', icon: '🏇', entries: decisionEntries },
+  { id: 'mercenaires', title: 'Mercenaires', icon: '🗡️', entries: mercEntries },
+];
+
+export const GLOSSARY: GlossarySection[] = [...concepts, ...generated];
+
+/** Recherche simple (sans accents ni casse) dans les termes, synonymes et textes. */
+export function searchGlossary(
+  query: string,
+): { section: GlossarySection; entry: GlossaryEntry }[] {
+  const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const q = norm(query.trim());
+  if (!q) return [];
+  const out: { section: GlossarySection; entry: GlossaryEntry; score: number }[] = [];
+  for (const section of GLOSSARY)
+    for (const entry of section.entries) {
+      const t = norm(entry.term);
+      const a = norm(entry.aka ?? '');
+      const x = norm(entry.text);
+      const score = t.includes(q) ? 3 : a.includes(q) ? 2 : x.includes(q) ? 1 : 0;
+      if (score) out.push({ section, entry, score });
+    }
+  return out.sort((a, b) => b.score - a.score).slice(0, 40);
+}
