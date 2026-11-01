@@ -24,7 +24,7 @@ import { DECISIONS } from '../../data/decisions';
 import { PoachCard } from '../components/Entourage';
 import { AcceptanceView } from '../components/Diplomacy';
 import { MarriageClauses, PactsCard } from '../components/Crowns';
-import type { MarriageClause } from '../../engine/crowns';
+import { hasFamilyPact, type MarriageClause } from '../../engine/crowns';
 import { NewsList, newsAbout } from '../components/News';
 import { decisionCheck } from '../../engine/decisions';
 import { useStore } from '../store';
@@ -139,18 +139,40 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
           Envoyer
         </button>
       </div>
-      <div className="card">
-        <b>Proposer une alliance</b>
-        <AcceptanceView acc={alliance} />
-        <button
-          className="btn small"
-          style={{ marginTop: 6 }}
-          disabled={!!alliance.blocked}
-          onClick={() => dispatch({ type: 'proposeAlliance', targetId: id })}
-        >
-          Proposer
-        </button>
-      </div>
+      {allied(game, pl, id) ? (
+        <div className="card">
+          <b>Alliance en vigueur</b>
+          <p className="small muted" style={{ margin: '4px 0 8px' }}>
+            La rompre coûte {-BALANCE.diplomacy.breakAlliance.prestige} prestige et sa rancune (
+            {BALANCE.diplomacy.breakAlliance.opinion} d’opinion). L’attaquer dans les{' '}
+            {BALANCE.diplomacy.breakAlliance.treacherySeasons} saisons qui suivent passe pour une
+            traîtrise ({BALANCE.diplomacy.breakAlliance.treacheryPrestige} prestige, toutes les
+            cours vous en veulent).
+            {hasFamilyPact(game, pl, id)
+              ? ' Vous êtes aussi liés par un pacte de famille : le rompre est un parjure.'
+              : ''}
+          </p>
+          <button
+            className="btn small ghost"
+            onClick={() => dispatch({ type: 'breakAlliance', targetId: id })}
+          >
+            Rompre l’alliance
+          </button>
+        </div>
+      ) : (
+        <div className="card">
+          <b>Proposer une alliance</b>
+          <AcceptanceView acc={alliance} />
+          <button
+            className="btn small"
+            style={{ marginTop: 6 }}
+            disabled={!!alliance.blocked}
+            onClick={() => dispatch({ type: 'proposeAlliance', targetId: id })}
+          >
+            Proposer
+          </button>
+        </div>
+      )}
       <div className="card">
         <b>Traité de terres</b>
         <p className="small muted" style={{ margin: '4px 0 8px' }}>

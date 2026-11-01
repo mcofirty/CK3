@@ -6,6 +6,7 @@ import {
   applyClause,
   breakPacts,
   fuseCrowns,
+  hasFamilyPact,
   offerProtection,
   proposePact,
   setAgnatic,
@@ -51,6 +52,7 @@ import { addStress, stressFromSpec } from './stress';
 import { chronicle, type Ctx, newId, notify } from './context';
 import {
   allianceAcceptance,
+  renounceAlliance,
   callToArms,
   celebrateMarriage,
   demandTribute,
@@ -143,6 +145,7 @@ export type Action =
   | { type: 'offerProtection'; targetId: string }
   | { type: 'proposePact'; kind: 'famille' | 'succession'; targetId: string; gold?: number }
   | { type: 'breakPacts'; targetId: string }
+  | { type: 'breakAlliance'; targetId: string }
   | { type: 'proposeAlliance'; targetId: string }
   | { type: 'sendGift'; targetId: string }
   | { type: 'callToArms'; allyId: string; warId: string; gold?: number }
@@ -354,6 +357,11 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'breakPacts':
       breakPacts(state, pl, a.targetId);
+      break;
+    case 'breakAlliance':
+      // Avec un pacte de famille, rompre l'alliance est un parjure.
+      if (hasFamilyPact(state, pl, a.targetId)) breakPacts(state, pl, a.targetId);
+      else renounceAlliance(state, pl, a.targetId);
       break;
     case 'proposeAlliance': {
       const acc = allianceAcceptance(state, pl, a.targetId);

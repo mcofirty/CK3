@@ -199,6 +199,26 @@ export function breakAlliance(state: GameState, a: string, b: string): void {
   state.alliances = state.alliances.filter((k) => k !== allyKey(a, b));
 }
 
+/** Le joueur (ou l'IA) dénonce une alliance : prestige et rancune ; on s'en souvient. */
+export function renounceAlliance(state: GameState, fromId: string, allyId: string): boolean {
+  if (!allied(state, fromId, allyId)) return false;
+  const B = D.breakAlliance;
+  breakAlliance(state, fromId, allyId);
+  state.characters[fromId].prestige += B.prestige;
+  addOpinion(state, allyId, fromId, 'A rompu notre alliance', B.opinion, B.opinionSeasons);
+  (state.brokenAlliances ??= {})[allyKey(fromId, allyId)] = state.turn;
+  const text = `${displayName(state, state.characters[fromId])} rompt son alliance avec ${displayName(state, state.characters[allyId])}.`;
+  if (fromId === state.playerId || allyId === state.playerId) chronicle(state, text, 'divers');
+  else worldNews(state, text, 'alliance', fromId);
+  return true;
+}
+
+/** Attaquer un allié tout juste renié : traîtrise. */
+export function recentlyBetrayed(state: GameState, a: string, b: string): boolean {
+  const t = state.brokenAlliances?.[allyKey(a, b)];
+  return t !== undefined && state.turn - t < D.breakAlliance.treacherySeasons;
+}
+
 /** Ennemi principal de `fromId` dans cette guerre. */
 function warEnemy(state: GameState, fromId: string, warId: string): string | undefined {
   const w = state.wars[warId];

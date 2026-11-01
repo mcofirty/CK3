@@ -386,6 +386,8 @@ export interface GameState {
   /** Pactes de famille et pactes successoraux (paires triées "a|b"). */
   familyPacts?: string[];
   successionPacts?: string[];
+  /** Alliances rompues : paire "a|b" → tour de la rupture. */
+  brokenAlliances?: Record<string, number>;
   /** Appels à l'aide refusés : souverain → tour où l'on peut le solliciter de nouveau. */
   callRefused?: Record<string, number>;
   /** Traités refusés : souverain → tour où l'on peut négocier de nouveau. */

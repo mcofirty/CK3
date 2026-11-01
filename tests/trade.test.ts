@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../src/data/balance';
 import { applyAction } from '../src/engine/actions';
-import { addOpinion } from '../src/engine/characters';
+import { addOpinion, allied } from '../src/engine/characters';
+import { makeAlliance } from '../src/engine/diplomacy';
 import { callToArmsAcceptance } from '../src/engine/diplomacy';
 import {
   balanceOffer,
@@ -15,7 +16,7 @@ import {
 import { isCapital } from '../src/engine/economy/local';
 import { bordersPlayer, independentRulers } from '../src/engine/realm';
 import { Rng } from '../src/engine/rng';
-import { declareWar } from '../src/engine/war';
+import { canDeclareWar, declareWar } from '../src/engine/war';
 import { newGame } from '../src/engine/world';
 import { clearEvents } from './helpers';
 
@@ -133,5 +134,35 @@ describe('Marchandage', () => {
     const o = balanceOffer(s, s.playerId, { ...emptyOffer(rival), takeCounties: [c.id] });
     expect(o.giveGold).toBeLessThanOrEqual(20);
     expect(tradeAcceptance(s, s.playerId, o).blocked).toBeUndefined();
+  });
+});
+
+describe('Rompre une alliance', () => {
+  it('rompre puis déclarer la guerre : possible, mais attaquer aussitôt est une traîtrise', () => {
+    const s = newGame({ seed: 49 });
+    clearEvents(s);
+    const rival = independentRulers(s).find((id) => id !== s.playerId)!;
+    const target = Object.values(s.counties).find((c) => c.holderId === rival)!;
+    s.characters[s.playerId].claims.push(target.id);
+    makeAlliance(s, s.playerId, rival);
+    expect(canDeclareWar(s, s.playerId, rival, 'revendication', target.id).ok).toBe(false);
+    const prestige = s.characters[s.playerId].prestige;
+    let next = applyAction(s, { type: 'breakAlliance', targetId: rival });
+    expect(allied(next, next.playerId, rival)).toBe(false);
+    expect(next.characters[next.playerId].prestige).toBe(
+      prestige + BALANCE.diplomacy.breakAlliance.prestige,
+    );
+    expect(canDeclareWar(next, next.playerId, rival, 'revendication', target.id).ok).toBe(true);
+    const before = next.characters[next.playerId].prestige;
+    next = applyAction(next, {
+      type: 'declareWar',
+      targetId: rival,
+      cb: 'revendication',
+      countyId: target.id,
+    });
+    expect(Object.values(next.wars).some((w) => w.defenderId === rival)).toBe(true);
+    expect(next.characters[next.playerId].prestige).toBe(
+      before + BALANCE.diplomacy.breakAlliance.treacheryPrestige,
+    );
   });
 });

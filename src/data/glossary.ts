@@ -342,7 +342,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Alliance',
-        text: 'Un pacte entre souverains : vous pouvez appeler votre allié aux armes dans une guerre.',
+        text: `Un pacte entre souverains : vous pouvez appeler votre allié aux armes dans une guerre. On ne peut pas déclarer la guerre à un allié : rompez d’abord l’alliance depuis sa fiche (Intrigues), au prix de ${-B.diplomacy.breakAlliance.prestige} prestige et de sa rancune. L’attaquer dans les ${B.diplomacy.breakAlliance.treacherySeasons} saisons qui suivent est une traîtrise (${B.diplomacy.breakAlliance.treacheryPrestige} prestige, toutes les cours vous en veulent).`,
       },
       {
         term: 'Appel aux armes',

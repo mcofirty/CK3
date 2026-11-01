@@ -431,6 +431,16 @@ export const BALANCE = {
     acceptThreshold: 0,
     marriage: { base: 10, perOpinion: 0.5, rankBonus: 15, allianceInterest: 10 },
     alliance: { base: -10, perOpinion: 0.6, threatInterest: 20 },
+    /** Rompre une alliance : prestige, rancune de l'ex-allié, méfiance si l'on attaque aussitôt. */
+    breakAlliance: {
+      prestige: -50,
+      opinion: -30,
+      opinionSeasons: 16,
+      /** Attaquer l'ex-allié avant ce délai : traîtrise aux yeux de toutes les cours. */
+      treacherySeasons: 4,
+      treacheryOpinion: -15,
+      treacheryPrestige: -100,
+    },
     callToArms: {
       base: 10,
       perOpinion: 0.7,

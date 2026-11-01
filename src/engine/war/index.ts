@@ -817,7 +817,8 @@ export function canDeclareWar(
   if (attackerId === defenderId) reasons.push('Cible invalide');
   if (atWar(state, attackerId, defenderId)) reasons.push('Déjà en guerre');
   if (truceWith(state, attackerId, defenderId)) reasons.push('Trêve en cours');
-  if (allied(state, attackerId, defenderId)) reasons.push('Vous êtes alliés');
+  if (allied(state, attackerId, defenderId))
+    reasons.push('Vous êtes alliés : rompez d’abord l’alliance (Intrigues › fiche du souverain)');
   if (a.imprisonedBy) reasons.push('Vous êtes prisonnier');
   if (
     Object.values(state.characters).some(
@@ -916,6 +917,22 @@ export function declareWar(
     if (bordersPlayer(state, attackerId) || bordersPlayer(state, defenderId)) notify(state, text);
   }
   addOpinion(state, defenderId, attackerId, 'M’a déclaré la guerre', -30, 40);
+  // Attaquer un allié à peine renié : traîtrise.
+  const broken = state.brokenAlliances?.[allyKey(attackerId, defenderId)];
+  const T = BALANCE.diplomacy.breakAlliance;
+  if (broken !== undefined && state.turn - broken < T.treacherySeasons) {
+    a.prestige += T.treacheryPrestige;
+    for (const r of Object.values(state.characters))
+      if (
+        r.alive &&
+        r.id !== attackerId &&
+        !r.liegeId &&
+        Object.values(state.counties).some((c) => c.holderId === r.id)
+      )
+        addOpinion(state, r.id, attackerId, 'Traîtrise envers un allié', T.treacheryOpinion, 16);
+    if (attackerId === state.playerId)
+      notify(state, 'Attaquer un allié à peine renié : toutes les cours vous jugent traître.');
+  }
   return war;
 }
 
