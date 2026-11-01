@@ -513,7 +513,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Couleur de maison',
-        text: `Chaque maison a une couleur parmi ${HOUSE_COLORS.length} (${HOUSE_COLORS.map((c) => c.name.toLowerCase()).join(', ')}), celle du champ de son blason : elle sert de fond aux portraits de ses membres et teinte leurs vêtements. Les maisons régnantes ont toutes des couleurs différentes. Un fond gris signale un personnage sans maison.`,
+        text: `Chaque maison a sa propre couleur, que nulle autre ne porte : d’abord les ${HOUSE_COLORS.length} émaux et teintes classiques (${HOUSE_COLORS.map((c) => c.name.toLowerCase()).join(', ')}), puis des teintes nouvelles créées pour les maisons qui naissent, aussi éloignées que possible de celles des maisons vivantes. Elle colore le champ du blason, le fond des portraits et les vêtements. Un fond gris signale un personnage sans maison.`,
       },
       {
         term: 'Royaumes étrangers',

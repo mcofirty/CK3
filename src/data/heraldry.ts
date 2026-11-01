@@ -18,3 +18,11 @@ export const HOUSE_COLORS = [
   { name: 'Brun', hex: '#6b4a2a' },
   { name: 'Acier', hex: '#55606c' },
 ] as const;
+
+/** Teintes créées une fois la palette épuisée : assez soutenues pour l'or et l'argent. */
+export const HOUSE_COLOR_RANGE = {
+  saturation: [0.25, 0.5] as const,
+  lightness: [0.24, 0.42] as const,
+  /** Nombre de candidates tirées pour trouver la plus distincte. */
+  candidates: 160,
+};

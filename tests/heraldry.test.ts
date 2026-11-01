@@ -1,38 +1,51 @@
 import { describe, expect, it } from 'vitest';
-import { HOUSE_COLORS } from '../src/data/heraldry';
-import { houseColorIndex } from '../src/engine/heraldry';
+import { newMinorDynasty } from '../src/engine/characters/lifecycle';
+import { colorDistance, houseColorOf } from '../src/engine/heraldry';
 import { independentRulers } from '../src/engine/realm';
+import { Rng } from '../src/engine/rng';
 import { migrate } from '../src/save/migrations';
 import { newGame } from '../src/engine/world';
 
+const colors = (s: ReturnType<typeof newGame>) => Object.values(s.dynasties).map(houseColorOf);
+
 describe('Couleurs de maison', () => {
-  it('les maisons des souverains ont toutes une couleur différente', () => {
-    for (let seed = 1; seed <= 15; seed++) {
+  it('chaque maison a sa propre couleur dès le départ', () => {
+    for (let seed = 1; seed <= 10; seed++) {
       const s = newGame({ seed });
-      const houses = [...new Set(independentRulers(s).map((r) => s.characters[r].dynastyId!))];
-      const colors = houses.map((d) => houseColorIndex(s.dynasties[d]));
-      expect(new Set(colors).size).toBe(houses.length);
+      const all = colors(s);
+      expect(new Set(all).size).toBe(all.length);
     }
   });
 
-  it('les couleurs sont réparties : aucune n’est portée par plus de 3 maisons au départ', () => {
+  it('les souverains ont des couleurs bien distinctes', () => {
+    const s = newGame({ seed: 2 });
+    const cs = independentRulers(s).map((r) =>
+      houseColorOf(s.dynasties[s.characters[r].dynastyId!]),
+    );
+    for (let i = 0; i < cs.length; i++)
+      for (let j = i + 1; j < cs.length; j++)
+        expect(colorDistance(cs[i], cs[j])).toBeGreaterThan(100);
+  });
+
+  it('les maisons nées en cours de partie reçoivent des couleurs nouvelles', () => {
     const s = newGame({ seed: 3 });
-    const count = new Map<number, number>();
-    for (const d of Object.values(s.dynasties)) {
-      const i = houseColorIndex(d);
-      expect(HOUSE_COLORS[i]).toBeDefined();
-      count.set(i, (count.get(i) ?? 0) + 1);
+    const ctx = { state: s, rng: new Rng(9) };
+    const founder = s.characters[s.playerId];
+    for (let i = 0; i < 80; i++) {
+      const id = newMinorDynasty(ctx, founder);
+      const c = s.dynasties[id].color!;
+      expect(c).toMatch(/^#[0-9a-f]{6}$/);
     }
-    expect(Math.max(...count.values())).toBeLessThanOrEqual(3);
+    const all = colors(s);
+    expect(new Set(all).size).toBe(all.length);
   });
 
-  it('une sauvegarde v7 reçoit des couleurs distinctes pour ses souverains', () => {
+  it('une sauvegarde v8 (couleurs numérotées) reçoit des couleurs uniques', () => {
     const s = newGame({ seed: 4 }) as unknown as Record<string, unknown>;
-    for (const d of Object.values(s.dynasties as Record<string, { color?: number }>))
-      delete d.color;
-    s.version = 7;
+    for (const d of Object.values(s.dynasties as Record<string, { color?: unknown }>)) d.color = 1;
+    s.version = 8;
     const m = migrate(JSON.parse(JSON.stringify(s)));
-    const houses = [...new Set(independentRulers(m).map((r) => m.characters[r].dynastyId!))];
-    expect(new Set(houses.map((d) => m.dynasties[d].color)).size).toBe(houses.length);
+    const all = Object.values(m.dynasties).map(houseColorOf);
+    expect(new Set(all).size).toBe(all.length);
   });
 });

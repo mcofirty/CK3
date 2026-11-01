@@ -42,7 +42,7 @@ import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
 import { armyUpkeep, totalMen } from '../../engine/units';
 import { armyOf, findPath, militaryStrength, truceWith } from '../../engine/war';
 import { useStore } from '../store';
-import { houseColorIndex } from '../../engine/heraldry';
+import { houseColorOf } from '../../engine/heraldry';
 import { Bar, CharLine, CharLink, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
 import { realmColor, visibleMen } from './MapView';
 import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
@@ -158,7 +158,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
             {relation && <span className={`chip ${relation.cls}`}>{relation.t}</span>}
           </div>
         </div>
-        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorIndex(dyn)} size={44} />}
+        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={44} />}
       </div>
 
       {c.alive && (

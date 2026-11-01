@@ -87,6 +87,19 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
     }
     return next;
   },
+  // Version 8 → 9 : une couleur unique par maison (hex), créée au besoin.
+  8: (s) => {
+    const next: AnySave = { ...s, version: 9 };
+    const g = next as unknown as GameState;
+    if (g.counties && g.characters && g.dynasties) {
+      for (const d of Object.values(g.dynasties)) if (typeof d.color !== 'string') delete d.color;
+      const rulers = independentRulers(g)
+        .map((id) => g.characters[id]?.dynastyId)
+        .filter((d): d is string => !!d);
+      assignHouseColors(g, [...new Set(rulers)], new Rng(4243 + (g.turn ?? 0)));
+    }
+    return next;
+  },
 };
 
 function upgradeBattle(b: AnySave): AnySave {
