@@ -7,6 +7,7 @@ import { emptyStats } from '../engine/context';
 import { ensureCapitals, independentRulers } from '../engine/realm';
 import { assignHouseColors } from '../engine/heraldry';
 import { grantHouseClaims } from '../engine/crowns';
+import { repairRealms } from '../engine/characters/lifecycle';
 import { Rng } from '../engine/rng';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
@@ -113,6 +114,14 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   },
   // Version 11 → 12 : influence dans les cours étrangères.
   11: (s) => ({ influence: {}, ...s, version: 12 }),
+  // Version 12 → 13 : royaumes réparés dès le chargement (vassaux d'un suzerain mort, etc.).
+  12: (s) => {
+    const next: AnySave = { ...s, version: 13 };
+    const g = next as unknown as GameState;
+    if (g.counties && g.characters && g.dynasties)
+      repairRealms({ state: g, rng: new Rng(9100 + (g.turn ?? 0)) });
+    return next;
+  },
 };
 
 function upgradeBattle(b: AnySave): AnySave {

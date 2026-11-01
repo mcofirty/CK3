@@ -233,7 +233,10 @@ export function killCharacter(ctx: Ctx, id: string, cause: string): void {
   // Complots.
   for (const p of Object.values(state.plots))
     if (p.ownerId === id || p.targetId === id) delete state.plots[p.id];
-  if (heldCounties(state, id).length || titlesOf(state, id).length) succession(ctx, id);
+  // Un suzerain sans terre propre mais avec des vassaux a aussi une succession.
+  const hasVassals = Object.values(state.characters).some((v) => v.alive && v.liegeId === id);
+  if (heldCounties(state, id).length || titlesOf(state, id).length || hasVassals)
+    succession(ctx, id);
   else if (id === state.playerId) succession(ctx, id);
 }
 
@@ -411,8 +414,13 @@ export function succession(ctx: Ctx, id: string): void {
   for (const v of Object.values(state.characters)) {
     if (!v.alive) continue;
     if (v.liegeId === id) {
-      v.liegeId = heir.id;
-      addOpinion(state, v.id, heir.id, 'Nouveau suzerain', BALANCE.opinion.newLiege, 12);
+      if (v.id === heir.id) {
+        // L'héritier était vassal du défunt : il prend sa place, jamais son propre suzerain.
+        v.liegeId = liege && liege !== heir.id ? liege : undefined;
+      } else {
+        v.liegeId = heir.id;
+        addOpinion(state, v.id, heir.id, 'Nouveau suzerain', BALANCE.opinion.newLiege, 12);
+      }
     }
     if (v.courtId === id) v.courtId = heir.id;
   }
@@ -485,11 +493,66 @@ export function newMinorDynasty(ctx: Ctx, founder: Character): string {
   return id;
 }
 
+/**
+ * Répare les royaumes incohérents (parties anciennes) : comté tenu par un mort ou un disparu,
+ * vassal rattaché à un suzerain mort, disparu ou sans terre. Chaque comté relève ensuite d'un
+ * souverain vivant.
+ */
+export function repairRealms(ctx: Ctx): number {
+  const { state } = ctx;
+  let fixed = 0;
+  // Seigneurs morts qui tiennent encore des terres ou des vassaux : leur succession a lieu.
+  const deadLords = new Set<string>();
+  for (const c of Object.values(state.counties)) {
+    const h = state.characters[c.holderId];
+    if (h && !h.alive) deadLords.add(h.id);
+  }
+  for (const v of Object.values(state.characters)) {
+    const l = v.alive && v.liegeId ? state.characters[v.liegeId] : undefined;
+    if (l && !l.alive) deadLords.add(l.id);
+  }
+  for (const id of deadLords) {
+    if (id === state.playerId) continue;
+    succession(ctx, id);
+    fixed++;
+  }
+  // Comté sans titulaire connu : un seigneur local relève la bannière.
+  for (const c of Object.values(state.counties)) {
+    if (state.characters[c.holderId]?.alive) continue;
+    const lord = createCharacter(ctx, {
+      age: ctx.rng.int(25, 45),
+      dynastyId: null,
+      courtId: undefined,
+      skillBase: 7,
+    });
+    lord.dynastyId = newMinorDynasty(ctx, lord);
+    lord.courtId = lord.id;
+    lord.gold = 50;
+    c.holderId = lord.id;
+    fixed++;
+  }
+  // Vassal d'un suzerain disparu, mort ou sans terre : il s'émancipe.
+  const landed = new Set(Object.values(state.counties).map((c) => c.holderId));
+  for (const v of Object.values(state.characters)) {
+    if (!v.alive || !v.liegeId) continue;
+    const l = state.characters[v.liegeId];
+    if (v.liegeId === v.id || !l?.alive || !landed.has(l.id) || l.liegeId === v.id) {
+      v.liegeId = undefined;
+      fixed++;
+    }
+  }
+  if (fixed) ensureCapitals(state);
+  return fixed;
+}
+
 /** Retire les personnages morts sans importance pour alléger la sauvegarde. */
 export function pruneCharacters(state: GameState): void {
   const keepDynasty = state.playerDynastyId;
+  const needed = new Set<string>();
+  for (const c of Object.values(state.counties)) needed.add(c.holderId);
+  for (const v of Object.values(state.characters)) if (v.liegeId) needed.add(v.liegeId);
   for (const c of Object.values(state.characters)) {
-    if (c.alive || c.dynastyId === keepDynasty) continue;
+    if (c.alive || c.dynastyId === keepDynasty || needed.has(c.id)) continue;
     if ((c.deathTurn ?? 0) > state.turn - 40) continue;
     const hasLivingChild = c.childrenIds.some((k) => state.characters[k]?.alive);
     if (hasLivingChild) continue;

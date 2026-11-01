@@ -2,7 +2,7 @@
 import { BALANCE } from '../data/balance';
 import { runAi } from './ai';
 import { cleanOpinions } from './characters';
-import { pruneCharacters, seasonLife } from './characters/lifecycle';
+import { pruneCharacters, repairRealms, seasonLife } from './characters/lifecycle';
 import { chronicle, recordRuler, seasonOf, type Ctx } from './context';
 import { autoFillCouncil, seasonCouncil } from './diplomacy';
 import { drawSeasonEvents } from './events/engine';
@@ -106,6 +106,7 @@ export function startSeason(ctx: Ctx): void {
   const { state } = ctx;
   for (const c of Object.values(state.characters))
     if (c.recruitedThisSeason) c.recruitedThisSeason = 0;
+  repairRealms(ctx);
   ensureCapitals(state);
   seasonIncome(ctx);
   seasonProgression(ctx);

@@ -1003,6 +1003,10 @@ export function transferCounty(state: GameState, countyId: string, newHolder: st
   for (const ch of Object.values(state.characters))
     ch.claims = ch.claims.filter((x) => !(x === countyId && ch.id === newHolder));
   ensureCapitals(state);
+  // Un souverain qui perd sa dernière terre perd aussi ses vassaux : ils s'émancipent.
+  if (old && !heldCounties(state, old).length)
+    for (const v of Object.values(state.characters))
+      if (v.alive && v.liegeId === old) v.liegeId = undefined;
   // Un vassal sans terre rejoint la cour de son ancien suzerain.
   const oldC = state.characters[old];
   if (oldC && !heldCounties(state, old).length && oldC.liegeId) {
