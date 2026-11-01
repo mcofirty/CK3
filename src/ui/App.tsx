@@ -4,12 +4,14 @@ import { displayName, opinion } from '../engine/characters';
 import { yearOf } from '../engine/context';
 import { wards } from '../engine/diplomacy';
 import { checkAll, effectLabels, eventDef, eventText, renderText } from '../engine/events/engine';
+import { eventSubjects } from '../engine/events/subjects';
 import { capitalOccupied, economyOf, vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
 import {
   Icon,
   Logo,
+  Portrait,
   Segmented,
   Sheet,
   TipLayer,
@@ -590,6 +592,46 @@ function TabBar() {
   );
 }
 
+/** Personnes et comtés concernés : un appui ouvre leur fiche par-dessus l'événement. */
+function EventSubjects({
+  game,
+  subjects,
+}: {
+  game: GameState;
+  subjects: ReturnType<typeof eventSubjects>;
+}) {
+  const inspect = useStore((s) => s.inspect);
+  if (!subjects.length) return null;
+  return (
+    <div className="event-subjects" data-noswipe>
+      {subjects.slice(0, 6).map((x) => {
+        const c = x.kind === 'perso' ? game.characters[x.id] : undefined;
+        const k = x.kind === 'comte' ? game.counties[x.id] : undefined;
+        return (
+          <button
+            key={x.id}
+            className="event-subject"
+            onClick={() => inspect({ kind: x.kind, id: x.id })}
+            aria-label={`Voir la fiche de ${c ? c.name : (k?.name ?? '')}`}
+          >
+            {c ? (
+              <Portrait state={game} c={c} size={36} />
+            ) : (
+              <span className="event-subject-county" aria-hidden>
+                ⛫
+              </span>
+            )}
+            <span className="event-subject-text">
+              <b>{c ? displayName(game, c) : k?.name}</b>
+              <span className="tiny muted">{x.role ?? (c ? 'Fiche' : 'Comté')} ›</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function EventModal({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const inst = game.pendingEvents[0];
@@ -616,6 +658,7 @@ function EventModal({ game }: { game: GameState }) {
       </p>
       <h2>{renderText(game, def.titre, inst.scope)}</h2>
       <p className="event-text">{renderText(game, eventText(def, inst.scope), inst.scope)}</p>
+      <EventSubjects game={game} subjects={eventSubjects(game, def, inst.scope)} />
       {def.choix.map((c, i) => {
         const ok = checkAll(game, c.conditions, inst.scope);
         const fx = effectLabels(game, c.effets, inst.scope);

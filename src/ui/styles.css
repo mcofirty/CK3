@@ -2390,3 +2390,51 @@ body {
 .news-revolte .news-icon {
   color: var(--bad, #b3261e);
 }
+
+/* Fiches des personnes concernées par un événement */
+.event-subjects {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 2px -4px 12px;
+  padding: 2px 4px;
+  scrollbar-width: none;
+}
+.event-subjects::-webkit-scrollbar {
+  display: none;
+}
+.event-subject {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 52px;
+  max-width: 78%;
+  padding: 6px 12px 6px 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.event-subject-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+}
+.event-subject-text b {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.event-subject-county {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--glass);
+  font-size: 20px;
+}

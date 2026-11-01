@@ -208,27 +208,31 @@ export function callAllies(ctx: Ctx, w: War): void {
     for (const ally of allies) {
       if (warSide(state, w.id, ally) || allied(state, ally, enemy)) continue;
       if (ally === state.playerId) {
-        proposeToPlayer(ctx, {
-          id: `sys_appel_${w.id}`,
-          titre: 'Appel aux armes',
-          texte: `${state.characters[leader].name}, votre allié, est en guerre contre ${state.characters[enemy].name} (« ${w.name} ») et vous appelle à ses côtés.`,
-          choix: [
-            {
-              libelle: 'Honorer l’alliance',
-              effets: [
-                {
-                  rejoindre_guerre: {
-                    warId: w.id,
-                    allie: leader,
-                    camp: side === 'attacker' ? 'attaquant' : 'defenseur',
+        proposeToPlayer(
+          ctx,
+          {
+            id: `sys_appel_${w.id}`,
+            titre: 'Appel aux armes',
+            texte: `${state.characters[leader].name}, votre allié, est en guerre contre ${state.characters[enemy].name} (« ${w.name} ») et vous appelle à ses côtés.`,
+            choix: [
+              {
+                libelle: 'Honorer l’alliance',
+                effets: [
+                  {
+                    rejoindre_guerre: {
+                      warId: w.id,
+                      allie: leader,
+                      camp: side === 'attacker' ? 'attaquant' : 'defenseur',
+                    },
                   },
-                },
-                { prestige: 10 },
-              ],
-            },
-            { libelle: 'Refuser', effets: [{ prestige: -30 }] },
-          ],
-        });
+                  { prestige: 10 },
+                ],
+              },
+              { libelle: 'Refuser', effets: [{ prestige: -30 }] },
+            ],
+          },
+          { allie: leader, ennemi: enemy },
+        );
         continue;
       }
       if (truceWith(state, ally, enemy)) continue;
@@ -237,10 +241,15 @@ export function callAllies(ctx: Ctx, w: War): void {
   }
 }
 
-function proposeToPlayer(ctx: Ctx, def: Omit<EventDef, 'declencheur'>): void {
+/** Proposition de l'IA au joueur ; `scope` nomme les personnes concernées (fiches affichables). */
+function proposeToPlayer(
+  ctx: Ctx,
+  def: Omit<EventDef, 'declencheur'>,
+  scope: Record<string, string> = {},
+): void {
   const full: EventDef = { categorie: 'systeme', declencheur: { type: 'suite' }, poids: 0, ...def };
   if (ctx.state.pendingEvents.some((e) => e.eventId === full.id)) return;
-  queueEvent(ctx, full, { souverain: ctx.state.playerId }, true);
+  queueEvent(ctx, full, { souverain: ctx.state.playerId, ...scope }, true);
 }
 
 // --- Guerre ---
@@ -269,36 +278,44 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
       continue;
     }
     if (my >= demand && enemy === state.playerId) {
-      proposeToPlayer(ctx, {
-        id: `sys_exige_${w.id}`,
-        titre: 'Exigences de l’ennemi',
-        texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)})${enemyFallen ? ', votre capitale étant entre ses mains,' : ''} et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
-        choix: [
-          {
-            libelle: 'Accepter ses conditions',
-            effets: [
-              { paix: { warId: w.id, issue: w.attackerId === r.id ? 'attaquant' : 'defenseur' } },
-            ],
-          },
-          { libelle: 'Refuser et combattre', effets: [{ prestige: 5 }] },
-        ],
-      });
+      proposeToPlayer(
+        ctx,
+        {
+          id: `sys_exige_${w.id}`,
+          titre: 'Exigences de l’ennemi',
+          texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)})${enemyFallen ? ', votre capitale étant entre ses mains,' : ''} et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
+          choix: [
+            {
+              libelle: 'Accepter ses conditions',
+              effets: [
+                { paix: { warId: w.id, issue: w.attackerId === r.id ? 'attaquant' : 'defenseur' } },
+              ],
+            },
+            { libelle: 'Refuser et combattre', effets: [{ prestige: 5 }] },
+          ],
+        },
+        { ennemi: r.id },
+      );
       continue;
     }
     if (my <= BALANCE.war.whitePeaceAi && age >= BALANCE.war.minWarSeasons) {
       if (enemy === state.playerId) {
-        proposeToPlayer(ctx, {
-          id: `sys_blanche_${w.id}`,
-          titre: 'Une offre de paix',
-          texte: `${r.name}, en mauvaise posture dans la guerre « ${w.name} », propose une paix blanche.`,
-          choix: [
-            {
-              libelle: 'Accepter la paix blanche',
-              effets: [{ paix: { warId: w.id, issue: 'blanche' } }],
-            },
-            { libelle: 'Refuser : poursuivre la guerre', effets: [] },
-          ],
-        });
+        proposeToPlayer(
+          ctx,
+          {
+            id: `sys_blanche_${w.id}`,
+            titre: 'Une offre de paix',
+            texte: `${r.name}, en mauvaise posture dans la guerre « ${w.name} », propose une paix blanche.`,
+            choix: [
+              {
+                libelle: 'Accepter la paix blanche',
+                effets: [{ paix: { warId: w.id, issue: 'blanche' } }],
+              },
+              { libelle: 'Refuser : poursuivre la guerre', effets: [] },
+            ],
+          },
+          { ennemi: r.id },
+        );
       } else if (scoreFor(state, w, enemy) < BALANCE.war.peaceThreshold && rng.chance(0.5)) {
         endWar(ctx, w.id, 'blanche');
       }
@@ -390,15 +407,19 @@ function aiMarriage(ctx: Ctx, r: Character): void {
   const theirCourt = target.courtId;
   const theirRuler = state.characters[theirCourt]?.liegeId ?? theirCourt;
   if (theirRuler === state.playerId) {
-    proposeToPlayer(ctx, {
-      id: `sys_mariage_${me.id}_${target.id}`,
-      titre: 'Une demande en mariage',
-      texte: `${r.name} propose d’unir ${me.id === r.id ? 'sa personne' : me.name} à ${target.name}, de votre maison. Une telle union rapprocherait vos deux cours.`,
-      choix: [
-        { libelle: 'Accepter l’union', effets: [{ mariage: { a: me.id, b: target.id } }] },
-        { libelle: 'Refuser poliment', effets: [] },
-      ],
-    });
+    proposeToPlayer(
+      ctx,
+      {
+        id: `sys_mariage_${me.id}_${target.id}`,
+        titre: 'Une demande en mariage',
+        texte: `${r.name} propose d’unir ${me.id === r.id ? 'sa personne' : me.name} à ${target.name}, de votre maison. Une telle union rapprocherait vos deux cours.`,
+        choix: [
+          { libelle: 'Accepter l’union', effets: [{ mariage: { a: me.id, b: target.id } }] },
+          { libelle: 'Refuser poliment', effets: [] },
+        ],
+      },
+      { proposant: r.id, pretendant: me.id, promis: target.id },
+    );
     return;
   }
   if (opinion(state, theirRuler, r.id) >= -20) celebrateMarriage(ctx, me.id, target.id);
@@ -412,15 +433,19 @@ function aiAlliance(ctx: Ctx, r: Character): void {
   if (!others.length) return;
   const t = rng.pick(others);
   if (t === state.playerId) {
-    proposeToPlayer(ctx, {
-      id: `sys_alliance_${r.id}`,
-      titre: 'Une proposition d’alliance',
-      texte: `${r.name}, lié à votre maison par le mariage, propose une alliance : chacun viendrait au secours de l’autre en cas de guerre.`,
-      choix: [
-        { libelle: 'Sceller l’alliance', effets: [{ alliance: r.id }] },
-        { libelle: 'Décliner', effets: [] },
-      ],
-    });
+    proposeToPlayer(
+      ctx,
+      {
+        id: `sys_alliance_${r.id}`,
+        titre: 'Une proposition d’alliance',
+        texte: `${r.name}, lié à votre maison par le mariage, propose une alliance : chacun viendrait au secours de l’autre en cas de guerre.`,
+        choix: [
+          { libelle: 'Sceller l’alliance', effets: [{ alliance: r.id }] },
+          { libelle: 'Décliner', effets: [] },
+        ],
+      },
+      { proposant: r.id },
+    );
     return;
   }
   if (allianceAcceptance(state, r.id, t).accept) makeAlliance(state, r.id, t);

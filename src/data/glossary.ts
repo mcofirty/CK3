@@ -485,7 +485,7 @@ const concepts: GlossarySection[] = [
     entries: [
       {
         term: 'Événement',
-        text: 'Une situation qui demande un choix : chaque option affiche à l’avance ses effets connus. Il y en a 0 à 3 par saison, tirés selon la saison, vos traits, vos conditions et un biais propre à votre partie.',
+        text: 'Une situation qui demande un choix : chaque option affiche à l’avance ses effets connus, et les personnes ou comtés concernés apparaissent sous le texte : touchez-les pour ouvrir leur fiche avant de décider. Il y en a 0 à 3 par saison, tirés selon la saison, vos traits, vos conditions et un biais propre à votre partie.',
       },
       {
         term: '🎲 Issue incertaine',

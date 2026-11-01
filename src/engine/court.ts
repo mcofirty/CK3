@@ -187,7 +187,7 @@ function seasonHostages(ctx: Ctx): void {
           { libelle: 'Garder l’otage : il nous protège.', effets: [{ prestige: 5 }] },
         ],
       },
-      {},
+      { otage: h.id, famille: family.id },
       true,
     );
   }

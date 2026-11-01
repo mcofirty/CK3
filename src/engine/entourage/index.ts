@@ -357,7 +357,7 @@ function seasonWards(ctx: Ctx): void {
           },
         ],
       },
-      {},
+      home ? { pupille: k.id, parent: home.id } : { pupille: k.id },
       true,
     );
   }
