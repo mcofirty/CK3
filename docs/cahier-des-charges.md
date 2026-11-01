@@ -126,6 +126,8 @@ Bâtiments (8 au départ) : Marché, Ferme, Caserne, Écuries, Archerie, Muraill
 
 _Révision du 1er novembre 2026, à la demande du propriétaire : mariages entre souverains. Unions personnelles (un héritier qui reçoit un second royaume le tient à part, avec ses privilèges, jusqu'à la fusion des couronnes ; le partage rend la couronne au cadet) ; loi agnatique ; droits dynastiques transmis par le sang (forts quand la maison visée est fragile), guerre de droit dynastique et prétendants ; contrat de mariage (renonciation, matrilinéaire, hommage, dot) ; protection d'un souverain lié par la famille, pactes de famille et successoraux, parjure._
 
+_Révision du 1er novembre 2026, à la demande du propriétaire : fiche de royaume (souverain, héritier attendu, ligne de succession, prétendants) et influence dans les cours étrangères (chancelier, Grands courtisés, cadeaux, liens de famille), qui facilite les négociations et permet de faire acclamer un candidat à la succession._
+
 ## 6. Événements narratifs
 
 Les événements sont des données (fichiers JSON), interprétées par un petit moteur d'effets ; ajouter un événement ne demande aucune ligne de code.

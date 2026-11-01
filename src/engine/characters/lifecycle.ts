@@ -4,6 +4,7 @@ import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
 import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
 import { ensureCapitals, isIndependent, realmCounties, realmName } from '../realm';
 import { createUnion, grantHouseClaims, inheritUnions, pactHeir } from '../crowns';
+import { acclaimedHeir, afterSuccession } from '../influence';
 import { newHouseColor } from '../heraldry';
 import { Rng } from '../rng';
 import type { Character, GameState } from '../state';
@@ -277,6 +278,13 @@ export function succession(ctx: Ctx, id: string): void {
   const wasPlayer = id === state.playerId;
   const independent = !dead.liegeId;
   let heir = heirs[0];
+  // Influence : les Grands peuvent acclamer le candidat soutenu par le joueur.
+  const acclaimed = independent && !wasPlayer ? acclaimedHeir(state, dead) : undefined;
+  let passedOver: Character | undefined;
+  if (acclaimed && acclaimed !== heir) {
+    passedOver = heir;
+    heir = acclaimed;
+  }
   // Pacte successoral : faute d'héritier, l'allié recueille l'héritage.
   const pactPartner = !heir && independent ? pactHeir(state, id) : undefined;
   if (pactPartner) heir = pactPartner;
@@ -395,6 +403,7 @@ export function succession(ctx: Ctx, id: string): void {
       `${heir.name} hérite de ${dead.name} en vertu d’un pacte successoral.`,
       'succession',
     );
+  if (independent) afterSuccession(state, id, heir, passedOver);
   if (!heir.liegeId) heir.gold += dead.gold;
   heir.prestige += dead.prestige * 0.5;
   heir.piety += dead.piety * 0.5;

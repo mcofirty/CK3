@@ -21,6 +21,7 @@ import {
 import { AchievementList, DynastyBook, EndingBanner } from './components/Book';
 import { Inspector } from './components/Inspector';
 import { TradeSheet } from './components/Diplomacy';
+import { RealmSheet } from './components/RealmSheet';
 import { SettingsButton, SettingsSheet } from './components/Settings';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
@@ -245,6 +246,7 @@ function Game({ game }: { game: GameState }) {
           </div>
         </Sheet>
       )}
+      <RealmSheet game={game} />
       <Inspector game={game} />
       <TradeSheet game={game} />
       {!game.tutorialSeen && <Tutorial />}

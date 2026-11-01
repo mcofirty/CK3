@@ -62,6 +62,9 @@ interface Store {
   settingsOpen: boolean;
   /** Traité de terres en cours de rédaction (souverain, comté demandé). */
   tradeWith: { targetId: string; take?: string } | null;
+  /** Fiche de royaume ouverte (souverain). */
+  realmSheet: string | null;
+  setRealmSheet: (id: string | null) => void;
   setTradeWith: (t: { targetId: string; take?: string } | null) => void;
   setSettingsOpen: (open: boolean) => void;
   sound: (id: SoundId) => void;
@@ -105,6 +108,8 @@ export const useStore = create<Store>((set, get) => ({
   },
   settingsOpen: false,
   tradeWith: null,
+  realmSheet: null,
+  setRealmSheet: (realmSheet) => set({ realmSheet }),
   setTradeWith: (tradeWith) => set({ tradeWith }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   sound: (id) => play(id, get().settings),

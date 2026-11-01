@@ -2518,3 +2518,41 @@ body {
 .trade-gold .btn {
   flex: 1;
 }
+
+/* Fiche de royaume */
+.realm-person {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.realm-person.supported {
+  background: var(--glass-strong);
+  border-radius: 12px;
+}
+.realm-person-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+.realm-person-main .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.realm-rank {
+  width: 22px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted, #8a7f72);
+  flex-shrink: 0;
+}

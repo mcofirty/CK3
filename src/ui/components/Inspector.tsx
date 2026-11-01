@@ -100,6 +100,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ---------------------------------------------------------------------------
 
 function CharacterDetail({ game, id }: { game: GameState; id: string }) {
+  const setRealmSheet = useStore((s) => s.setRealmSheet);
+  const inspectClose = useStore((s) => s.inspectClose);
   const c = game.characters[id];
   const pl = game.playerId;
   const dyn = c.dynastyId ? game.dynasties[c.dynastyId] : undefined;
@@ -162,6 +164,19 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </div>
         {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={44} />}
       </div>
+
+      {c.alive && independent && (
+        <button
+          className="btn block ghost"
+          style={{ marginTop: 10 }}
+          onClick={() => {
+            inspectClose();
+            setRealmSheet(id);
+          }}
+        >
+          Fiche du royaume : succession{id !== pl ? ' et influence' : ''} ›
+        </button>
+      )}
 
       {c.alive && (
         <div className="row small" style={{ margin: '10px 0 2px' }}>
@@ -410,6 +425,8 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
   const ruler = countyRuler(game, c);
   const mine = c.holderId === pl;
   const inMyRealm = ruler === pl;
+  const setRealmSheet = useStore((s) => s.setRealmSheet);
+  const inspectClose = useStore((s) => s.inspectClose);
   const setTradeWith = useStore((s) => s.setTradeWith);
   const army = armyOf(game, pl);
   const path = army ? findPath(game, pl, army.location, id) : [];
@@ -457,7 +474,17 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
             </>
           )}
           <dt>Royaume</dt>
-          <dd>{realmName(game, ruler)}</dd>
+          <dd>
+            <button
+              className="link"
+              onClick={() => {
+                inspectClose();
+                setRealmSheet(ruler);
+              }}
+            >
+              {realmName(game, ruler)}
+            </button>
+          </dd>
           <dt>Duché</dt>
           <dd>
             {duchy.name}

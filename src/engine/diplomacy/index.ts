@@ -21,6 +21,7 @@ import {
 } from '../characters';
 import { gainXp } from '../progression';
 import { clauseFactors, hasFamilyPact, type MarriageClause } from '../crowns';
+import { gainInfluence, influenceFactor } from '../influence';
 import { chronicle, notify, worldNews, type Ctx } from '../context';
 import { capitalOf, countyRuler, independentRulers, rankOf, rankValue } from '../realm';
 import type { Character, CouncilPost, GameState } from '../state';
@@ -100,6 +101,7 @@ export function marriageAcceptance(
   f.push(...traitFactors(state.characters[theirRuler] ?? b));
   const pb = perkBonus(state, state.characters[pl], 'acceptance');
   if (pb) f.push({ label: 'Talents et héritages', value: pb });
+  f.push(...influenceFactor(state, theirRuler));
   const cl = clauseFactors(state, a, b, clause, dowry);
   f.push(...cl.factors);
   return finish(f, marriageBlock(state, a, b) ?? cl.blocked);
@@ -168,6 +170,7 @@ export function allianceAcceptance(state: GameState, fromId: string, toId: strin
   if (threatened) f.push({ label: 'Menacé par une guerre', value: D.alliance.threatInterest });
   const ratio = militaryStrength(state, fromId) / Math.max(1, militaryStrength(state, toId));
   f.push({ label: 'Rapport de force', value: Math.max(-20, Math.min(20, (ratio - 1) * 20)) });
+  f.push(...influenceFactor(state, toId));
   f.push(...traitFactors(state.characters[toId]));
   let blocked: string | undefined;
   if (!marriageTie(state, fromId, toId)) blocked = 'Il faut un lien par mariage entre vos familles';
@@ -318,6 +321,8 @@ export function sendGift(ctx: Ctx, fromId: string, toId: string): boolean {
   state.characters[fromId].gold -= chk.cost;
   state.characters[toId].gold += chk.cost;
   addOpinion(state, toId, fromId, 'Cadeau', BALANCE.economy.giftOpinion, 16);
+  if (fromId === state.playerId)
+    gainInfluence(state, topLiege(state, toId), BALANCE.influence.giftGain);
   return true;
 }
 
@@ -404,6 +409,7 @@ export const COUNCIL_INFO: Record<
     tasks: [
       { id: 'relations', label: 'Améliorer les relations', target: 'cour' },
       { id: 'revendication', label: 'Fabriquer une revendication', target: 'comte_etranger' },
+      { id: 'influence', label: 'Gagner de l’influence', target: 'cour' },
     ],
   },
   marechal: {
@@ -492,6 +498,10 @@ export function seasonCouncil(ctx: Ctx): void {
         }
         break;
       }
+      case 'chancelier:influence':
+        if (seat.targetId)
+          gainInfluence(state, seat.targetId, s * BALANCE.influence.chancellorPerDiplomacy);
+        break;
       case 'espion:espionner':
         if (seat.targetId) state.spied[seat.targetId] = state.turn;
         break;

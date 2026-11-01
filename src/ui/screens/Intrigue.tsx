@@ -102,6 +102,7 @@ function Diplomacy({ game }: { game: GameState }) {
 function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClose: () => void }) {
   const dispatch = useStore((s) => s.dispatch);
   const setTradeWith = useStore((s) => s.setTradeWith);
+  const setRealmSheet = useStore((s) => s.setRealmSheet);
   const inspect = useStore((s) => s.inspect);
   const pl = game.playerId;
   const c = game.characters[id];
@@ -127,6 +128,13 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         onClick={() => inspect({ kind: 'perso', id })}
       >
         Fiche détaillée (traits, famille, terres) ›
+      </button>
+      <button
+        className="btn block ghost"
+        style={{ marginTop: 6 }}
+        onClick={() => setRealmSheet(id)}
+      >
+        Fiche du royaume (succession, influence) ›
       </button>
       <div className="card" style={{ marginTop: 12 }}>
         <b>Envoyer un cadeau ({gift} or)</b>

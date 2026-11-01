@@ -92,6 +92,7 @@ export function CharacterCard({ game, c }: { game: GameState; c: Character }) {
 }
 
 function RulerView({ game }: { game: GameState }) {
+  const setRealmSheet = useStore((s) => s.setRealmSheet);
   const dispatch = useStore((s) => s.dispatch);
   const inspect = useStore((s) => s.inspect);
   const p = game.characters[game.playerId];
@@ -173,6 +174,13 @@ function RulerView({ game }: { game: GameState }) {
           </Tip>
         )}
         <AgnaticLaw game={game} />
+        <button
+          className="btn block ghost"
+          style={{ marginTop: 8 }}
+          onClick={() => setRealmSheet(game.playerId)}
+        >
+          Ligne de succession et prétendants ›
+        </button>
       </div>
       {titles.length > 0 && (
         <div className="card">

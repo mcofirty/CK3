@@ -386,6 +386,8 @@ export interface GameState {
   /** Pactes de famille et pactes successoraux (paires triées "a|b"). */
   familyPacts?: string[];
   successionPacts?: string[];
+  /** Influence du joueur dans les cours étrangères : souverain → points et candidat soutenu. */
+  influence?: Record<string, { points: number; supportId?: string }>;
   /** Alliances rompues : paire "a|b" → tour de la rupture. */
   brokenAlliances?: Record<string, number>;
   /** Appels à l'aide refusés : souverain → tour où l'on peut le solliciter de nouveau. */
@@ -502,4 +504,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;

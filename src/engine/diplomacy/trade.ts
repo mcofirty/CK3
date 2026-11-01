@@ -20,6 +20,7 @@ import type { County, GameState } from '../state';
 import { transferCounty } from '../war';
 import type { Acceptance, Factor } from './index';
 import { hasFamilyPact } from '../crowns';
+import { influenceFactor } from '../influence';
 
 const T = BALANCE.trade;
 
@@ -105,6 +106,7 @@ export function tradeAcceptance(state: GameState, fromId: string, offer: TradeOf
   f.push({ label: 'Opinion', value: opinion(state, t, fromId) * T.perOpinion });
   if (hasFamilyPact(state, fromId, t))
     f.push({ label: 'Pacte de famille', value: BALANCE.crowns.familyPact.tradeBonus });
+  f.push(...influenceFactor(state, t));
   f.push(...traitTrade(state, t));
   let blocked: string | undefined;
   const empty =

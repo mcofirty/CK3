@@ -21,6 +21,7 @@ import {
 import { chronicle, clamp, newId, notify, worldNews, type Ctx } from './context';
 import type { Acceptance, Factor } from './diplomacy';
 import { contentmentOf } from './economy/local';
+import { backedByGrandees, influenceFactor } from './influence';
 import type { EventDef } from './events/types';
 import {
   capitalOf,
@@ -331,6 +332,7 @@ export function claimInfo(
   if (r.imprisonedBy) reasons.push('Souverain captif');
   if (!livingChildren(state, r).length) reasons.push('Aucun enfant pour lui succéder');
   if (r.female && r.agnatic) reasons.push('Une femme règne malgré la loi agnatique');
+  if (backedByGrandees(state, rulerId, claimantId)) reasons.push('Les Grands le soutiennent');
   return { claimantId, houseId, rulerId, strong: reasons.length > 0, reasons };
 }
 
@@ -629,6 +631,7 @@ export function protectionAcceptance(
     value: realmCounties(state, targetId).length * P.perCounty,
   });
   if (familyTie(state, fromId, targetId)) f.push({ label: 'Liens de famille', value: P.familyTie });
+  f.push(...influenceFactor(state, targetId));
   f.push(...traitFactors(t));
   if (t?.traits.includes('ambitieux')) f.push({ label: 'Refuse de plier', value: -25 });
   let blocked: string | undefined;
@@ -680,6 +683,7 @@ export function familyPactAcceptance(
   const f: Factor[] = [{ label: 'Base', value: P.base }];
   f.push({ label: 'Opinion', value: opinion(state, targetId, fromId) * P.perOpinion });
   if (familyTie(state, fromId, targetId)) f.push({ label: 'Liens de famille', value: P.familyTie });
+  f.push(...influenceFactor(state, targetId));
   f.push(...traitFactors(state.characters[targetId]));
   let blocked: string | undefined;
   if (!isIndependent(state, targetId) || targetId === fromId) blocked = 'Souverain invalide';
@@ -709,6 +713,7 @@ export function successionPactAcceptance(
   if (heirless(state, fromId))
     f.push({ label: 'Vous n’avez pas d’héritier direct', value: P.youHaveNoHeir });
   if (gold > 0) f.push({ label: `${gold} or offerts`, value: gold / P.goldPerPoint });
+  f.push(...influenceFactor(state, targetId));
   f.push(...traitFactors(state.characters[targetId]));
   let blocked: string | undefined;
   if (!isIndependent(state, targetId) || targetId === fromId) blocked = 'Souverain invalide';

@@ -111,6 +111,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
       for (const c of Object.values(g.characters)) if (c.alive) grantHouseClaims(g, c);
     return next;
   },
+  // Version 11 → 12 : influence dans les cours étrangères.
+  11: (s) => ({ influence: {}, ...s, version: 12 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

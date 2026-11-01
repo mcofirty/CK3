@@ -614,6 +614,32 @@ export const BALANCE = {
     perjuryOpinion: -10,
   },
 
+  /** Influence dans les cours étrangères (engine/influence.ts). */
+  influence: {
+    max: 100,
+    /** Perte par saison (l'influence s'entretient). */
+    decay: 1,
+    /** Chancelier « Gagner de l'influence » : points par saison par point de Diplomatie. */
+    chancellorPerDiplomacy: 0.25,
+    /** Lien de famille avec le souverain : gain par saison. */
+    familyTie: 1,
+    giftGain: 5,
+    /** Courtiser les Grands : or dépensé, points gagnés. */
+    courtGold: 50,
+    courtGain: 8,
+    /** Seuils d'acclamation à la mort du souverain. */
+    supportThreshold: 50,
+    outsiderThreshold: 80,
+    /** Points consommés par une acclamation. */
+    acclaimCost: 40,
+    /** Bonus d'acceptation : par point d'influence. */
+    acceptancePerPoint: 0.2,
+    owedCrownOpinion: 30,
+    passedOverOpinion: -40,
+    /** Lignée affichée. */
+    lineLength: 6,
+  },
+
   /** Traités : achat, vente et échange de comtés (engine/diplomacy/trade.ts). */
   trade: {
     /** Valeur d'un comté en or : revenus de tant de saisons + développement + bâtiments. */

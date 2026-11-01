@@ -13,6 +13,7 @@ import {
   type MarriageClause,
 } from './crowns';
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
+import { courtGrandees, setSupport } from './influence';
 import { BALANCE } from '../data/balance';
 import {
   answerDuel,
@@ -146,6 +147,8 @@ export type Action =
   | { type: 'proposePact'; kind: 'famille' | 'succession'; targetId: string; gold?: number }
   | { type: 'breakPacts'; targetId: string }
   | { type: 'breakAlliance'; targetId: string }
+  | { type: 'courtGrandees'; rulerId: string }
+  | { type: 'supportHeir'; rulerId: string; candidateId?: string }
   | { type: 'proposeAlliance'; targetId: string }
   | { type: 'sendGift'; targetId: string }
   | { type: 'callToArms'; allyId: string; warId: string; gold?: number }
@@ -357,6 +360,12 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'breakPacts':
       breakPacts(state, pl, a.targetId);
+      break;
+    case 'courtGrandees':
+      courtGrandees(state, pl, a.rulerId);
+      break;
+    case 'supportHeir':
+      setSupport(state, a.rulerId, a.candidateId);
       break;
     case 'breakAlliance':
       // Avec un pacte de famille, rompre l'alliance est un parjure.

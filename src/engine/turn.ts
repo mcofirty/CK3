@@ -12,6 +12,7 @@ import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
 import { seasonAbroad } from './abroad';
 import { seasonPretenders, seasonUnions } from './crowns';
+import { seasonInfluence } from './influence';
 import { checkAchievements, computeEnding } from './endings';
 import { ensureCapitals, realmCounties } from './realm';
 import { seasonPlague } from './plague';
@@ -114,6 +115,7 @@ export function startSeason(ctx: Ctx): void {
   runAi(ctx);
   seasonAbroad(ctx);
   seasonUnions(state);
+  seasonInfluence(state);
   seasonPretenders(ctx);
   autoFillCouncil(state);
   seasonEntourage(ctx);

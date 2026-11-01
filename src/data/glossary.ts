@@ -207,6 +207,14 @@ const concepts: GlossarySection[] = [
         text: `Un souverain qui hérite d’un autre royaume (enfant de deux souverains, pacte successoral, droit dynastique victorieux) porte deux couronnes : chacune garde ses coutumes. La couronne où il ne réside pas grogne (contentement ${B.crowns.distantContentment} par saison, vassaux ${B.crowns.distantOpinion}). Ses Grands demandent d’abord leurs privilèges : les confirmer (${B.crowns.privilegesGold} or, grogne réduite, fusion plus lointaine) ou imposer votre autorité (vassaux ${B.crowns.imposeOpinion}, fusion plus proche). Après ${B.crowns.fuseSeasons / 4} ans de règne commun, « Unir les couronnes » (${B.crowns.fuseCost} prestige, +${B.crowns.fuseRenown} renommée) fond les deux royaumes ; les vassaux de l’ancienne couronne le prennent mal.`,
       },
       {
+        term: 'Fiche de royaume',
+        text: 'Depuis la fiche d’un souverain, d’un comté ou d’un personnage régnant (et Cour › Souverain pour la vôtre) : le souverain, sa loi de succession, l’héritier attendu, la ligne de succession (six noms, avec leur lien de parenté), les prétendants de sang, les couronnes réunies et vos pactes.',
+      },
+      {
+        term: 'Influence',
+        text: `Votre poids dans une cour étrangère, de 0 à ${B.influence.max}. Elle se gagne par le chancelier (« Gagner de l’influence », ${B.influence.chancellorPerDiplomacy} par point de Diplomatie et par saison), en courtisant les Grands (${B.influence.courtGold} or, +${B.influence.courtGain}), par les cadeaux (+${B.influence.giftGain}) et les liens de famille (+${B.influence.familyTie} par saison) ; elle s’érode de ${B.influence.decay} par saison. Elle facilite mariages, alliances, pactes, protection et traités (+${B.influence.acceptancePerPoint} par point). Soutenez un candidat dans la fiche du royaume : à la mort du souverain, les Grands l’acclament si votre influence atteint ${B.influence.supportThreshold} (héritier de la ligne) ou ${B.influence.outsiderThreshold} (prétendant d’une autre maison, vous compris). L’élu vous doit sa couronne ; l’héritier écarté ne vous le pardonnera pas. Un prétendant soutenu à ${B.influence.supportThreshold} a un droit fort.`,
+      },
+      {
         term: 'Droits dynastiques',
         text: `Un enfant reçoit des droits sur la maison régnante de son parent étranger, et hérite de ceux de ses parents (${B.crowns.maxClaims} au plus). Un droit est fort quand la maison visée est fragile (souverain enfant, captif, sans enfant) ; sinon faible. Depuis Cour › Maison, faites valoir les droits d’un membre de votre maison ou de votre cour par la guerre (droit fort : gratuit ; faible : ${B.crowns.weakClaimPrestige} prestige) : victorieux, il monte sur le trône et devient votre vassal, ou vous ceignez la couronne vous-même. Des prétendants viennent parfois demander asile.`,
       },
