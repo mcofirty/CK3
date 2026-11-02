@@ -2556,3 +2556,27 @@ body {
   color: var(--muted, #8a7f72);
   flex-shrink: 0;
 }
+
+/* Guerre rejointe : mise en avant dans l'onglet Armée */
+.war-focus {
+  animation: war-focus 3.2s ease-out;
+  border-radius: 12px;
+  outline: 3px solid var(--accent);
+  outline-offset: 8px;
+}
+@keyframes war-focus {
+  0%,
+  60% {
+    outline-color: var(--accent);
+    background: var(--glass-strong);
+  }
+  100% {
+    outline-color: transparent;
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .war-focus {
+    animation: none;
+  }
+}

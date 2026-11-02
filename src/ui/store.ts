@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { applyAction, type Action } from '../engine/actions';
 import type { GameState } from '../engine/state';
+import { warsOf } from '../engine/war';
 import { newGame, type NewGameOptions } from '../engine/world';
 import { importJson, lastSlot, loadGame, saveGame, type Slot } from '../save/storage';
 import {
@@ -39,6 +40,9 @@ interface Store {
   error?: string;
   saving: boolean;
   dispatch: (a: Action) => void;
+  /** Guerre à mettre en avant dans l'onglet Armée (rejointe à l'appel d'un allié, etc.). */
+  focusWar: string | null;
+  clearFocusWar: () => void;
   setTab: (t: Tab) => void;
   selectCounty: (id?: string) => void;
   /** Pile de fiches ouvertes : la dernière est affichée, « Retour » revient à la précédente. */
@@ -117,6 +121,8 @@ export const useStore = create<Store>((set, get) => ({
   tab: 'cour',
   tabDir: 'none',
   saving: false,
+  focusWar: null,
+  clearFocusWar: () => set({ focusWar: null }),
   dispatch: (a) => {
     const g = get().game;
     if (!g) return;
@@ -125,6 +131,15 @@ export const useStore = create<Store>((set, get) => ({
       set({ game: next, error: undefined });
       const fx = feedback(g, next, a);
       if (fx) play(fx, get().settings);
+      // Une guerre rejointe en répondant à un événement (appel aux armes…) : menu de guerre.
+      if (a.type === 'chooseEvent') {
+        const had = new Set(warsOf(g, g.playerId).map((w) => w.id));
+        const joined = warsOf(next, next.playerId).find((w) => !had.has(w.id));
+        if (joined) {
+          set({ focusWar: joined.id });
+          get().setTab('armee');
+        }
+      }
       // Succès : gardés sur l'appareil, au-delà de la partie.
       const fresh = (next.achievements ?? []).filter((x) => !(g.achievements ?? []).includes(x));
       if (fresh.length) {

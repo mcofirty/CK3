@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BALANCE } from '../../data/balance';
 import { MERCENARIES } from '../../data/mercenaries';
 import { UNIT_TYPES, UNITS } from '../../data/units';
@@ -35,7 +35,23 @@ import { useStore } from '../store';
 export function ArmyScreen({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const setTab = useStore((s) => s.setTab);
+  const focusWar = useStore((s) => s.focusWar);
+  const clearFocusWar = useStore((s) => s.clearFocusWar);
   const pl = game.playerId;
+  // Guerre tout juste rejointe : on la met en avant dans la carte Guerres.
+  useEffect(() => {
+    if (!focusWar) return;
+    const t = setTimeout(() => {
+      document
+        .getElementById(`war-${focusWar}`)
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 350);
+    const c = setTimeout(clearFocusWar, 3500);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(c);
+    };
+  }, [focusWar, clearFocusWar]);
   const army = armyOf(game, pl);
   const standing = standingOf(game, pl);
   const cap = recruitCapacity(game, pl);
@@ -226,6 +242,8 @@ export function ArmyScreen({ game }: { game: GameState }) {
           return (
             <div
               key={w.id}
+              id={`war-${w.id}`}
+              className={focusWar === w.id ? 'war-focus' : undefined}
               style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 8 }}
             >
               <b>{w.name}</b>
