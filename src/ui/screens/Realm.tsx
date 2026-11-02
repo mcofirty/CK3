@@ -8,7 +8,14 @@ import {
 } from '../../engine/realm';
 import type { GameState } from '../../engine/state';
 import { useState } from 'react';
-import { CharLine, CountyLink, Opinion, Segmented, usePager } from '../components/common';
+import {
+  CharLine,
+  CountyLink,
+  Opinion,
+  Segmented,
+  usePager,
+  useFocusView,
+} from '../components/common';
 import { EconomyView } from '../components/Economy';
 import { MapView, playerColor } from '../components/MapView';
 import { useStore } from '../store';
@@ -18,6 +25,7 @@ const REALM_VIEWS = ['carte', 'economie'] as const;
 export function RealmScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<(typeof REALM_VIEWS)[number]>('carte');
   const dir = usePager(REALM_VIEWS, view, setView);
+  useFocusView(REALM_VIEWS, setView);
   return (
     <>
       <Segmented

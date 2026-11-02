@@ -372,6 +372,30 @@ export function usePager<T extends string>(views: readonly T[], view: T, setView
   return dir.current;
 }
 
+/**
+ * Ouvre la sous-vue demandée par `goTo` (fin de saison, etc.) puis fait défiler
+ * jusqu'à l'élément visé et le met en évidence.
+ */
+export function useFocusView<T extends string>(views: readonly T[], setView: (v: T) => void) {
+  const focus = useStore((st) => st.focusView);
+  const clear = useStore((st) => st.clearFocusView);
+  useEffect(() => {
+    if (!focus || !(views as readonly string[]).includes(focus.view)) return;
+    setView(focus.view as T);
+    clear();
+    if (!focus.anchor) return;
+    const id = focus.anchor;
+    const t = setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      el.classList.add('war-focus');
+      setTimeout(() => el.classList.remove('war-focus'), 3500);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [focus, views, setView, clear]);
+}
+
 /** Symbole Highborn (arbre-couronne), à la couleur du texte courant. */
 export function Logo({ size = 32, className }: { size?: number; className?: string }) {
   return (

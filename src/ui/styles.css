@@ -2613,3 +2613,12 @@ body {
   border-radius: 12px;
   padding: 8px;
 }
+
+/* Fin de saison : un point d'attention et son bouton « Voir » */
+.attention-item {
+  border-bottom: 1px solid var(--line);
+  padding: 4px 0 10px;
+}
+.attention-item p {
+  margin: 6px 0;
+}

@@ -31,7 +31,7 @@ import { ChronicleScreen } from './screens/Chronicle';
 import { CourtScreen } from './screens/Court';
 import { IntrigueScreen } from './screens/Intrigue';
 import { RealmScreen } from './screens/Realm';
-import { TABS, useStore, type Tab } from './store';
+import { TABS, useStore, type Inspected, type Tab } from './store';
 
 export function App() {
   const game = useStore((s) => s.game);
@@ -200,7 +200,9 @@ function TitleScreen() {
 function Game({ game }: { game: GameState }) {
   const tab = useStore((s) => s.tab);
   const tabDir = useStore((s) => s.tabDir);
-  const [summary, setSummary] = useState<string[] | null>(null);
+  const [summary, setSummary] = useState<AttentionItem[] | null>(null);
+  const goTo = useStore((s) => s.goTo);
+  const inspect = useStore((s) => s.inspect);
   const dispatch = useStore((s) => s.dispatch);
   const confirmEnd = useStore((s) => s.settings.confirmEnd);
   if (game.gameOver) return <EndScreen game={game} />;
@@ -229,12 +231,21 @@ function Game({ game }: { game: GameState }) {
         <Sheet onClose={() => setSummary(null)}>
           <h2>Avant de finir la saison</h2>
           {summary.map((s, i) => (
-            <p key={i}>• {s}</p>
+            <div key={i} className="attention-item">
+              <p>• {s.text}</p>
+              <button
+                className="btn small"
+                onClick={() => {
+                  setSummary(null);
+                  if ('inspect' in s.go) inspect(s.go.inspect);
+                  else goTo(s.go.tab, s.go.view, s.go.anchor);
+                }}
+              >
+                {s.label} ›
+              </button>
+            </div>
           ))}
           <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn grow" onClick={() => setSummary(null)}>
-              Revenir
-            </button>
             <button
               className="btn primary grow"
               onClick={() => {
@@ -256,42 +267,77 @@ function Game({ game }: { game: GameState }) {
   );
 }
 
+/** Où mène le bouton « Voir » d'un point d'attention. */
+type AttentionGo = { inspect: Inspected } | { tab: Tab; view?: string; anchor?: string };
+interface AttentionItem {
+  text: string;
+  label: string;
+  go: AttentionGo;
+}
+
 /** Ce qui demande attention avant la fin de saison. */
-function attention(g: GameState): string[] {
-  const res: string[] = [];
+function attention(g: GameState): AttentionItem[] {
+  const res: AttentionItem[] = [];
   const pl = g.playerId;
   for (const v of vassalsOf(g, pl)) {
     const op = opinion(g, v, pl);
     if (op < -30 || g.characters[v].inFaction)
-      res.push(`${g.characters[v].name} est mécontent (opinion ${signed(op)}).`);
+      res.push({
+        text: `${g.characters[v].name} est mécontent (opinion ${signed(op)}).`,
+        label: 'Voir sa fiche',
+        go: { inspect: { kind: 'perso', id: v } },
+      });
   }
   for (const a of Object.values(g.armies))
     if (a.ownerId === pl && a.supply < 20)
-      res.push(`Votre armée manque de ravitaillement (${Math.round(a.supply)}).`);
+      res.push({
+        text: `Votre armée manque de ravitaillement (${Math.round(a.supply)}).`,
+        label: 'Voir l’armée',
+        go: { inspect: { kind: 'armee', id: a.id } },
+      });
   for (const k of wards(g))
     if (!k.educatorId && (g.turn - k.birthTurn) / 4 >= 3)
-      res.push(`${k.name} n’a pas d’éducateur.`);
+      res.push({
+        text: `${k.name} n’a pas d’éducateur.`,
+        label: 'Choisir un éducateur',
+        go: { tab: 'cour', view: 'entourage', anchor: 'focus-pupilles' },
+      });
   const fallen = capitalOccupied(g, pl);
   if (fallen)
-    res.push(
-      `Votre capitale, ${fallen.name}, est occupée : revenus amputés, capitulation possible.`,
-    );
+    res.push({
+      text: `Votre capitale, ${fallen.name}, est occupée : revenus amputés, capitulation possible.`,
+      label: 'Voir la capitale',
+      go: { inspect: { kind: 'comte', id: fallen.id } },
+    });
   const seatsEmpty = Object.values(g.council).filter((s) => !s.holderId).length;
-  if (seatsEmpty) res.push(`${seatsEmpty} siège(s) du conseil vacant(s).`);
-  if (g.characters[pl].gold < 0) res.push('Votre trésor est dans le rouge.');
+  if (seatsEmpty)
+    res.push({
+      text: `${seatsEmpty} siège(s) du conseil vacant(s).`,
+      label: 'Ouvrir le conseil',
+      go: { tab: 'cour', view: 'conseil', anchor: 'focus-conseil' },
+    });
+  const treasury: AttentionGo = { tab: 'royaume', view: 'economie' };
+  if (g.characters[pl].gold < 0)
+    res.push({ text: 'Votre trésor est dans le rouge.', label: 'Voir l’économie', go: treasury });
   else {
     const eco = economyOf(g, pl);
     if (g.characters[pl].gold + eco.goldNet < 0)
-      res.push(
-        `Votre trésor passera dans le rouge à la saison prochaine (${Math.round(g.characters[pl].gold)} or, ${eco.goldNet > 0 ? '+' : ''}${Math.round(eco.goldNet)} par saison).`,
-      );
+      res.push({
+        text: `Votre trésor passera dans le rouge à la saison prochaine (${Math.round(g.characters[pl].gold)} or, ${eco.goldNet > 0 ? '+' : ''}${Math.round(eco.goldNet)} par saison).`,
+        label: 'Voir l’économie',
+        go: treasury,
+      });
   }
   if (
     (g.candidates ?? []).length &&
     g.turn % 4 === 0 &&
     Object.values(g.council).some((s) => !s.holderId)
   )
-    res.push('Des candidats de passage sont à la cour et un poste du conseil est vacant.');
+    res.push({
+      text: 'Des candidats de passage sont à la cour et un poste du conseil est vacant.',
+      label: 'Voir les candidats',
+      go: { tab: 'cour', view: 'entourage', anchor: 'focus-candidats' },
+    });
   return res;
 }
 

@@ -32,6 +32,7 @@ import {
   Skills,
   Segmented,
   usePager,
+  useFocusView,
   TraitChips,
 } from '../components/common';
 import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../components/Progression';
@@ -49,6 +50,7 @@ const COURT_VIEWS = ['souverain', 'entourage', 'conseil', 'arbre'] as const;
 export function CourtScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<(typeof COURT_VIEWS)[number]>('souverain');
   const dir = usePager(COURT_VIEWS, view, setView);
+  useFocusView(COURT_VIEWS, setView);
   return (
     <>
       <Segmented
@@ -366,7 +368,7 @@ function CouncilView({ game }: { game: GameState }) {
   return (
     <>
       {vacant.length > 0 && (
-        <div className="card">
+        <div className="card" id="focus-conseil">
           <b>
             {vacant.length === 1 ? 'Un poste est vacant' : `${vacant.length} postes sont vacants`}
           </b>

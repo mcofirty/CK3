@@ -131,7 +131,7 @@ export function CandidatesCard({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const list = game.candidates ?? [];
   return (
-    <div className="card">
+    <div className="card" id="focus-candidats">
       <h3>Candidats de passage</h3>
       <p className="small muted">
         De nouveaux visages se présentent chaque printemps. Une prime d’engagement, puis un salaire
@@ -190,7 +190,7 @@ export function WardsCard({ game }: { game: GameState }) {
   const options = wardCandidates(game);
   if (!here.length && !options.length) return null;
   return (
-    <div className="card">
+    <div className="card" id="focus-pupilles">
       <h3>Pupilles</h3>
       <p className="small muted">
         Les enfants de vos vassaux peuvent grandir à votre cour : ils sont éduqués par vos

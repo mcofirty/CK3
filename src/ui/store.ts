@@ -43,6 +43,10 @@ interface Store {
   /** Guerre à mettre en avant dans l'onglet Armée (rejointe à l'appel d'un allié, etc.). */
   focusWar: string | null;
   clearFocusWar: () => void;
+  /** Sous-vue (et élément, par son id DOM) à ouvrir dans l'onglet courant. */
+  focusView: { view: string; anchor?: string } | null;
+  goTo: (tab: Tab, view?: string, anchor?: string) => void;
+  clearFocusView: () => void;
   setTab: (t: Tab) => void;
   selectCounty: (id?: string) => void;
   /** Pile de fiches ouvertes : la dernière est affichée, « Retour » revient à la précédente. */
@@ -123,6 +127,12 @@ export const useStore = create<Store>((set, get) => ({
   saving: false,
   focusWar: null,
   clearFocusWar: () => set({ focusWar: null }),
+  focusView: null,
+  goTo: (tab, view, anchor) => {
+    set({ focusView: view ? { view, anchor } : null, inspectStack: [] });
+    get().setTab(tab);
+  },
+  clearFocusView: () => set({ focusView: null }),
   dispatch: (a) => {
     const g = get().game;
     if (!g) return;
