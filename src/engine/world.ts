@@ -18,6 +18,7 @@ import {
   independentRulers,
 } from './realm';
 import { assignHouseColors } from './heraldry';
+import { autoEducate } from './diplomacy';
 import { Rng } from './rng';
 import {
   SAVE_VERSION,
@@ -313,6 +314,7 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   assignHouseColors(state, [...new Set(rulerHouses)], new Rng(seed ^ 0x5eed));
 
   autoFillCouncil(state);
+  autoEducate(state);
   // Le chancelier cultive d'emblée un voisin.
   const neighbor = border[0] ? state.counties[border[0].id].holderId : undefined;
   const nr = neighbor ? (state.characters[neighbor]?.liegeId ?? neighbor) : undefined;

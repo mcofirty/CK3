@@ -133,7 +133,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Éducation',
-        text: 'Les enfants de la maison (et les pupilles) sont éduqués par un membre de la cour sur une compétence choisie. À la majorité, ils gagnent des points dans cette compétence et un trait d’éducation, meilleur si l’éducateur est compétent.',
+        text: 'Les enfants de la maison (et les pupilles) sont éduqués par un membre de la cour sur une compétence choisie. À la majorité, ils gagnent des points dans cette compétence et un trait d’éducation, meilleur si l’éducateur est compétent. Par défaut c’est automatique : dès son arrivée à la cour (naissance, pupille), l’enfant travaille sa plus haute compétence avec l’adulte de la cour le plus fort dans cette compétence ; si l’éducateur disparaît, un autre le remplace. Cour › Famille permet de choisir soi-même éducateur et compétence, ou de revenir à « Automatique ».',
       },
       {
         term: 'Pupille',

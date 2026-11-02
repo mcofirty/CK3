@@ -61,6 +61,8 @@ export interface Character {
   rivals: string[];
   educatorId?: string;
   educationFocus?: SkillKey;
+  /** Éducation réglée à la main par le joueur : l'attribution automatique n'y touche plus. */
+  educationManual?: boolean;
   /** Revendications sur des comtés. */
   claims: string[];
   /** Droits dynastiques : maisons dont il peut revendiquer l'héritage (par le sang). */

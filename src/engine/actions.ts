@@ -14,6 +14,7 @@ import {
 } from './crowns';
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { courtGrandees, setSupport } from './influence';
+import { autoEducate } from './diplomacy';
 import { BALANCE } from '../data/balance';
 import {
   answerDuel,
@@ -99,7 +100,14 @@ export type Action =
   | { type: 'build'; countyId: string; building: BuildingType }
   | { type: 'moveCapital'; countyId: string }
   | { type: 'setCouncil'; post: CouncilPost; holderId?: string; task: string; targetId?: string }
-  | { type: 'setEducator'; childId: string; educatorId?: string; focus: SkillKey }
+  | {
+      type: 'setEducator';
+      childId: string;
+      educatorId?: string;
+      focus: SkillKey;
+      /** Rend la main à l'attribution automatique (meilleur éducateur). */
+      auto?: boolean;
+    }
   | { type: 'raiseArmy' }
   | { type: 'disbandArmy'; armyId: string }
   | { type: 'moveArmy'; armyId: string; targetCountyId: string }
@@ -180,6 +188,8 @@ export function applyAction(state: GameState, action: Action): GameState {
   const s = structuredClone(state);
   const ctx: Ctx = { state: s, rng: new Rng(s.rng) };
   dispatch(ctx, action);
+  // Tout enfant arrivé à la cour (naissance, pupille, événement) reçoit son éducateur.
+  autoEducate(s);
   // Une partie peut s'achever hors de la fin de saison (mort pendant un événement, une bataille).
   if (s.gameOver && !s.gameOver.done) finishGame(s);
   s.rng = ctx.rng.s;
@@ -220,8 +230,15 @@ function dispatch(ctx: Ctx, a: Action): void {
     case 'setEducator': {
       const c = state.characters[a.childId];
       if (c && ageOf(state, c) < BALANCE.characters.adulthood) {
-        c.educatorId = a.educatorId;
-        c.educationFocus = a.focus;
+        if (a.auto) {
+          c.educatorId = undefined;
+          c.educationFocus = undefined;
+          c.educationManual = false;
+        } else {
+          c.educatorId = a.educatorId;
+          c.educationFocus = a.focus;
+          c.educationManual = true;
+        }
       }
       break;
     }

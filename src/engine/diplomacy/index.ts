@@ -24,7 +24,14 @@ import { clauseFactors, hasFamilyPact, type MarriageClause } from '../crowns';
 import { gainInfluence, influenceFactor } from '../influence';
 import { chronicle, notify, worldNews, type Ctx } from '../context';
 import { capitalOf, countyRuler, independentRulers, rankOf, rankValue } from '../realm';
-import type { Character, CouncilPost, GameState } from '../state';
+import {
+  SKILL_KEYS,
+  SKILL_LABELS,
+  type Character,
+  type CouncilPost,
+  type GameState,
+  type SkillKey,
+} from '../state';
 import { joinWar, militaryStrength, truceWith, warsOf } from '../war';
 
 const D = BALANCE.diplomacy;
@@ -547,6 +554,53 @@ export function wards(state: GameState): Character[] {
   for (const k of Object.values(state.characters))
     if (k.alive && k.fosterOf === state.playerId && !isAdult(state, k)) kids.set(k.id, k);
   return [...kids.values()].sort((a, b) => a.birthTurn - b.birthTurn);
+}
+
+/** Compétence la plus haute d'un personnage (la première en cas d'égalité). */
+export function bestSkillKey(c: Character): SkillKey {
+  return SKILL_KEYS.reduce((best, k) => (skill(c, k) > skill(c, best) ? k : best), SKILL_KEYS[0]);
+}
+
+/** Éducateur possible : adulte de la cour, vivant, libre, pas de passage (vous compris). */
+export function educatorCandidates(state: GameState): Character[] {
+  const p = player(state);
+  return [...councilCandidates(state), p].filter(
+    (e) => e.alive && !e.imprisonedBy && !e.visitor && isAdult(state, e),
+  );
+}
+
+/** Le meilleur éducateur pour une compétence : niveau le plus haut, puis total des compétences. */
+export function bestEducator(
+  state: GameState,
+  focus: SkillKey,
+  except?: string,
+): Character | undefined {
+  const total = (c: Character) => SKILL_KEYS.reduce((s, k) => s + skill(c, k), 0);
+  return educatorCandidates(state)
+    .filter((e) => e.id !== except)
+    .sort((a, b) => skill(b, focus) - skill(a, focus) || total(b) - total(a))[0];
+}
+
+/**
+ * Chaque enfant à éduquer sans réglage manuel reçoit automatiquement, pour sa compétence la
+ * plus haute, l'éducateur le plus compétent de la cour. Refait si l'éducateur n'est plus là.
+ */
+export function autoEducate(state: GameState): void {
+  for (const k of wards(state)) {
+    if (k.educationManual) continue;
+    const cur = k.educatorId ? state.characters[k.educatorId] : undefined;
+    const valid = !!cur && educatorCandidates(state).some((e) => e.id === cur.id);
+    if (valid) continue;
+    const focus = k.educationFocus ?? bestSkillKey(k);
+    const e = bestEducator(state, focus);
+    if (!e) continue;
+    k.educationFocus = focus;
+    k.educatorId = e.id;
+    notify(
+      state,
+      `${e.id === state.playerId ? 'Vous' : e.name} ${e.id === state.playerId ? 'prenez' : 'prend'} en charge l’éducation de ${k.name} (${SKILL_LABELS[focus].toLowerCase()} ${skill(e, focus)}).`,
+    );
+  }
 }
 
 export function capitalName(state: GameState, id: string): string {

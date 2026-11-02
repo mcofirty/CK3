@@ -10,7 +10,14 @@ import {
   skill,
 } from '../../engine/characters';
 import { heirsOf } from '../../engine/characters/lifecycle';
-import { COUNCIL_INFO, COUNCIL_POSTS, councilCandidates, wards } from '../../engine/diplomacy';
+import {
+  bestSkillKey,
+  COUNCIL_INFO,
+  COUNCIL_POSTS,
+  councilCandidates,
+  educatorCandidates,
+  wards,
+} from '../../engine/diplomacy';
 import { canCreateTitle, countyRuler, independentRulers, titleOf } from '../../engine/realm';
 import {
   SKILL_KEYS,
@@ -227,7 +234,7 @@ function FamilyView({ game }: { game: GameState }) {
   const p = game.characters[game.playerId];
   const fam = closeFamily(game, p);
   const kids = wards(game);
-  const educators = councilCandidates(game).concat(p);
+  const educators = educatorCandidates(game);
   return (
     <>
       <div className="card">
@@ -256,7 +263,9 @@ function FamilyView({ game }: { game: GameState }) {
       <div className="card">
         <h3>Éducation</h3>
         <p className="small muted">
-          À 16 ans, l’enfant reçoit un trait selon son éducateur et la compétence travaillée.
+          À 16 ans, l’enfant reçoit un trait selon son éducateur et la compétence travaillée. En
+          mode automatique, il travaille sa plus haute compétence avec l’éducateur le plus compétent
+          de la cour.
         </p>
         {kids.length === 0 && <p className="muted">Aucun enfant à éduquer.</p>}
         {kids.map((k) => (
@@ -268,17 +277,27 @@ function FamilyView({ game }: { game: GameState }) {
             <div className="row" style={{ width: '100%' }}>
               <select
                 className="select grow"
-                value={k.educatorId ?? ''}
+                value={k.educationManual ? (k.educatorId ?? 'none') : 'auto'}
                 onChange={(e) =>
-                  dispatch({
-                    type: 'setEducator',
-                    childId: k.id,
-                    educatorId: e.target.value || undefined,
-                    focus: k.educationFocus ?? 'diplomatie',
-                  })
+                  dispatch(
+                    e.target.value === 'auto'
+                      ? {
+                          type: 'setEducator',
+                          childId: k.id,
+                          focus: 'diplomatie',
+                          auto: true,
+                        }
+                      : {
+                          type: 'setEducator',
+                          childId: k.id,
+                          educatorId: e.target.value === 'none' ? undefined : e.target.value,
+                          focus: k.educationFocus ?? bestSkillKey(k),
+                        },
+                  )
                 }
               >
-                <option value="">— Éducateur —</option>
+                <option value="auto">Automatique</option>
+                <option value="none">Aucun éducateur</option>
                 {educators
                   .filter((e) => isAdult(game, e))
                   .map((e) => (
@@ -289,7 +308,7 @@ function FamilyView({ game }: { game: GameState }) {
               </select>
               <select
                 className="select"
-                value={k.educationFocus ?? 'diplomatie'}
+                value={k.educationFocus ?? bestSkillKey(k)}
                 onChange={(e) =>
                   dispatch({
                     type: 'setEducator',
@@ -306,6 +325,14 @@ function FamilyView({ game }: { game: GameState }) {
                 ))}
               </select>
             </div>
+            {k.educatorId && game.characters[k.educatorId] && (
+              <div className="small muted" style={{ width: '100%', marginTop: 4 }}>
+                Éducateur : <b>{game.characters[k.educatorId].name}</b> (
+                {SKILL_LABELS[k.educationFocus ?? bestSkillKey(k)].toLowerCase()}{' '}
+                {skill(game.characters[k.educatorId], k.educationFocus ?? bestSkillKey(k))})
+                {k.educationManual ? '' : ' · choisi automatiquement'}
+              </div>
+            )}
           </div>
         ))}
       </div>
