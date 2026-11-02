@@ -50,7 +50,15 @@ import {
   rallyPrisoner,
   requestWard,
 } from './entourage';
-import { repayLoan, setConscription, setTax, setTaxAll, takeLoan, toggleEdict } from './economy';
+import {
+  repayLoan,
+  setConscription,
+  setConscriptionAll,
+  setTax,
+  setTaxAll,
+  takeLoan,
+  toggleEdict,
+} from './economy';
 import { hireMercenaries } from './war/campaignExtras';
 import { addMemory } from './relations';
 import { addStress, stressFromSpec } from './stress';
@@ -141,6 +149,7 @@ export type Action =
   | { type: 'setTax'; countyId: string; level: TaxLevel }
   | { type: 'setTaxAll'; level: TaxLevel }
   | { type: 'setConscription'; countyId: string; level: ConscriptionLevel }
+  | { type: 'setConscriptionAll'; level: ConscriptionLevel }
   | { type: 'toggleEdict'; id: string }
   | { type: 'takeLoan'; amount: number }
   | { type: 'repayLoan'; loanId: string }
@@ -497,6 +506,9 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'setTaxAll':
       setTaxAll(state, pl, a.level);
+      break;
+    case 'setConscriptionAll':
+      setConscriptionAll(state, pl, a.level);
       break;
     case 'setConscription':
       setConscription(state, pl, a.countyId, a.level);

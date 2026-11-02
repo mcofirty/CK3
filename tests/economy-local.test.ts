@@ -37,6 +37,17 @@ describe('Impôts et contentement', () => {
     expect(contentmentOf(s.counties[c.id])).toBeLessThan(v0);
   });
 
+  it('la conscription se règle d’un coup pour tout le domaine', () => {
+    let s = clearEvents(newGame({ seed: 61 }));
+    s = applyAction(s, { type: 'setConscriptionAll', level: 'lourde' });
+    expect(own(s).every((c) => c.conscription === 'lourde')).toBe(true);
+    expect(
+      Object.values(s.counties).some(
+        (c) => c.holderId !== s.playerId && c.conscription === 'lourde',
+      ),
+    ).toBe(false);
+  });
+
   it('le contentement agit sur revenus, levées et développement', () => {
     const s = newGame({ seed: 62 });
     const c = own(s)[0];

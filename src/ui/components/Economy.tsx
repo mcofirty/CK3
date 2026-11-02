@@ -152,6 +152,8 @@ export function EconomyView({ game }: { game: GameState }) {
   const avg = own.length ? own.reduce((s, c) => s + contentmentOf(c), 0) / own.length : 0;
   const taxes = own.map((c) => c.tax ?? 'normal');
   const common = taxes.every((t) => t === taxes[0]) ? taxes[0] : null;
+  const levies = own.map((c) => c.conscription ?? 'normale');
+  const commonLevy = levies.every((t) => t === levies[0]) ? levies[0] : null;
   const loans = (game.loans ?? []).filter((l) => l.ownerId === pl);
   const cap = loanCap(game, pl);
   const debt = debtOf(game, pl);
@@ -207,6 +209,20 @@ export function EconomyView({ game }: { game: GameState }) {
         <p className="small muted" style={{ margin: '4px 0 8px' }}>
           {common ? TAX_HINT[common] : 'Taux différents selon les comtés.'} Sous {L.revoltThreshold}{' '}
           de contentement, le peuple peut se révolter.
+        </p>
+        <p className="small muted" style={{ margin: '10px 0 6px' }}>
+          Conscription dans tout le domaine :
+        </p>
+        <Segmented
+          options={CONSCRIPTION_LEVELS.map((t) => ({ value: t, label: CONSCRIPTION_LABELS[t] }))}
+          value={commonLevy}
+          onChange={(level) => dispatch({ type: 'setConscriptionAll', level })}
+        />
+        <p className="small muted" style={{ margin: '4px 0 8px' }}>
+          {commonLevy
+            ? `Levées ×${L.conscription[commonLevy].levies}, contentement ${signed(L.conscription[commonLevy].contentment)}/saison, développement ×${L.conscription[commonLevy].development}.`
+            : 'Conscription différente selon les comtés.'}{' '}
+          Chaque comté se règle aussi à part (touchez-le).
         </p>
         {own.map((c) => {
           const v = contentmentOf(c);

@@ -12,6 +12,7 @@ import {
   hurtPopulation,
   revoltChance,
   TAX_LABELS,
+  CONSCRIPTION_LABELS,
   vitalityOf,
   vitalityTarget,
 } from './local';
@@ -123,6 +124,23 @@ export function setConscription(
   if (!c || c.holderId !== rulerId) return false;
   c.conscription = level;
   return true;
+}
+
+/** Même conscription dans tous les comtés tenus en propre. */
+export function setConscriptionAll(
+  state: GameState,
+  rulerId: string,
+  level: ConscriptionLevel,
+): number {
+  let n = 0;
+  for (const c of Object.values(state.counties))
+    if (c.holderId === rulerId) {
+      c.conscription = level;
+      n++;
+    }
+  if (n && rulerId === state.playerId)
+    notify(state, `Conscription ${CONSCRIPTION_LABELS[level].toLowerCase()} dans tout le domaine.`);
+  return n;
 }
 
 // --- Édits ---
