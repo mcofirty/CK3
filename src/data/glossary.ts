@@ -153,7 +153,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Éducation',
-        text: 'Les enfants de la maison (et les pupilles) sont éduqués par un membre de la cour sur une compétence choisie. À la majorité, ils gagnent des points dans cette compétence et un trait d’éducation, meilleur si l’éducateur est compétent. Par défaut c’est automatique : dès son arrivée à la cour (naissance, pupille), l’enfant travaille sa plus haute compétence avec l’adulte de la cour le plus fort dans cette compétence ; si l’éducateur disparaît, un autre le remplace. Cour › Famille permet de choisir soi-même éducateur et compétence, ou de revenir à « Automatique ».',
+        text: 'Les enfants de la maison (et les pupilles) sont éduqués par un membre de la cour sur une compétence choisie. À la majorité, ils gagnent des points dans cette compétence et un trait d’éducation, meilleur si l’éducateur est compétent. Par défaut c’est automatique : dès son arrivée à la cour (naissance, pupille), l’enfant travaille sa plus haute compétence avec l’adulte de la cour le plus fort dans cette compétence ; si l’éducateur disparaît, un autre le remplace. Cour › Maison › « Éducation des enfants » permet de choisir soi-même éducateur et compétence, ou de revenir à « Automatique ».',
       },
       {
         term: 'Pupille',
@@ -216,7 +216,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Loi de succession',
-        text: `Cour › Souverain › Maison › « Lois et gouvernement ». ${LAW_LIST}. Le gouvernement fixe les lois permises. Changer de loi coûte du prestige, irrite les vassaux (${LAW_CHANGE_OPINION} d’opinion) et ne peut se refaire avant ${LAW_COOLDOWN / 4} ans ; un aperçu montre qui hériterait sous chaque loi. Le conjoint n’hérite jamais : les terres d’une souveraine vont à ses enfants. Sous le partage, une couronne tenue en union revient au cadet.`,
+        text: `Royaume › Lois. ${LAW_LIST}. Le gouvernement fixe les lois permises. Changer de loi coûte du prestige, irrite les vassaux (${LAW_CHANGE_OPINION} d’opinion) et ne peut se refaire avant ${LAW_COOLDOWN / 4} ans ; un aperçu montre qui hériterait sous chaque loi. Le conjoint n’hérite jamais : les terres d’une souveraine vont à ses enfants. Sous le partage, une couronne tenue en union revient au cadet.`,
       },
       {
         term: 'Gouvernement',
@@ -236,7 +236,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Fiche de royaume',
-        text: 'Depuis la fiche d’un souverain, d’un comté ou d’un personnage régnant (et Cour › Souverain pour la vôtre) : le souverain, sa loi de succession, l’héritier attendu, la ligne de succession (six noms, avec leur lien de parenté), les prétendants de sang, les couronnes réunies et vos pactes.',
+        text: 'Depuis la fiche d’un souverain, d’un comté ou d’un personnage régnant (et Royaume › Lois pour la vôtre) : le souverain, sa loi de succession, l’héritier attendu, la ligne de succession (six noms, avec leur lien de parenté), les prétendants de sang, les couronnes réunies et vos pactes.',
       },
       {
         term: 'Influence',
@@ -244,7 +244,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Droits dynastiques',
-        text: `Un enfant reçoit des droits sur la maison régnante de son parent étranger, et hérite de ceux de ses parents (${B.crowns.maxClaims} au plus). Un droit est fort quand la maison visée est fragile (souverain enfant, captif, sans enfant) ; sinon faible. Depuis Cour › Maison, faites valoir les droits d’un membre de votre maison ou de votre cour par la guerre (droit fort : gratuit ; faible : ${B.crowns.weakClaimPrestige} prestige) : victorieux, il monte sur le trône et devient votre vassal, ou vous ceignez la couronne vous-même. Des prétendants viennent parfois demander asile.`,
+        text: `Un enfant reçoit des droits sur la maison régnante de son parent étranger, et hérite de ceux de ses parents (${B.crowns.maxClaims} au plus). Un droit est fort quand la maison visée est fragile (souverain enfant, captif, sans enfant) ; sinon faible. Depuis Royaume › Lois › Droits dynastiques, faites valoir les droits d’un membre de votre maison ou de votre cour par la guerre (droit fort : gratuit ; faible : ${B.crowns.weakClaimPrestige} prestige) : victorieux, il monte sur le trône et devient votre vassal, ou vous ceignez la couronne vous-même. Des prétendants viennent parfois demander asile.`,
       },
       {
         term: 'Contrat de mariage',
@@ -363,7 +363,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Décisions',
-        text: 'Actions que vous lancez vous-même (tournoi, chasse, festin, pèlerinage…), chacune avec un coût, un délai avant de recommencer et un événement qui en décide l’issue.',
+        text: 'Cour › Souverain › « Actions du souverain » : ce que vous lancez vous-même (tournoi, chasse, festin, pèlerinage…), chacune avec un coût, un délai avant de recommencer et un événement qui en décide l’issue.',
       },
     ],
   },
@@ -378,11 +378,11 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Alliance',
-        text: `Un pacte entre souverains : vous pouvez appeler votre allié aux armes dans une guerre. On ne peut pas déclarer la guerre à un allié : rompez d’abord l’alliance depuis sa fiche (Intrigues), au prix de ${-B.diplomacy.breakAlliance.prestige} prestige et de sa rancune. L’attaquer dans les ${B.diplomacy.breakAlliance.treacherySeasons} saisons qui suivent est une traîtrise (${B.diplomacy.breakAlliance.treacheryPrestige} prestige, toutes les cours vous en veulent).`,
+        text: `Un pacte entre souverains : vous pouvez appeler votre allié aux armes dans une guerre. On ne peut pas déclarer la guerre à un allié : rompez d’abord l’alliance depuis sa fiche (Monde › Cours), au prix de ${-B.diplomacy.breakAlliance.prestige} prestige et de sa rancune. L’attaquer dans les ${B.diplomacy.breakAlliance.treacherySeasons} saisons qui suivent est une traîtrise (${B.diplomacy.breakAlliance.treacheryPrestige} prestige, toutes les cours vous en veulent).`,
       },
       {
         term: 'Appel aux armes',
-        text: `Depuis une guerre (onglet Armée › Appeler à l’aide), demandez à un souverain de vous rejoindre. Un allié répond plus volontiers (liens du mariage, hostilité envers l’ennemi commun) ; s’il refuse, l’alliance est rompue. Un souverain sans alliance part de ${B.diplomacy.callToArms.noAlliance} mais peut être convaincu par un subside (1 point par ${B.diplomacy.callToArms.goldPerPoint} or, versé seulement s’il accepte) ; un refus le rend sourd ${B.diplomacy.callToArms.refusalCooldown} saisons.`,
+        text: `Depuis une guerre (Armée › Guerres › Appeler à l’aide), demandez à un souverain de vous rejoindre. Un allié répond plus volontiers (liens du mariage, hostilité envers l’ennemi commun) ; s’il refuse, l’alliance est rompue. Un souverain sans alliance part de ${B.diplomacy.callToArms.noAlliance} mais peut être convaincu par un subside (1 point par ${B.diplomacy.callToArms.goldPerPoint} or, versé seulement s’il accepte) ; un refus le rend sourd ${B.diplomacy.callToArms.refusalCooldown} saisons.`,
       },
       {
         term: 'Traité de terres',
@@ -463,7 +463,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Paix',
-        text: `Onglet Armée › « Négocier la paix » (chef de guerre seulement). Trois formes : victoire (vous réclamez des comtés et de l’or), paix blanche (statu quo, avec de l’or si vous voulez l’acheter) ou reddition (vous cédez ce qu’il réclame, marchandable). Une barre d’acceptation montre, en direct, si l’ennemi accepte : elle part de l’état de la guerre (score de son point de vue, lassitude après ${B.peace.exhaustionStart / 4} ans, capitale occupée, rapport de force), puis compte la valeur des comtés (${B.peace.countyBase} + ${B.peace.countyPerDev} par niveau de développement ; ×${B.peace.occupiedMult} s’ils sont occupés, ×${B.peace.objectiveMult} pour l’objectif, ×${B.peace.farMult} sinon, ×${B.peace.capitalMult} pour une capitale occupée) et l’or (${B.peace.goldPerPoint} or = 1 point). « Équilibrer l’or » trouve la somme juste. Quand l’IA vous propose la paix (exigences ou offre), vous pouvez accepter, refuser, ou modifier les conditions et contre-proposer. Elle réclame au plus ${Math.round(B.peace.maxGoldShare * 100)} % de votre trésor.`,
+        text: `Armée › Guerres › « Négocier la paix » (chef de guerre seulement). Trois formes : victoire (vous réclamez des comtés et de l’or), paix blanche (statu quo, avec de l’or si vous voulez l’acheter) ou reddition (vous cédez ce qu’il réclame, marchandable). Une barre d’acceptation montre, en direct, si l’ennemi accepte : elle part de l’état de la guerre (score de son point de vue, lassitude après ${B.peace.exhaustionStart / 4} ans, capitale occupée, rapport de force), puis compte la valeur des comtés (${B.peace.countyBase} + ${B.peace.countyPerDev} par niveau de développement ; ×${B.peace.occupiedMult} s’ils sont occupés, ×${B.peace.objectiveMult} pour l’objectif, ×${B.peace.farMult} sinon, ×${B.peace.capitalMult} pour une capitale occupée) et l’or (${B.peace.goldPerPoint} or = 1 point). « Équilibrer l’or » trouve la somme juste. Quand l’IA vous propose la paix (exigences ou offre), vous pouvez accepter, refuser, ou modifier les conditions et contre-proposer. Elle réclame au plus ${Math.round(B.peace.maxGoldShare * 100)} % de votre trésor.`,
       },
     ],
   },
@@ -569,11 +569,11 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Chronique',
-        text: 'Le journal de la maison : naissances, décès, successions, guerres, titres, mariages, hauts faits. Le Livre de la dynastie résume chaque règne, ses ambitions et ses exploits.',
+        text: 'Règne › Journal : naissances, décès, successions, guerres, titres, mariages, hauts faits. Règne › Livre résume chaque règne, ses ambitions et ses exploits.',
       },
       {
         term: 'Nouvelles du monde',
-        text: `Onglet Monde de la Chronique : guerres et paix, morts et successions, mariages, alliances, titres fondés, révoltes, et faits de saison chez les autres souverains (récoltes, tournois, fondations, brigands, pirates, incendies…), environ ${pc(B.abroad.chancePerRuler)} de chance par cour et par saison. Ces faits changent vraiment leur trésor, leurs levées et leurs comtés. Filtrez par voisins, guerres, cours ou terres ; la fiche d’un souverain montre ses dernières nouvelles. Les guerres de vos voisins arrivent aussi dans vos avis.`,
+        text: `Monde › Nouvelles : guerres et paix, morts et successions, mariages, alliances, titres fondés, révoltes, et faits de saison chez les autres souverains (récoltes, tournois, fondations, brigands, pirates, incendies…), environ ${pc(B.abroad.chancePerRuler)} de chance par cour et par saison. Ces faits changent vraiment leur trésor, leurs levées et leurs comtés. Filtrez par voisins, guerres, cours ou terres ; la fiche d’un souverain montre ses dernières nouvelles. Les guerres de vos voisins arrivent aussi dans vos avis.`,
       },
       {
         term: 'Couleur de maison',
@@ -596,11 +596,11 @@ const concepts: GlossarySection[] = [
     entries: [
       {
         term: 'Barre du haut',
-        text: 'Engrenage des Paramètres, logo (appui long : outils de test), or, prestige, piété, et le bouton « Fin de saison ». Toucher une ressource en détaille la dernière saison.',
+        text: 'Engrenage des Paramètres (appui long : outils de test), logo, saison et année, or (avec le revenu net par saison), prestige et piété. Toucher une ressource en détaille la dernière saison. Le bouton « Fin de saison » est en bas, au-dessus des onglets.',
       },
       {
         term: 'Onglets',
-        text: 'Cour (souverain, entourage, conseil, maison), Royaume (carte, économie), Armée, Intrigues (diplomatie, complots, décisions) et Chronique (journal, monde, avis, livre, succès).',
+        text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide.',
       },
       {
         term: 'Gestes',

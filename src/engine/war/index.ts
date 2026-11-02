@@ -830,7 +830,9 @@ export function canDeclareWar(
   if (atWar(state, attackerId, defenderId)) reasons.push('Déjà en guerre');
   if (truceWith(state, attackerId, defenderId)) reasons.push('Trêve en cours');
   if (allied(state, attackerId, defenderId))
-    reasons.push('Vous êtes alliés : rompez d’abord l’alliance (Intrigues › fiche du souverain)');
+    reasons.push(
+      'Vous êtes alliés : rompez d’abord l’alliance (Monde › Cours › fiche du souverain)',
+    );
   if (a.imprisonedBy) reasons.push('Vous êtes prisonnier');
   if (
     Object.values(state.characters).some(

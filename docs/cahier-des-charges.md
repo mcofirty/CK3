@@ -401,16 +401,18 @@ L'interface est pensée pour une main, en portrait : navigation par onglets en b
 
 | Onglet | Contenu |
 | --- | --- |
-| Cour | Fiche du souverain, famille, conseil, arbre généalogique |
-| Royaume | Carte SVG des comtés, fiche de comté, bâtiments, vassaux |
-| Armée | Armées, recrutement, ordres de déplacement, guerres en cours et score |
-| Intrigues | Diplomatie, complots en cours, complots découverts |
-| Chronique | Journal des événements marquants de la dynastie |
+| Règne | Résumé (liste « À faire », chiffres clés, avis de la saison, dernière bataille), journal de la dynastie et des avis, livre de la dynastie et succès |
+| Cour | Souverain (fiche, ambition, talents, actions du souverain, relations), maison (succession en bref, famille, mariages, éducation, pupilles, héritages, arbre généalogique), conseil, courtisans (cour, candidats, prisonniers) |
+| Royaume | Carte SVG des comtés, domaine (comtés, impôts, conscription, vassaux, titres à fonder), trésor (bilan, trésorier, édits, banquiers), lois (gouvernement, loi et ligne de succession, couronnes, droits dynastiques) |
+| Armée | Troupes (armée, commandants, siège, recrutement, mercenaires), guerres (score, paix, appel à l'aide, déclaration de guerre) |
+| Monde | Cours voisines (diplomatie), complots en cours et découverts, nouvelles du monde |
 
 Règles d'ergonomie :
 
-- Barre du haut : or, prestige, piété, saison et année. Un appui sur une ressource montre le détail de ses revenus et dépenses.
-- Bouton « Fin de saison » flottant en bas à droite, au-dessus de la barre d'onglets.
+- Barre du haut : saison et année, or (avec le revenu net par saison), prestige, piété, chacun avec son libellé. Un appui sur une ressource montre le détail de ses revenus et dépenses.
+- Bouton « Fin de saison » en bande pleine largeur en bas, juste au-dessus de la barre d'onglets.
+- Pastilles sur les onglets et sous-onglets pour ce qui attend (points de talent, poste vacant, guerre en cours) ; les sous-onglets restent visibles au défilement.
+- Les explications des cartes sont repliées derrière une icône ⓘ.
 - Les événements et les propositions s'affichent en cartes modales, avec les effets de chaque choix visibles.
 - Zones tactiles d'au moins 44 px, texte d'au moins 16 px.
 - Appui long à la place du survol pour les infobulles (traits, modificateurs, raisons d'opinion).
@@ -447,7 +449,7 @@ src/
     map.json          comtés, adjacences, terrains, positions SVG
     events/*.json
   ui/
-    screens/          Cour, Royaume, Armée, Intrigues, Chronique, Bataille
+    screens/          Règne, Cour, Royaume, Armée, Monde, Bataille
     components/
     store.ts          store Zustand qui appelle le moteur
   save/
