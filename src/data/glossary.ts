@@ -600,7 +600,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Onglets',
-        text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide.',
+        text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide, et une bulle « Premier passage » présente chaque écran la première fois (Paramètres › Revoir les aides des écrans).',
       },
       {
         term: 'Bilan et personnages suivis',

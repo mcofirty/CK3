@@ -39,6 +39,7 @@ import { Pip } from './Court';
 import { CallHelpSheet } from '../components/Diplomacy';
 import { PeaceSheet } from '../components/Peace';
 import { useStore } from '../store';
+import { FirstVisitTip } from '../components/FirstVisit';
 
 const ARMY_VIEWS = ['troupes', 'guerres'] as const;
 type ArmyView = (typeof ARMY_VIEWS)[number];
@@ -60,6 +61,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
+        <FirstVisitTip id={`armee/${view}`} />
         {view === 'troupes' ? <TroopsView game={game} /> : <WarsView game={game} />}
       </div>
     </>

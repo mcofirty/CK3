@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { GLOSSARY, searchGlossary } from '../../data/glossary';
 import { AchievementList } from './Book';
 import { Segmented, Sheet } from './common';
+import { resetScreenTips } from './FirstVisit';
 
 function Switch({
   label,
@@ -52,11 +53,13 @@ export function SettingsSheet() {
   const sound = useStore((s) => s.sound);
   const [view, setView] = useState<'main' | 'succes' | 'glossaire'>('main');
   const [saved, setSaved] = useState(false);
+  const [tipsReset, setTipsReset] = useState(false);
   if (!open) return null;
   const close = () => {
     setOpen(false);
     setView('main');
     setSaved(false);
+    setTipsReset(false);
   };
   return (
     <Sheet onClose={close} swapKey={view}>
@@ -124,6 +127,21 @@ export function SettingsSheet() {
               value={settings.confirmEnd}
               onChange={(v) => setSettings({ confirmEnd: v })}
             />
+            <button
+              className="setting-row"
+              onClick={() => {
+                resetScreenTips();
+                setTipsReset(true);
+              }}
+            >
+              <span className="grow">
+                <span className="setting-label">💡 Revoir les aides des écrans</span>
+                <span className="small muted setting-hint">
+                  La bulle « Premier passage » reviendra sur chaque écran
+                </span>
+              </span>
+              <span className={tipsReset ? 'good small' : 'muted'}>{tipsReset ? 'Fait' : '›'}</span>
+            </button>
             <button className="setting-row" onClick={() => setView('glossaire')}>
               <span className="grow">
                 <span className="setting-label">📖 Glossaire</span>

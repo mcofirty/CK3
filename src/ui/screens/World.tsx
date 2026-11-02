@@ -23,6 +23,7 @@ import { PactsCard } from '../components/Crowns';
 import { hasFamilyPact } from '../../engine/crowns';
 import { NewsList, WorldNews, newsAbout } from '../components/News';
 import { useStore } from '../store';
+import { FirstVisitTip } from '../components/FirstVisit';
 
 const WORLD_VIEWS = ['cours', 'complots', 'nouvelles'] as const;
 type WorldView = (typeof WORLD_VIEWS)[number];
@@ -44,6 +45,7 @@ export function WorldScreen({ game }: { game: GameState }) {
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
+        <FirstVisitTip id={`monde/${view}`} />
         {view === 'cours' && <Diplomacy game={game} />}
         {view === 'complots' && <Plots game={game} />}
         {view === 'nouvelles' && <WorldNews game={game} />}

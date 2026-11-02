@@ -25,6 +25,7 @@ import { LawsBody } from '../components/Laws';
 import { MapView, playerColor } from '../components/MapView';
 import { SuccessionSection } from '../components/RealmSheet';
 import { useStore } from '../store';
+import { FirstVisitTip } from '../components/FirstVisit';
 
 const REALM_VIEWS = ['carte', 'domaine', 'tresor', 'lois'] as const;
 type RealmView = (typeof REALM_VIEWS)[number];
@@ -47,6 +48,7 @@ export function RealmScreen({ game }: { game: GameState }) {
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
+        <FirstVisitTip id={`royaume/${view}`} />
         {view === 'carte' && <MapPane game={game} />}
         {view === 'domaine' && <DomainView game={game} />}
         {view === 'tresor' && <TreasuryView game={game} />}

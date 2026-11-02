@@ -3105,3 +3105,14 @@ button.plain {
   gap: 4px;
   margin-top: 3px;
 }
+
+/* Aide au premier passage */
+.first-visit {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+.first-visit-label {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}

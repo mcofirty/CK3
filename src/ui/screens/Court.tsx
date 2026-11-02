@@ -42,6 +42,7 @@ import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../compone
 import { perkPoints } from '../../engine/progression';
 import { CandidatesCard, CourtCard, WardsCard } from '../components/Entourage';
 import { useStore } from '../store';
+import { FirstVisitTip } from '../components/FirstVisit';
 import { GOVERNMENTS, SUCCESSION_LAWS } from '../../data/governments';
 import { governmentOf } from '../../engine/government';
 import { houseColorOf } from '../../engine/heraldry';
@@ -73,6 +74,7 @@ export function CourtScreen({ game }: { game: GameState }) {
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
+        <FirstVisitTip id={`cour/${view}`} />
         {view === 'souverain' && <RulerView game={game} />}
         {view === 'maison' && <HouseView game={game} />}
         {view === 'conseil' && <CouncilView game={game} />}

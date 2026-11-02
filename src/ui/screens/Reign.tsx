@@ -21,6 +21,7 @@ import {
   usePager,
 } from '../components/common';
 import { useStore } from '../store';
+import { FirstVisitTip } from '../components/FirstVisit';
 
 const KIND_ICON: Record<string, string> = {
   naissance: '✶',
@@ -55,6 +56,7 @@ export function ReignScreen({ game }: { game: GameState }) {
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
+        <FirstVisitTip id={`regne/${view}`} />
         {view === 'resume' && <Summary game={game} />}
         {view === 'journal' && <Journal game={game} />}
         {view === 'livre' && <Book game={game} />}
