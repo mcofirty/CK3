@@ -596,7 +596,7 @@ const concepts: GlossarySection[] = [
     entries: [
       {
         term: 'Barre du haut',
-        text: 'Engrenage des Paramètres (appui long : outils de test), logo, saison et année, or (avec le revenu net par saison), prestige et piété. Toucher une ressource en détaille la dernière saison. Le bouton « Fin de saison » est en bas, au-dessus des onglets.',
+        text: 'Engrenage des Paramètres (appui long : outils de test), loupe de recherche (personnage, comté ou royaume par son nom), logo, saison et année, or (avec le revenu net par saison), prestige et piété. Toucher une ressource en détaille la dernière saison. Le bouton « Fin de saison » est en bas, au-dessus des onglets.',
       },
       {
         term: 'Onglets',

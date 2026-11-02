@@ -3062,3 +3062,34 @@ button.plain {
 .tc-table td:first-child {
   text-align: left;
 }
+
+/* Recherche */
+.search-btn {
+  width: 40px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink2);
+}
+.search-btn:active {
+  background: var(--accent-soft);
+}
+.search-input {
+  width: 100%;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+@media (max-width: 380px) {
+  .search-btn {
+    width: 34px;
+  }
+}

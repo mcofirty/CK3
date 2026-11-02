@@ -22,6 +22,7 @@ import { TradeSheet } from './components/Diplomacy';
 import { RealmSheet } from './components/RealmSheet';
 import { PeaceNegotiation } from './components/Peace';
 import { SettingsButton, SettingsSheet } from './components/Settings';
+import { SearchSheet } from './components/Search';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
@@ -408,6 +409,7 @@ function TopBar({ game }: { game: GameState }) {
   const p = game.characters[game.playerId];
   const [detail, setDetail] = useState<'gold' | 'prestige' | 'piety' | null>(null);
   const [debug, setDebug] = useState(false);
+  const [search, setSearch] = useState(false);
   const saving = useStore((s) => s.saving);
   const lines = detail ? game.ledger[detail] : [];
   const labels = { gold: 'Or', prestige: 'Prestige', piety: 'Piété' };
@@ -419,6 +421,17 @@ function TopBar({ game }: { game: GameState }) {
         <span className="title" aria-label="Highborn" onContextMenu={(e) => e.preventDefault()}>
           <LongPressTitle onLong={() => setDebug(true)} />
         </span>
+        <button className="search-btn" aria-label="Rechercher" onClick={() => setSearch(true)}>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path
+              d="M15.5 15.5 21 21"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
         <span className="topbar-season">
           <b>{SEASON_NAMES[game.turn % 4]}</b>
           <span>
@@ -479,6 +492,7 @@ function TopBar({ game }: { game: GameState }) {
         </Sheet>
       )}
       {debug && <DebugSheet onClose={() => setDebug(false)} />}
+      {search && <SearchSheet game={game} onClose={() => setSearch(false)} />}
     </>
   );
 }
