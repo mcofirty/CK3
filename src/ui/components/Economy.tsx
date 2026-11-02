@@ -20,7 +20,7 @@ import { countyMaxLevies, economyOf } from '../../engine/realm';
 import { fmtPop, RealmPopulation } from './Capital';
 import type { GameState, TaxLevel } from '../../engine/state';
 import { useStore } from '../store';
-import { Bar, Segmented, signed } from './common';
+import { Bar, CardTitle, Segmented, signed } from './common';
 import { TreasuryCard } from './Entourage';
 
 const L = BALANCE.local;
@@ -140,20 +140,12 @@ export function CountyEconomy({ game, id }: { game: GameState; id: string }) {
 // Tableau de bord du royaume
 // ---------------------------------------------------------------------------
 
-export function EconomyView({ game }: { game: GameState }) {
+/** Royaume › Trésor : bilan, trésorier, édits, banquiers. */
+export function TreasuryView({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
-  const inspect = useStore((s) => s.inspect);
   const pl = game.playerId;
   const p = game.characters[pl];
   const eco = economyOf(game, pl);
-  const own = Object.values(game.counties)
-    .filter((c) => c.holderId === pl)
-    .sort((a, b) => contentmentOf(a) - contentmentOf(b));
-  const avg = own.length ? own.reduce((s, c) => s + contentmentOf(c), 0) / own.length : 0;
-  const taxes = own.map((c) => c.tax ?? 'normal');
-  const common = taxes.every((t) => t === taxes[0]) ? taxes[0] : null;
-  const levies = own.map((c) => c.conscription ?? 'normale');
-  const commonLevy = levies.every((t) => t === levies[0]) ? levies[0] : null;
   const loans = (game.loans ?? []).filter((l) => l.ownerId === pl);
   const cap = loanCap(game, pl);
   const debt = debtOf(game, pl);
@@ -190,6 +182,121 @@ export function EconomyView({ game }: { game: GameState }) {
 
       <TreasuryCard game={game} />
 
+      <div className="card">
+        <CardTitle help="Des politiques pour tout le domaine. Abroger un édit est gratuit, mais il ne peut être proclamé à nouveau tout de suite.">
+          Édits du royaume
+        </CardTitle>
+        {EDICTS.map((e) => {
+          const chk = edictCheck(game, pl, e.id);
+          const on = active.has(e.id);
+          const fx = [
+            e.income
+              ? `revenus ${e.income > 0 ? '+' : '−'}${Math.round(Math.abs(e.income) * 100)} %`
+              : '',
+            e.contentment ? `contentement ${fmt(e.contentment)}/saison` : '',
+            e.development
+              ? `développement ${e.development > 0 ? '+' : '−'}${Math.round(Math.abs(e.development) * 100)} %`
+              : '',
+            e.levies ? `levées +${Math.round(e.levies * 100)} %` : '',
+            e.piety ? `piété +${e.piety}/saison` : '',
+            e.upkeep ? `entretien ${e.upkeep} or/saison` : '',
+          ].filter(Boolean);
+          return (
+            <div key={e.id} className={`list-item decision${on ? ' edict-on' : ''}`}>
+              <span className="dec-icon">{e.icon}</span>
+              <div className="grow">
+                <b>{e.name}</b>
+                {on && <span className="chip tiny good"> en vigueur</span>}
+                <div className="small">{e.description}</div>
+                <div className="small muted">
+                  {fx.join(' · ')}
+                  {!on && ` · proclamation ${e.cost} or`}
+                  {!chk.ok && chk.reason && <span className="bad"> · {chk.reason}</span>}
+                </div>
+              </div>
+              <button
+                className={`btn small${on ? ' ghost' : ' primary'}`}
+                disabled={!chk.ok}
+                onClick={() => dispatch({ type: 'toggleEdict', id: e.id })}
+              >
+                {on ? 'Abroger' : 'Proclamer'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <CardTitle
+          help={`Emprunter donne de l’or tout de suite ; les intérêts (${Math.round(L.loanRate * 100)} % par saison) pèsent jusqu’au remboursement. Les dettes passent à l’héritier.`}
+        >
+          Banquiers
+        </CardTitle>
+        {loans.map((l) => (
+          <div key={l.id} className="list-item">
+            <div className="grow">
+              <b>{l.principal} or</b>
+              <div className="small muted">
+                Intérêts {(l.principal * l.rate).toFixed(1)} or/saison · depuis{' '}
+                {Math.max(0, game.turn - l.turn)} saison(s)
+              </div>
+            </div>
+            <button
+              className="btn small"
+              disabled={p.gold < l.principal}
+              onClick={() => dispatch({ type: 'repayLoan', loanId: l.id })}
+            >
+              Rembourser
+            </button>
+          </div>
+        ))}
+        <p className="small" style={{ margin: '8px 0' }}>
+          Dette : <b>{debt} or</b> · encore empruntable : <b>{cap} or</b>
+        </p>
+        <div className="row wrap">
+          {[100, 250]
+            .filter((a) => a <= cap)
+            .map((a) => (
+              <button
+                key={a}
+                className="btn small"
+                onClick={() => dispatch({ type: 'takeLoan', amount: a })}
+              >
+                Emprunter {a} or
+              </button>
+            ))}
+          {cap >= L.loanMin && (
+            <button
+              className="btn small"
+              onClick={() => dispatch({ type: 'takeLoan', amount: cap })}
+            >
+              Emprunter le maximum ({cap})
+            </button>
+          )}
+          {cap < L.loanMin && (
+            <span className="small muted">Les banquiers ne prêteront pas davantage.</span>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Royaume › Domaine : impôts, conscription, contentement et comtés du domaine propre. */
+export function TaxesCard({ game }: { game: GameState }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const inspect = useStore((s) => s.inspect);
+  const pl = game.playerId;
+  const own = Object.values(game.counties)
+    .filter((c) => c.holderId === pl)
+    .sort((a, b) => contentmentOf(a) - contentmentOf(b));
+  const avg = own.length ? own.reduce((s, c) => s + contentmentOf(c), 0) / own.length : 0;
+  const taxes = own.map((c) => c.tax ?? 'normal');
+  const common = taxes.every((t) => t === taxes[0]) ? taxes[0] : null;
+  const levies = own.map((c) => c.conscription ?? 'normale');
+  const commonLevy = levies.every((t) => t === levies[0]) ? levies[0] : null;
+  return (
+    <>
       <div className="card">
         <h3>Impôts et peuple</h3>
         <RealmPopulation game={game} rulerId={game.playerId} />
@@ -256,105 +363,6 @@ export function EconomyView({ game }: { game: GameState }) {
             </button>
           );
         })}
-      </div>
-
-      <div className="card">
-        <h3>Édits du royaume</h3>
-        <p className="small muted">
-          Des politiques pour tout le domaine. Abroger un édit est gratuit, mais il ne peut être
-          proclamé à nouveau tout de suite.
-        </p>
-        {EDICTS.map((e) => {
-          const chk = edictCheck(game, pl, e.id);
-          const on = active.has(e.id);
-          const fx = [
-            e.income
-              ? `revenus ${e.income > 0 ? '+' : '−'}${Math.round(Math.abs(e.income) * 100)} %`
-              : '',
-            e.contentment ? `contentement ${fmt(e.contentment)}/saison` : '',
-            e.development
-              ? `développement ${e.development > 0 ? '+' : '−'}${Math.round(Math.abs(e.development) * 100)} %`
-              : '',
-            e.levies ? `levées +${Math.round(e.levies * 100)} %` : '',
-            e.piety ? `piété +${e.piety}/saison` : '',
-            e.upkeep ? `entretien ${e.upkeep} or/saison` : '',
-          ].filter(Boolean);
-          return (
-            <div key={e.id} className={`list-item decision${on ? ' edict-on' : ''}`}>
-              <span className="dec-icon">{e.icon}</span>
-              <div className="grow">
-                <b>{e.name}</b>
-                {on && <span className="chip tiny good"> en vigueur</span>}
-                <div className="small">{e.description}</div>
-                <div className="small muted">
-                  {fx.join(' · ')}
-                  {!on && ` · proclamation ${e.cost} or`}
-                  {!chk.ok && chk.reason && <span className="bad"> · {chk.reason}</span>}
-                </div>
-              </div>
-              <button
-                className={`btn small${on ? ' ghost' : ' primary'}`}
-                disabled={!chk.ok}
-                onClick={() => dispatch({ type: 'toggleEdict', id: e.id })}
-              >
-                {on ? 'Abroger' : 'Proclamer'}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="card">
-        <h3>Banquiers</h3>
-        <p className="small muted">
-          Emprunter donne de l’or tout de suite ; les intérêts ({Math.round(L.loanRate * 100)} % par
-          saison) pèsent jusqu’au remboursement. Les dettes passent à l’héritier.
-        </p>
-        {loans.map((l) => (
-          <div key={l.id} className="list-item">
-            <div className="grow">
-              <b>{l.principal} or</b>
-              <div className="small muted">
-                Intérêts {(l.principal * l.rate).toFixed(1)} or/saison · depuis{' '}
-                {Math.max(0, game.turn - l.turn)} saison(s)
-              </div>
-            </div>
-            <button
-              className="btn small"
-              disabled={p.gold < l.principal}
-              onClick={() => dispatch({ type: 'repayLoan', loanId: l.id })}
-            >
-              Rembourser
-            </button>
-          </div>
-        ))}
-        <p className="small" style={{ margin: '8px 0' }}>
-          Dette : <b>{debt} or</b> · encore empruntable : <b>{cap} or</b>
-        </p>
-        <div className="row wrap">
-          {[100, 250]
-            .filter((a) => a <= cap)
-            .map((a) => (
-              <button
-                key={a}
-                className="btn small"
-                onClick={() => dispatch({ type: 'takeLoan', amount: a })}
-              >
-                Emprunter {a} or
-              </button>
-            ))}
-          {cap >= L.loanMin && (
-            <button
-              className="btn small"
-              onClick={() => dispatch({ type: 'takeLoan', amount: cap })}
-            >
-              Emprunter le maximum ({cap})
-            </button>
-          )}
-          {cap < L.loanMin && (
-            <span className="small muted">Les banquiers ne prêteront pas davantage.</span>
-          )}
-        </div>
       </div>
     </>
   );

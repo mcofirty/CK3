@@ -23,11 +23,15 @@ function loadAchievements(): string[] {
   }
 }
 
-export type Tab = 'cour' | 'royaume' | 'armee' | 'intrigues' | 'chronique';
-export const TABS: Tab[] = ['cour', 'royaume', 'armee', 'intrigues', 'chronique'];
+/**
+ * Onglets : Règne (où en suis-je ?), Cour (mes gens), Royaume (mes terres, mon or, mes lois),
+ * Armée (mes forces, mes guerres), Monde (les autres cours).
+ */
+export type Tab = 'regne' | 'cour' | 'royaume' | 'armee' | 'monde';
+export const TABS: Tab[] = ['regne', 'cour', 'royaume', 'armee', 'monde'];
 
-/** Élément inspecté (fiche détaillée). */
-export type Inspected = { kind: 'perso' | 'comte' | 'armee'; id: string };
+/** Élément inspecté (fiche détaillée), avec l'onglet interne de la fiche à ouvrir. */
+export type Inspected = { kind: 'perso' | 'comte' | 'armee'; id: string; tab?: string };
 
 interface Store {
   game: GameState | null;
@@ -122,7 +126,7 @@ export const useStore = create<Store>((set, get) => ({
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   sound: (id) => play(id, get().settings),
   slot: 1,
-  tab: 'cour',
+  tab: 'regne',
   tabDir: 'none',
   saving: false,
   focusWar: null,
@@ -147,7 +151,7 @@ export const useStore = create<Store>((set, get) => ({
         const joined = warsOf(next, next.playerId).find((w) => !had.has(w.id));
         if (joined) {
           set({ focusWar: joined.id });
-          get().setTab('armee');
+          get().goTo('armee', 'guerres');
         }
       }
       // Succès : gardés sur l'appareil, au-delà de la partie.
@@ -192,7 +196,11 @@ export const useStore = create<Store>((set, get) => ({
   inspect: (i) => {
     const st = get().inspectStack;
     const top = st[st.length - 1];
-    if (top && top.kind === i.kind && top.id === i.id) return;
+    if (top && top.kind === i.kind && top.id === i.id && top.tab === i.tab) return;
+    if (top && top.kind === i.kind && top.id === i.id) {
+      set({ inspectStack: [...st.slice(0, -1), i] });
+      return;
+    }
     set({
       inspectStack: [...st, i].slice(-12),
       selectedCounty: i.kind === 'comte' ? i.id : get().selectedCounty,
@@ -206,7 +214,7 @@ export const useStore = create<Store>((set, get) => ({
   inspectClose: () => set({ inspectStack: [], selectedCounty: undefined }),
   start: async (slot, opts) => {
     const game = newGame(opts);
-    set({ game, slot, tab: 'cour', tabDir: 'none', selectedCounty: undefined });
+    set({ game, slot, tab: 'regne', tabDir: 'none', selectedCounty: undefined });
     await saveGame(slot, game);
   },
   load: async (slot) => {
@@ -216,7 +224,7 @@ export const useStore = create<Store>((set, get) => ({
         set({
           game,
           slot,
-          tab: 'cour',
+          tab: 'regne',
           tabDir: 'none',
           selectedCounty: undefined,
           error: undefined,
@@ -228,7 +236,7 @@ export const useStore = create<Store>((set, get) => ({
   importText: async (slot, text) => {
     try {
       const game = importJson(text);
-      set({ game, slot, tab: 'cour', tabDir: 'none', error: undefined });
+      set({ game, slot, tab: 'regne', tabDir: 'none', error: undefined });
       await saveGame(slot, game);
     } catch (e) {
       set({ error: e instanceof Error ? `Import impossible : ${e.message}` : 'Import impossible' });

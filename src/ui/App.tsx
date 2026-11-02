@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { SEASON_NAMES } from '../data/names';
-import { displayName, opinion } from '../engine/characters';
+import { displayName } from '../engine/characters';
 import { yearOf } from '../engine/context';
-import { wards } from '../engine/diplomacy';
 import { checkAll, effectLabels, eventDef, eventText, renderText } from '../engine/events/engine';
 import { eventSubjects } from '../engine/events/subjects';
-import { capitalOccupied, economyOf, vassalsOf } from '../engine/realm';
+import { economyOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { listSlots, downloadExport, type Slot, type SlotInfo } from '../save/storage';
 import {
@@ -15,7 +14,6 @@ import {
   Segmented,
   Sheet,
   TipLayer,
-  signed,
   useSlideSelect,
 } from './components/common';
 import { AchievementList, DynastyBook, EndingBanner } from './components/Book';
@@ -27,11 +25,12 @@ import { SettingsButton, SettingsSheet } from './components/Settings';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
-import { ChronicleScreen } from './screens/Chronicle';
 import { CourtScreen } from './screens/Court';
-import { IntrigueScreen } from './screens/Intrigue';
+import { ReignScreen } from './screens/Reign';
 import { RealmScreen } from './screens/Realm';
-import { TABS, useStore, type Inspected, type Tab } from './store';
+import { WorldScreen } from './screens/World';
+import { attention, tabBadges, type AttentionItem } from './attention';
+import { TABS, useStore, type Tab } from './store';
 
 export function App() {
   const game = useStore((s) => s.game);
@@ -207,21 +206,22 @@ function Game({ game }: { game: GameState }) {
   const confirmEnd = useStore((s) => s.settings.confirmEnd);
   if (game.gameOver) return <EndScreen game={game} />;
   const endSeason = () => {
-    const items = confirmEnd ? attention(game) : [];
+    const items = confirmEnd ? attention(game).filter((x) => x.endSeason) : [];
     if (items.length) setSummary(items);
     else dispatch({ type: 'endSeason' });
   };
   return (
     <div className="app">
-      <TopBar game={game} onEndSeason={endSeason} />
+      <TopBar game={game} />
       <SwipeScreen key={tab} className={`screen enter-${tabDir}`}>
+        {tab === 'regne' && <ReignScreen game={game} />}
         {tab === 'cour' && <CourtScreen game={game} />}
         {tab === 'royaume' && <RealmScreen game={game} />}
         {tab === 'armee' && <ArmyScreen game={game} />}
-        {tab === 'intrigues' && <IntrigueScreen game={game} />}
-        {tab === 'chronique' && <ChronicleScreen game={game} />}
+        {tab === 'monde' && <WorldScreen game={game} />}
       </SwipeScreen>
-      <TabBar />
+      <EndSeasonBar game={game} onEndSeason={endSeason} />
+      <TabBar game={game} />
       {game.phase !== 'bataille' && <OutcomeToast outcome={game.lastOutcome} />}
       {game.pendingEvents.length > 0 && game.tutorialSeen && game.phase !== 'bataille' && (
         <EventModal game={game} />
@@ -265,80 +265,6 @@ function Game({ game }: { game: GameState }) {
       {game.phase === 'bataille' && game.battle && <BattleScreen game={game} />}
     </div>
   );
-}
-
-/** Où mène le bouton « Voir » d'un point d'attention. */
-type AttentionGo = { inspect: Inspected } | { tab: Tab; view?: string; anchor?: string };
-interface AttentionItem {
-  text: string;
-  label: string;
-  go: AttentionGo;
-}
-
-/** Ce qui demande attention avant la fin de saison. */
-function attention(g: GameState): AttentionItem[] {
-  const res: AttentionItem[] = [];
-  const pl = g.playerId;
-  for (const v of vassalsOf(g, pl)) {
-    const op = opinion(g, v, pl);
-    if (op < -30 || g.characters[v].inFaction)
-      res.push({
-        text: `${g.characters[v].name} est mécontent (opinion ${signed(op)}).`,
-        label: 'Voir sa fiche',
-        go: { inspect: { kind: 'perso', id: v } },
-      });
-  }
-  for (const a of Object.values(g.armies))
-    if (a.ownerId === pl && a.supply < 20)
-      res.push({
-        text: `Votre armée manque de ravitaillement (${Math.round(a.supply)}).`,
-        label: 'Voir l’armée',
-        go: { inspect: { kind: 'armee', id: a.id } },
-      });
-  for (const k of wards(g))
-    if (!k.educatorId && (g.turn - k.birthTurn) / 4 >= 3)
-      res.push({
-        text: `${k.name} n’a pas d’éducateur.`,
-        label: 'Choisir un éducateur',
-        go: { tab: 'cour', view: 'entourage', anchor: 'focus-pupilles' },
-      });
-  const fallen = capitalOccupied(g, pl);
-  if (fallen)
-    res.push({
-      text: `Votre capitale, ${fallen.name}, est occupée : revenus amputés, capitulation possible.`,
-      label: 'Voir la capitale',
-      go: { inspect: { kind: 'comte', id: fallen.id } },
-    });
-  const seatsEmpty = Object.values(g.council).filter((s) => !s.holderId).length;
-  if (seatsEmpty)
-    res.push({
-      text: `${seatsEmpty} siège(s) du conseil vacant(s).`,
-      label: 'Ouvrir le conseil',
-      go: { tab: 'cour', view: 'conseil', anchor: 'focus-conseil' },
-    });
-  const treasury: AttentionGo = { tab: 'royaume', view: 'economie' };
-  if (g.characters[pl].gold < 0)
-    res.push({ text: 'Votre trésor est dans le rouge.', label: 'Voir l’économie', go: treasury });
-  else {
-    const eco = economyOf(g, pl);
-    if (g.characters[pl].gold + eco.goldNet < 0)
-      res.push({
-        text: `Votre trésor passera dans le rouge à la saison prochaine (${Math.round(g.characters[pl].gold)} or, ${eco.goldNet > 0 ? '+' : ''}${Math.round(eco.goldNet)} par saison).`,
-        label: 'Voir l’économie',
-        go: treasury,
-      });
-  }
-  if (
-    (g.candidates ?? []).length &&
-    g.turn % 4 === 0 &&
-    Object.values(g.council).some((s) => !s.holderId)
-  )
-    res.push({
-      text: 'Des candidats de passage sont à la cour et un poste du conseil est vacant.',
-      label: 'Voir les candidats',
-      go: { tab: 'cour', view: 'entourage', anchor: 'focus-candidats' },
-    });
-  return res;
 }
 
 /** Page glissable : glisser horizontalement change de sous-vue, puis d'onglet. */
@@ -478,13 +404,14 @@ const compact = (n: number) => {
   return String(Math.round(n));
 };
 
-function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => void }) {
+function TopBar({ game }: { game: GameState }) {
   const p = game.characters[game.playerId];
   const [detail, setDetail] = useState<'gold' | 'prestige' | 'piety' | null>(null);
   const [debug, setDebug] = useState(false);
   const saving = useStore((s) => s.saving);
   const lines = detail ? game.ledger[detail] : [];
   const labels = { gold: 'Or', prestige: 'Prestige', piety: 'Piété' };
+  const net = Math.round(economyOf(game, game.playerId).goldNet);
   return (
     <>
       <header className="topbar glass">
@@ -492,36 +419,46 @@ function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => voi
         <span className="title" aria-label="Highborn" onContextMenu={(e) => e.preventDefault()}>
           <LongPressTitle onLong={() => setDebug(true)} />
         </span>
-        <button className="res" onClick={() => setDetail('gold')}>
-          <span className="dot" style={{ background: 'var(--gold)' }} />
-          {compact(p.gold)}
-        </button>
-        <button className="res" onClick={() => setDetail('prestige')}>
-          <span
-            className="dot"
-            style={{ background: 'var(--accent)', borderRadius: 3, transform: 'rotate(45deg)' }}
-          />
-          {compact(p.prestige)}
-        </button>
-        <button className="res" onClick={() => setDetail('piety')}>
-          <span className="dot" style={{ background: 'var(--good)' }} />
-          {compact(p.piety)}
+        <span className="topbar-season">
+          <b>{SEASON_NAMES[game.turn % 4]}</b>
+          <span>
+            {yearOf(game)}
+            {saving ? ' ·' : ''}
+          </span>
+        </span>
+        <button className="res" onClick={() => setDetail('gold')} aria-label="Or : détail">
+          <span className="res-v">
+            <span className="dot" style={{ background: 'var(--gold)' }} />
+            {compact(p.gold)}
+          </span>
+          <span className="res-l">
+            or{' '}
+            <b className={net >= 0 ? 'good' : 'bad'}>
+              {net >= 0 ? '+' : '−'}
+              {Math.abs(net)}
+            </b>
+          </span>
         </button>
         <button
-          className="season-btn"
-          onClick={onEndSeason}
-          disabled={game.pendingEvents.length > 0}
-          aria-label="Fin de saison"
+          className="res"
+          onClick={() => setDetail('prestige')}
+          aria-label="Prestige : détail"
         >
-          <span className="s1">
-            {SEASON_NAMES[game.turn % 4]} {yearOf(game)}
-            {saving && ' ·'}
+          <span className="res-v">
+            <span
+              className="dot"
+              style={{ background: 'var(--accent)', borderRadius: 2, transform: 'rotate(45deg)' }}
+            />
+            {compact(p.prestige)}
           </span>
-          <span className="s2">
-            {game.pendingEvents.length > 0
-              ? `${game.pendingEvents.length} événement${game.pendingEvents.length > 1 ? 's' : ''}`
-              : 'Fin de saison ›'}
+          <span className="res-l">prestige</span>
+        </button>
+        <button className="res" onClick={() => setDetail('piety')} aria-label="Piété : détail">
+          <span className="res-v">
+            <span className="dot" style={{ background: 'var(--good)' }} />
+            {compact(p.piety)}
           </span>
+          <span className="res-l">piété</span>
         </button>
       </header>
       {detail && (
@@ -543,6 +480,26 @@ function TopBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => voi
       )}
       {debug && <DebugSheet onClose={() => setDebug(false)} />}
     </>
+  );
+}
+
+/** Bande « Fin de saison », pleine largeur, juste au-dessus des onglets (à portée du pouce). */
+function EndSeasonBar({ game, onEndSeason }: { game: GameState; onEndSeason: () => void }) {
+  const pending = game.pendingEvents.length;
+  const next = SEASON_NAMES[(game.turn + 1) % 4].toLowerCase();
+  const toward = /^[aeéiouh]/.test(next) ? `vers l’${next}` : `vers le ${next}`;
+  return (
+    <button
+      className="endbar"
+      onClick={onEndSeason}
+      disabled={pending > 0}
+      aria-label="Fin de saison"
+    >
+      <span className="endbar-main">
+        {pending > 0 ? `${pending} événement${pending > 1 ? 's' : ''} à régler` : 'Fin de saison'}
+      </span>
+      <span className="endbar-sub">{pending > 0 ? 'avant de finir la saison' : `${toward} ›`}</span>
+    </button>
   );
 }
 
@@ -607,17 +564,17 @@ function DebugSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function TabBar() {
+function TabBar({ game }: { game: GameState }) {
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
   const labels: Record<Tab, string> = {
+    regne: 'Règne',
     cour: 'Cour',
     royaume: 'Royaume',
     armee: 'Armée',
-    intrigues: 'Intrigues',
-    chronique: 'Chronique',
+    monde: 'Monde',
   };
-  const tabs: { id: Tab; label: string }[] = TABS.map((id) => ({ id, label: labels[id] }));
+  const badges = tabBadges(game);
   const { drag, handlers } = useSlideSelect(TABS.length, (i) => setTab(TABS[i]), 5, 0);
   return (
     <nav
@@ -628,17 +585,26 @@ function TabBar() {
       {...handlers}
     >
       <span className="indicator" aria-hidden />
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          className={tab === t.id ? 'active' : ''}
-          aria-current={tab === t.id ? 'page' : undefined}
-          onClick={() => setTab(t.id)}
-        >
-          {Icon[t.id]}
-          {t.label}
-        </button>
-      ))}
+      {TABS.map((id) => {
+        const b = badges[id];
+        return (
+          <button
+            key={id}
+            className={tab === id ? 'active' : ''}
+            aria-current={tab === id ? 'page' : undefined}
+            aria-label={b ? `${labels[id]} (à voir)` : labels[id]}
+            onClick={() => setTab(id)}
+          >
+            {Icon[id]}
+            {labels[id]}
+            {b !== undefined && (
+              <span className={`tab-badge${b === 'dot' ? ' dot' : ''}`} aria-hidden>
+                {b === 'dot' ? '' : b > 9 ? '9+' : b}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 }
@@ -752,11 +718,11 @@ const TUTORIAL = [
   },
   {
     t: 'Les saisons',
-    x: 'Chaque tour est une saison. Réglez les événements, donnez vos ordres, puis touchez « Fin de saison ». La partie est sauvegardée à chaque fin de saison.',
+    x: 'Chaque tour est une saison. Réglez les événements, donnez vos ordres, puis touchez « Fin de saison », en bas de l’écran. La partie est sauvegardée à chaque fin de saison.',
   },
   {
-    t: 'La cour et le royaume',
-    x: 'Choisissez votre conseil et les éducateurs de vos enfants dans l’onglet Cour. Dans Royaume, construisez et ménagez vos vassaux : leur opinion règle leurs impôts et leurs levées.',
+    t: 'Les onglets',
+    x: 'Règne résume la saison et liste ce qui demande votre attention. Cour : votre souverain, votre maison, le conseil et les courtisans. Royaume : la carte, vos terres et vassaux, le trésor, les lois. Armée : troupes et guerres. Monde : les cours voisines, les complots et les nouvelles.',
   },
   {
     t: 'La guerre',

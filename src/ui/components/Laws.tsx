@@ -7,7 +7,7 @@ import { heirUnderLaw, lawCheck, reformCheck, reformsFrom } from '../../engine/l
 import type { GameState, SuccessionLaw } from '../../engine/state';
 import { useStore } from '../store';
 import { AgnaticLaw } from './Crowns';
-import { CharLink, Sheet } from './common';
+import { CharLink } from './common';
 
 const pct = (x: number) => `${x > 0 ? '+' : ''}${Math.round(x * 100)} %`;
 const LAW_ORDER: SuccessionLaw[] = [
@@ -29,7 +29,8 @@ export function governmentEffects(id: keyof typeof GOVERNMENTS): string {
   return parts.join(' · ') || 'ni bonus ni malus';
 }
 
-export function LawsSheet({ game, onClose }: { game: GameState; onClose: () => void }) {
+/** Gouvernement et loi de succession du joueur (Royaume › Lois). */
+export function LawsBody({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const pl = game.playerId;
   const p = game.characters[pl];
@@ -39,11 +40,9 @@ export function LawsSheet({ game, onClose }: { game: GameState; onClose: () => v
   const ballot = p.successionLaw === 'elective' ? electionResults(game, p, heirsOf(game, p)) : [];
   const since = p.lawChangedTurn !== undefined ? game.turn - p.lawChangedTurn : undefined;
   return (
-    <Sheet onClose={onClose}>
-      <h2>Lois et gouvernement</h2>
-
-      <h3 className="settings-title">Gouvernement</h3>
-      <div className="settings-group trade-box">
+    <>
+      <div className="card">
+        <h3>Gouvernement</h3>
         <b>{gov.name}</b>
         <p className="small" style={{ margin: '4px 0' }}>
           {gov.description}
@@ -78,8 +77,8 @@ export function LawsSheet({ game, onClose }: { game: GameState; onClose: () => v
         })}
       </div>
 
-      <h3 className="settings-title">Loi de succession</h3>
-      <div className="settings-group trade-box">
+      <div className="card">
+        <h3>Loi de succession</h3>
         <p className="small muted" style={{ margin: '0 0 6px' }}>
           Changer de loi coûte du prestige, irrite vos vassaux, et ne peut se refaire avant{' '}
           {LAW_COOLDOWN / 4} ans
@@ -146,6 +145,6 @@ export function LawsSheet({ game, onClose }: { game: GameState; onClose: () => v
         )}
         <AgnaticLaw game={game} />
       </div>
-    </Sheet>
+    </>
   );
 }

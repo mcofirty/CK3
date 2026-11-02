@@ -1,55 +1,52 @@
 import { useState } from 'react';
 import { BALANCE } from '../../data/balance';
-import {
-  ageOf,
-  allied,
-  atWar,
-  closeFamily,
-  displayName,
-  isAdult,
-  topLiege,
-} from '../../engine/characters';
-import {
-  allianceAcceptance,
-  marriageAcceptance,
-  marriageCandidates,
-  tributeAcceptance,
-} from '../../engine/diplomacy';
+import { ageOf, allied, atWar, displayName } from '../../engine/characters';
+import { allianceAcceptance, tributeAcceptance } from '../../engine/diplomacy';
 import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
 import { capitalOf, independentRulers, realmCounties, realmName } from '../../engine/realm';
-import type { Character, GameState, PlotType } from '../../engine/state';
+import type { GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
-import { CharLine, Opinion, Portrait, Segmented, Sheet, usePager } from '../components/common';
-import { DECISIONS } from '../../data/decisions';
+import {
+  CardTitle,
+  CharLine,
+  ChoiceGrid,
+  Opinion,
+  Portrait,
+  Segmented,
+  Sheet,
+  useFocusView,
+  usePager,
+} from '../components/common';
 import { PoachCard } from '../components/Entourage';
 import { AcceptanceView } from '../components/Diplomacy';
-import { MarriageClauses, PactsCard } from '../components/Crowns';
-import { hasFamilyPact, type MarriageClause } from '../../engine/crowns';
-import { NewsList, newsAbout } from '../components/News';
-import { decisionCheck } from '../../engine/decisions';
+import { PactsCard } from '../components/Crowns';
+import { hasFamilyPact } from '../../engine/crowns';
+import { NewsList, WorldNews, newsAbout } from '../components/News';
 import { useStore } from '../store';
 
-const INTRIGUE_VIEWS = ['diplomatie', 'complots', 'decisions'] as const;
+const WORLD_VIEWS = ['cours', 'complots', 'nouvelles'] as const;
+type WorldView = (typeof WORLD_VIEWS)[number];
 
-export function IntrigueScreen({ game }: { game: GameState }) {
-  const [view, setView] = useState<'diplomatie' | 'complots' | 'decisions'>('diplomatie');
-  const dir = usePager(INTRIGUE_VIEWS, view, setView);
+export function WorldScreen({ game }: { game: GameState }) {
+  const [view, setView] = useState<WorldView>('cours');
+  const dir = usePager(WORLD_VIEWS, view, setView);
+  useFocusView(WORLD_VIEWS, setView);
   return (
     <>
       <Segmented
-        style={{ marginBottom: 12 }}
+        className="subnav"
         options={[
-          { value: 'diplomatie', label: 'Diplomatie' },
+          { value: 'cours', label: 'Cours' },
           { value: 'complots', label: 'Complots' },
-          { value: 'decisions', label: 'Décisions' },
+          { value: 'nouvelles', label: 'Nouvelles' },
         ]}
         value={view}
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
-        {view === 'diplomatie' && <Diplomacy game={game} />}
+        {view === 'cours' && <Diplomacy game={game} />}
         {view === 'complots' && <Plots game={game} />}
-        {view === 'decisions' && <Decisions game={game} />}
+        {view === 'nouvelles' && <WorldNews game={game} />}
       </div>
     </>
   );
@@ -58,12 +55,12 @@ export function IntrigueScreen({ game }: { game: GameState }) {
 function Diplomacy({ game }: { game: GameState }) {
   const pl = game.playerId;
   const [open, setOpen] = useState<string | null>(null);
-  const [marriage, setMarriage] = useState(false);
+  const goTo = useStore((s) => s.goTo);
   const rulers = independentRulers(game).filter((r) => r !== pl);
   return (
     <>
       <div className="card">
-        <h3>Cours voisines</h3>
+        <CardTitle>Cours voisines</CardTitle>
         {rulers.map((r) => {
           const c = game.characters[r];
           const rel = atWar(game, pl, r)
@@ -90,11 +87,10 @@ function Diplomacy({ game }: { game: GameState }) {
           );
         })}
       </div>
-      <button className="btn block" onClick={() => setMarriage(true)}>
-        Arranger un mariage
+      <button className="btn block" onClick={() => goTo('cour', 'maison')}>
+        Arranger un mariage (Cour › Maison) ›
       </button>
       {open && <RulerSheet game={game} id={open} onClose={() => setOpen(null)} />}
-      {marriage && <MarriageSheet game={game} onClose={() => setMarriage(false)} />}
     </>
   );
 }
@@ -136,7 +132,8 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
       >
         Fiche du royaume (succession, influence) ›
       </button>
-      <div className="card" style={{ marginTop: 12 }}>
+      <h3 className="settings-title">Relations</h3>
+      <div className="card">
         <b>Envoyer un cadeau ({gift} or)</b>
         <p className="small muted">+{BALANCE.economy.giftOpinion} d’opinion pendant 4 ans.</p>
         <button
@@ -182,18 +179,6 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
         </div>
       )}
       <div className="card">
-        <b>Traité de terres</b>
-        <p className="small muted" style={{ margin: '4px 0 8px' }}>
-          Acheter, vendre ou échanger des comtés, avec de l’or de part et d’autre.
-        </p>
-        <button className="btn small" onClick={() => setTradeWith({ targetId: id })}>
-          Négocier
-        </button>
-      </div>
-      <PactsCard game={game} rulerId={id} />
-      <PoachCard game={game} rulerId={id} />
-      <RulerNews game={game} id={id} />
-      <div className="card">
         <b>Réclamer un tribut ({BALANCE.diplomacy.tribute.amount} or)</b>
         <AcceptanceView acc={tribute} />
         <button
@@ -205,6 +190,20 @@ function RulerSheet({ game, id, onClose }: { game: GameState; id: string; onClos
           Exiger
         </button>
       </div>
+      <h3 className="settings-title">Accords</h3>
+      <div className="card">
+        <b>Traité de terres</b>
+        <p className="small muted" style={{ margin: '4px 0 8px' }}>
+          Acheter, vendre ou échanger des comtés, avec de l’or de part et d’autre.
+        </p>
+        <button className="btn small" onClick={() => setTradeWith({ targetId: id })}>
+          Négocier
+        </button>
+      </div>
+      <PactsCard game={game} rulerId={id} />
+      <h3 className="settings-title">Sa cour</h3>
+      <PoachCard game={game} rulerId={id} />
+      <RulerNews game={game} id={id} />
     </Sheet>
   );
 }
@@ -220,91 +219,9 @@ function RulerNews({ game, id }: { game: GameState; id: string }) {
   );
 }
 
-function MarriageSheet({ game, onClose }: { game: GameState; onClose: () => void }) {
-  const dispatch = useStore((s) => s.dispatch);
-  const p = game.characters[game.playerId];
-  const singles = [p, ...closeFamily(game, p)].filter(
-    (c) => !c.spouseId && isAdult(game, c) && c.dynastyId === game.playerDynastyId,
-  );
-  const [who, setWho] = useState<Character | null>(singles[0] ?? null);
-  const [target, setTarget] = useState<Character | null>(null);
-  const [clause, setClause] = useState<MarriageClause>('aucune');
-  const [dowry, setDowry] = useState(0);
-  const cands = who ? marriageCandidates(game, who) : [];
-  return (
-    <Sheet onClose={onClose}>
-      <h2>Arranger un mariage</h2>
-      <p className="small muted">
-        Un mariage crée un lien entre les cours et permet ensuite une alliance. Épouser un souverain
-        ou son enfant augmente la renommée.
-      </p>
-      {singles.length === 0 && <p className="muted">Personne à marier dans votre famille.</p>}
-      {singles.length > 0 && (
-        <select
-          className="select"
-          style={{ width: '100%' }}
-          value={who?.id ?? ''}
-          onChange={(e) => {
-            setWho(game.characters[e.target.value]);
-            setTarget(null);
-          }}
-        >
-          {singles.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.id === p.id ? ' (vous)' : ''}
-            </option>
-          ))}
-        </select>
-      )}
-      {who &&
-        !target &&
-        cands.map((c) => (
-          <CharLine
-            key={c.id}
-            state={game}
-            c={c}
-            onTap={() => setTarget(c)}
-            extra={<>cour de {game.characters[topLiege(game, c.id)]?.name}</>}
-          />
-        ))}
-      {who && target && (
-        <div className="card" style={{ marginTop: 10 }}>
-          <b>
-            {who.name} ⚭ {displayName(game, target)}
-          </b>
-          <MarriageClauses
-            clause={clause}
-            dowry={dowry}
-            maxGold={Math.max(0, Math.floor(game.characters[game.playerId].gold / 10) * 10)}
-            onChange={(c, d) => {
-              setClause(c);
-              setDowry(d);
-            }}
-          />
-          <AcceptanceView acc={marriageAcceptance(game, who, target, clause, dowry)} />
-          <div className="row" style={{ marginTop: 8 }}>
-            <button className="btn small ghost" onClick={() => setTarget(null)}>
-              Autre parti
-            </button>
-            <button
-              className="btn small primary right"
-              onClick={() => {
-                dispatch({ type: 'proposeMarriage', aId: who.id, bId: target.id, clause, dowry });
-                onClose();
-              }}
-            >
-              Proposer
-            </button>
-          </div>
-        </div>
-      )}
-    </Sheet>
-  );
-}
-
 function Plots({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
+  const goTo = useStore((s) => s.goTo);
   const pl = game.playerId;
   const mine = Object.values(game.plots).find((p) => p.ownerId === pl);
   const [type, setType] = useState<PlotType>('discrediter');
@@ -363,8 +280,8 @@ function Plots({ game }: { game: GameState }) {
       )}
       {!mine && (
         <div className="card">
-          <h3>Ourdir un complot</h3>
-          <Segmented
+          <CardTitle>Ourdir un complot</CardTitle>
+          <ChoiceGrid
             options={(Object.keys(PLOT_INFO) as PlotType[]).map((t) => ({
               value: t,
               label: PLOT_INFO[t].label,
@@ -423,11 +340,14 @@ function Plots({ game }: { game: GameState }) {
         </div>
       )}
       <div className="card">
-        <h3>Complots contre vous</h3>
-        <p className="small muted">
-          Votre maître-espion, chargé de « Démasquer les complots », peut les découvrir. Les
-          complots démasqués apparaissent sous forme d’événement.
-        </p>
+        <CardTitle help="Votre maître-espion, chargé de « Démasquer les complots », peut les découvrir. Les complots démasqués apparaissent sous forme d’événement.">
+          Complots contre vous
+        </CardTitle>
+        {!game.council.espion?.holderId && (
+          <button className="link" onClick={() => goTo('cour', 'conseil')}>
+            Aucun maître-espion pour les démasquer : nommer quelqu’un ›
+          </button>
+        )}
         {game.notifications
           .filter((n) => /complot|attentat|rumeurs/i.test(n.text))
           .slice(-5)
@@ -438,48 +358,5 @@ function Plots({ game }: { game: GameState }) {
           ))}
       </div>
     </>
-  );
-}
-
-function Decisions({ game }: { game: GameState }) {
-  const dispatch = useStore((s) => s.dispatch);
-  return (
-    <div className="card">
-      <h3>Décisions</h3>
-      <p className="small muted">
-        Agissez au lieu d’attendre : chaque décision ouvre un événement, puis revient après un
-        délai.
-      </p>
-      {DECISIONS.map((d) => {
-        const chk = decisionCheck(game, d.id);
-        const cost = [
-          d.cost.or ? `${d.cost.or} or` : '',
-          d.cost.prestige ? `${d.cost.prestige} prestige` : '',
-          d.cost.piete ? `${d.cost.piete} piété` : '',
-        ]
-          .filter(Boolean)
-          .join(', ');
-        return (
-          <div key={d.id} className="list-item decision">
-            <span className="dec-icon">{d.icon}</span>
-            <div className="grow">
-              <b>{d.name}</b>
-              <div className="small">{d.description}</div>
-              <div className="small muted">
-                {cost} · tous les {d.cooldownYears} an{d.cooldownYears > 1 ? 's' : ''}
-                {!chk.ok && chk.reason && <span className="bad"> · {chk.reason}</span>}
-              </div>
-            </div>
-            <button
-              className="btn small primary"
-              disabled={!chk.ok}
-              onClick={() => dispatch({ type: 'takeDecision', id: d.id })}
-            >
-              Agir
-            </button>
-          </div>
-        );
-      })}
-    </div>
   );
 }

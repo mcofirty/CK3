@@ -1,5 +1,7 @@
+/** Onglet Royaume : la carte, les terres et vassaux, le trésor, les lois et la succession. */
 import { demesneLimit, heldCounties, opinion } from '../../engine/characters';
 import {
+  canCreateTitle,
   realmCounties,
   realmName,
   titleOf,
@@ -9,6 +11,7 @@ import {
 import type { GameState } from '../../engine/state';
 import { useState } from 'react';
 import {
+  CardTitle,
   CharLine,
   CountyLink,
   Opinion,
@@ -16,49 +19,72 @@ import {
   usePager,
   useFocusView,
 } from '../components/common';
-import { EconomyView } from '../components/Economy';
+import { ClaimsCard, UnionsCard } from '../components/Crowns';
+import { TaxesCard, TreasuryView } from '../components/Economy';
+import { LawsBody } from '../components/Laws';
 import { MapView, playerColor } from '../components/MapView';
+import { SuccessionSection } from '../components/RealmSheet';
 import { useStore } from '../store';
 
-const REALM_VIEWS = ['carte', 'economie'] as const;
+const REALM_VIEWS = ['carte', 'domaine', 'tresor', 'lois'] as const;
+type RealmView = (typeof REALM_VIEWS)[number];
 
 export function RealmScreen({ game }: { game: GameState }) {
-  const [view, setView] = useState<(typeof REALM_VIEWS)[number]>('carte');
+  const [view, setView] = useState<RealmView>('carte');
   const dir = usePager(REALM_VIEWS, view, setView);
   useFocusView(REALM_VIEWS, setView);
   return (
     <>
       <Segmented
-        style={{ marginBottom: 12 }}
+        className="subnav"
         options={[
           { value: 'carte', label: 'Carte' },
-          { value: 'economie', label: 'Économie' },
+          { value: 'domaine', label: 'Domaine' },
+          { value: 'tresor', label: 'Trésor' },
+          { value: 'lois', label: 'Lois' },
         ]}
         value={view}
         onChange={setView}
       />
       <div className={`view enter-${dir}`} key={view}>
-        {view === 'carte' ? <MapAndRealm game={game} /> : <EconomyView game={game} />}
+        {view === 'carte' && <MapPane game={game} />}
+        {view === 'domaine' && <DomainView game={game} />}
+        {view === 'tresor' && <TreasuryView game={game} />}
+        {view === 'lois' && <LawsView game={game} />}
       </div>
     </>
   );
 }
 
-function MapAndRealm({ game }: { game: GameState }) {
+/** La carte seule, sur toute la hauteur disponible. */
+function MapPane({ game }: { game: GameState }) {
   const selected = useStore((s) => s.selectedCounty);
   const inspect = useStore((s) => s.inspect);
+  return (
+    <MapView
+      game={game}
+      selected={selected}
+      onSelect={(id) => inspect({ kind: 'comte', id })}
+      onArmy={(id) => inspect({ kind: 'armee', id })}
+    />
+  );
+}
+
+/** Les terres : résumé du royaume, impôts et comtés, vassaux, titres à fonder. */
+function DomainView({ game }: { game: GameState }) {
+  const dispatch = useStore((s) => s.dispatch);
   const pl = game.playerId;
+  const p = game.characters[pl];
   const own = heldCounties(game, pl);
   const vassals = vassalsOf(game, pl);
   const realm = realmCounties(game, pl);
+  const titles = [...Object.values(game.duchies), ...Object.values(game.kingdoms)]
+    .filter((t) => !t.holderId)
+    .map((t) => ({ t, chk: canCreateTitle(game, p.id, t.id), kingdom: 'duchies' in t }))
+    .filter((x) => x.chk.share > 0)
+    .sort((a, b) => b.chk.share - a.chk.share);
   return (
     <>
-      <MapView
-        game={game}
-        selected={selected}
-        onSelect={(id) => inspect({ kind: 'comte', id })}
-        onArmy={(id) => inspect({ kind: 'armee', id })}
-      />
       <div className="card">
         <div className="row">
           <span className="swatch lg" style={{ background: playerColor(game) }} />
@@ -76,8 +102,9 @@ function MapAndRealm({ game }: { game: GameState }) {
           ))}
         </div>
       </div>
-      <div className="card">
-        <h3>Vassaux</h3>
+      <TaxesCard game={game} />
+      <div className="card" id="focus-vassaux">
+        <CardTitle extra={vassals.length ? String(vassals.length) : undefined}>Vassaux</CardTitle>
         {vassals.length === 0 && <p className="muted">Aucun vassal.</p>}
         {vassals.map((v) => {
           const c = game.characters[v];
@@ -98,6 +125,44 @@ function MapAndRealm({ game }: { game: GameState }) {
           );
         })}
       </div>
+      {titles.length > 0 && (
+        <div className="card">
+          <CardTitle>Titres à fonder</CardTitle>
+          {titles.map(({ t, chk, kingdom }) => (
+            <div key={t.id} className="list-item">
+              <div className="grow">
+                <b>
+                  {kingdom ? 'Royaume' : 'Duché'} de {t.name}
+                </b>
+                <div className="small muted">
+                  {chk.ok ? `${chk.prestige} prestige, ${chk.gold} or` : chk.reasons.join(' · ')}
+                </div>
+              </div>
+              <button
+                className="btn small primary"
+                disabled={!chk.ok}
+                onClick={() => dispatch({ type: 'createTitle', titleId: t.id })}
+              >
+                Fonder
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Tout ce qui répond à « qui me succède ? » : gouvernement, loi, ligne, couronnes, droits. */
+function LawsView({ game }: { game: GameState }) {
+  return (
+    <>
+      <LawsBody game={game} />
+      <div className="card">
+        <SuccessionSection game={game} id={game.playerId} />
+      </div>
+      <UnionsCard game={game} />
+      <ClaimsCard game={game} />
     </>
   );
 }

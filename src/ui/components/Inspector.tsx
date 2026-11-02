@@ -43,7 +43,17 @@ import { armyUpkeep, totalMen } from '../../engine/units';
 import { armyOf, findPath, militaryStrength, truceWith } from '../../engine/war';
 import { useStore } from '../store';
 import { houseColorOf } from '../../engine/heraldry';
-import { Bar, CharLine, CharLink, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
+import {
+  Bar,
+  CharLine,
+  CharLink,
+  CoatOfArms,
+  CountyLink,
+  Portrait,
+  Segmented,
+  Sheet,
+  signed,
+} from './common';
 import { realmColor, visibleMen } from './MapView';
 import { PerkTree, RecordLine, RelationsList, StressGauge } from './Progression';
 import { CountyEconomy } from './Economy';
@@ -79,8 +89,12 @@ export function Inspector({ game }: { game: GameState }) {
         </span>
       </div>
       {!valid && <p className="muted">Cet élément n’existe plus.</p>}
-      {valid && top.kind === 'perso' && <CharacterDetail game={game} id={top.id} />}
-      {valid && top.kind === 'comte' && <CountyDetail game={game} id={top.id} />}
+      {valid && top.kind === 'perso' && (
+        <CharacterDetail key={`${top.id}:${top.tab ?? ''}`} game={game} id={top.id} tab={top.tab} />
+      )}
+      {valid && top.kind === 'comte' && (
+        <CountyDetail key={`${top.id}:${top.tab ?? ''}`} game={game} id={top.id} tab={top.tab} />
+      )}
       {valid && top.kind === 'armee' && <ArmyDetail game={game} id={top.id} />}
     </Sheet>
   );
@@ -99,7 +113,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // Personnage
 // ---------------------------------------------------------------------------
 
-function CharacterDetail({ game, id }: { game: GameState; id: string }) {
+type CharTab = 'apercu' | 'talents' | 'famille' | 'terres';
+
+function CharacterDetail({
+  game,
+  id,
+  tab: initial,
+}: {
+  game: GameState;
+  id: string;
+  tab?: string;
+}) {
+  const [tab, setTab] = useState<CharTab>(
+    ['apercu', 'talents', 'famille', 'terres'].includes(initial ?? '')
+      ? (initial as CharTab)
+      : 'apercu',
+  );
   const setRealmSheet = useStore((s) => s.setRealmSheet);
   const inspectClose = useStore((s) => s.inspectClose);
   const c = game.characters[id];
@@ -142,6 +171,8 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
   if (c.hostageOf) status.push(`Otage de ${game.characters[c.hostageOf]?.name ?? '—'}`);
   if (seat) status.push(COUNCIL_INFO[seat].label);
   const eco = independent || liege ? economyOf(game, id) : undefined;
+  const hasLands =
+    independent || counties.length > 0 || c.claims.length > 0 || (!!eco && id === pl);
 
   return (
     <>
@@ -178,7 +209,19 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </button>
       )}
 
-      {c.alive && (
+      <Segmented<CharTab>
+        style={{ margin: '12px 0 4px' }}
+        options={[
+          { value: 'apercu', label: 'Aperçu' },
+          { value: 'talents', label: 'Talents' },
+          { value: 'famille', label: 'Famille' },
+          ...(hasLands ? [{ value: 'terres' as const, label: 'Terres' }] : []),
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
+
+      {tab === 'apercu' && c.alive && (
         <div className="row small" style={{ margin: '10px 0 2px' }}>
           <span className="muted">Santé</span>
           <b className={health < 35 ? 'bad' : health > 70 ? 'good' : ''}>
@@ -186,83 +229,93 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
           </b>
         </div>
       )}
-      {c.alive && (
+      {tab === 'apercu' && c.alive && (
         <Bar value={health} max={100} color={health < 35 ? 'var(--bad)' : 'var(--good)'} />
       )}
 
-      <Section title="Compétences">
-        <div className="skills">
-          {SKILL_KEYS.map((k) => (
-            <div key={k}>
-              <b>{skill(c, k)}</b>
-              <span>{SKILL_LABELS[k]}</span>
-            </div>
-          ))}
-        </div>
-      </Section>
+      {tab === 'apercu' && (
+        <Section title="Compétences">
+          <div className="skills">
+            {SKILL_KEYS.map((k) => (
+              <div key={k}>
+                <b>{skill(c, k)}</b>
+                <span>{SKILL_LABELS[k]}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
-      {c.alive && c.dynastyId === game.playerDynastyId && isAdult(game, c) && (
-        <Section title="Arbre de compétences">
+      {tab === 'talents' && c.alive && c.dynastyId === game.playerDynastyId && isAdult(game, c) && (
+        <Section title="Arbre de talents">
           <PerkTree game={game} c={c} />
         </Section>
       )}
-      {c.alive && c.dynastyId !== game.playerDynastyId && (c.perks?.length ?? 0) > 0 && (
-        <Section title="Talents">
-          <p className="small">{(c.perks ?? []).map((x) => PERKS[x]?.name).join(' · ')}</p>
-        </Section>
-      )}
-      {c.alive && (c.stress ?? 0) > 0 && (
+      {tab === 'talents' &&
+        c.alive &&
+        c.dynastyId !== game.playerDynastyId &&
+        (c.perks?.length ?? 0) > 0 && (
+          <Section title="Talents">
+            <p className="small">{(c.perks ?? []).map((x) => PERKS[x]?.name).join(' · ')}</p>
+          </Section>
+        )}
+      {tab === 'talents' && c.alive && (c.stress ?? 0) > 0 && (
         <Section title="Esprit">
           <StressGauge c={c} />
         </Section>
       )}
-      <Section title="Relations et faits d’armes">
-        <RelationsList game={game} c={c} />
-        <RecordLine c={c} />
-      </Section>
+      {tab === 'talents' && (
+        <Section title="Relations et faits d’armes">
+          <RelationsList game={game} c={c} />
+          <RecordLine c={c} />
+        </Section>
+      )}
 
-      <Section title="Traits">
-        {c.traits.length === 0 && <p className="muted small">Aucun trait marquant.</p>}
-        <div className="trait-list">
-          {c.traits.map((t) => {
-            const d = TRAITS[t];
-            if (!d) return null;
-            const mods = Object.entries(d.skills ?? {}).map(
-              ([k, v]) => `${SKILL_LABELS[k as keyof typeof SKILL_LABELS]} ${signed(v as number)}`,
-            );
-            if (d.health) mods.push(`Santé ${signed(d.health)}`);
-            if (d.vassalOpinion) mods.push(`Vassaux ${signed(d.vassalOpinion)}`);
-            const cat = {
-              personnalite: 'Personnalité',
-              education: 'Éducation',
-              hereditaire: 'Héréditaire',
-              acquis: 'Acquis',
-            }[d.category];
-            return (
-              <div key={t} className={`trait-row cat-${d.category}`}>
-                <div className="row">
-                  <b>{d.name}</b>
-                  <span className="muted small right">{cat}</span>
+      {tab === 'apercu' && (
+        <Section title="Traits">
+          {c.traits.length === 0 && <p className="muted small">Aucun trait marquant.</p>}
+          <div className="trait-list">
+            {c.traits.map((t) => {
+              const d = TRAITS[t];
+              if (!d) return null;
+              const mods = Object.entries(d.skills ?? {}).map(
+                ([k, v]) =>
+                  `${SKILL_LABELS[k as keyof typeof SKILL_LABELS]} ${signed(v as number)}`,
+              );
+              if (d.health) mods.push(`Santé ${signed(d.health)}`);
+              if (d.vassalOpinion) mods.push(`Vassaux ${signed(d.vassalOpinion)}`);
+              const cat = {
+                personnalite: 'Personnalité',
+                education: 'Éducation',
+                hereditaire: 'Héréditaire',
+                acquis: 'Acquis',
+              }[d.category];
+              return (
+                <div key={t} className={`trait-row cat-${d.category}`}>
+                  <div className="row">
+                    <b>{d.name}</b>
+                    <span className="muted small right">{cat}</span>
+                  </div>
+                  <div className="small">{d.description}</div>
+                  {mods.length > 0 && <div className="small muted">{mods.join(' · ')}</div>}
                 </div>
-                <div className="small">{d.description}</div>
-                {mods.length > 0 && <div className="small muted">{mods.join(' · ')}</div>}
-              </div>
-            );
-          })}
-        </div>
-      </Section>
+              );
+            })}
+          </div>
+        </Section>
+      )}
 
-      {c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
+      {tab === 'apercu' && c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
         <CourtActionsSection game={game} c={c} />
       )}
 
-      {c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
+      {tab === 'apercu' && c.alive && id !== pl && c.dynastyId !== game.playerDynastyId && (
         <Section title="Comploter">
           <PlotActions game={game} id={id} />
         </Section>
       )}
 
-      {op && (
+      {tab === 'apercu' && op && (
         <Section title={`Opinion envers vous : ${signed(op.total)}`}>
           <div className="reasons">
             {op.reasons.map((r, i) => (
@@ -282,7 +335,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {(independent || counties.length > 0) && (
+      {tab === 'terres' && (independent || counties.length > 0) && (
         <Section title="Terres et titres">
           {titles.map((t) => (
             <div key={t} className="small">
@@ -305,7 +358,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {eco && (id === pl || independent) && (
+      {tab === 'terres' && eco && (id === pl || independent) && (
         <Section title="Trésor">
           <dl className="kv">
             <dt>Or</dt>
@@ -320,7 +373,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {c.claims.length > 0 && (
+      {tab === 'terres' && c.claims.length > 0 && (
         <Section title="Revendications">
           <div className="row wrap" style={{ gap: 4 }}>
             {c.claims.map((k) => (
@@ -330,7 +383,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {(c.houseClaims?.length ?? 0) > 0 && c.alive && (
+      {tab === 'famille' && (c.houseClaims?.length ?? 0) > 0 && c.alive && (
         <Section title="Droits par le sang">
           {c.houseClaims!.map((h) => {
             const info = claimInfo(game, c.id, h);
@@ -355,7 +408,7 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {age < BALANCE.characters.adulthood && c.alive && (
+      {tab === 'famille' && age < BALANCE.characters.adulthood && c.alive && (
         <Section title="Éducation">
           <p className="small">
             {c.educatorId ? (
@@ -371,25 +424,27 @@ function CharacterDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      <Section title="Famille">
-        {parents.map((p) => (
-          <CharLine key={p.id} state={game} c={p} extra={p.female ? 'mère' : 'père'} />
-        ))}
-        {spouse && <CharLine state={game} c={spouse} extra={c.female ? 'époux' : 'épouse'} />}
-        {kids.map((k) => (
-          <CharLine key={k.id} state={game} c={k} extra={k.female ? 'fille' : 'fils'} />
-        ))}
-        {siblings.slice(0, 6).map((k) => (
-          <CharLine key={k.id} state={game} c={k} extra={k.female ? 'sœur' : 'frère'} />
-        ))}
-        {!parents.length && !spouse && !kids.length && !siblings.length && (
-          <p className="muted small">Aucune famille connue.</p>
-        )}
-        {c.alive && !spouse && age >= 16 && <p className="small muted">Célibataire.</p>}
-        {c.alive && livingChildren(game, c).length === 0 && kids.length > 0 && (
-          <p className="small muted">Aucun enfant vivant.</p>
-        )}
-      </Section>
+      {tab === 'famille' && (
+        <Section title="Famille">
+          {parents.map((p) => (
+            <CharLine key={p.id} state={game} c={p} extra={p.female ? 'mère' : 'père'} />
+          ))}
+          {spouse && <CharLine state={game} c={spouse} extra={c.female ? 'époux' : 'épouse'} />}
+          {kids.map((k) => (
+            <CharLine key={k.id} state={game} c={k} extra={k.female ? 'fille' : 'fils'} />
+          ))}
+          {siblings.slice(0, 6).map((k) => (
+            <CharLine key={k.id} state={game} c={k} extra={k.female ? 'sœur' : 'frère'} />
+          ))}
+          {!parents.length && !spouse && !kids.length && !siblings.length && (
+            <p className="muted small">Aucune famille connue.</p>
+          )}
+          {c.alive && !spouse && age >= 16 && <p className="small muted">Célibataire.</p>}
+          {c.alive && livingChildren(game, c).length === 0 && kids.length > 0 && (
+            <p className="small muted">Aucun enfant vivant.</p>
+          )}
+        </Section>
+      )}
     </>
   );
 }
@@ -415,7 +470,14 @@ function terrainEffects(t: keyof typeof TERRAINS): string[] {
   return fx;
 }
 
-function CountyDetail({ game, id }: { game: GameState; id: string }) {
+type CountyTab = 'apercu' | 'economie' | 'batiments' | 'terrain';
+
+function CountyDetail({ game, id, tab: initial }: { game: GameState; id: string; tab?: string }) {
+  const [tab, setTab] = useState<CountyTab>(
+    ['apercu', 'economie', 'batiments', 'terrain'].includes(initial ?? '')
+      ? (initial as CountyTab)
+      : 'apercu',
+  );
   const dispatch = useStore((s) => s.dispatch);
   const inspect = useStore((s) => s.inspect);
   const [grant, setGrant] = useState(false);
@@ -459,135 +521,153 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
         </div>
       </div>
 
-      <Section title="Seigneurie">
-        <dl className="kv">
-          <dt>Titulaire</dt>
-          <dd>
-            <CharLink state={game} id={holder?.id} />
-          </dd>
-          {ruler !== c.holderId && (
-            <>
-              <dt>Suzerain</dt>
-              <dd>
-                <CharLink state={game} id={ruler} />
-              </dd>
-            </>
-          )}
-          <dt>Royaume</dt>
-          <dd>
-            <button
-              className="link"
-              onClick={() => {
-                inspectClose();
-                setRealmSheet(ruler);
-              }}
-            >
-              {realmName(game, ruler)}
-            </button>
-          </dd>
-          <dt>Duché</dt>
-          <dd>
-            {duchy.name}
-            {duchy.holderId ? (
+      <Segmented<CountyTab>
+        style={{ margin: '12px 0 4px' }}
+        options={[
+          { value: 'apercu', label: 'Aperçu' },
+          { value: 'economie', label: 'Économie' },
+          { value: 'batiments', label: 'Bâtiments' },
+          { value: 'terrain', label: 'Terrain' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
+
+      {tab === 'apercu' && (
+        <Section title="Seigneurie">
+          <dl className="kv">
+            <dt>Titulaire</dt>
+            <dd>
+              <CharLink state={game} id={holder?.id} />
+            </dd>
+            {ruler !== c.holderId && (
               <>
-                {' '}
-                (<CharLink state={game} id={duchy.holderId} />)
+                <dt>Suzerain</dt>
+                <dd>
+                  <CharLink state={game} id={ruler} />
+                </dd>
               </>
-            ) : (
-              ' (vacant)'
             )}
-          </dd>
-          {c.occupation && (
-            <>
-              <dt>Occupé par</dt>
-              <dd className="bad">
-                <CharLink state={game} id={c.occupation.byRulerId} />
-              </dd>
-            </>
+            <dt>Royaume</dt>
+            <dd>
+              <button
+                className="link"
+                onClick={() => {
+                  inspectClose();
+                  setRealmSheet(ruler);
+                }}
+              >
+                {realmName(game, ruler)}
+              </button>
+            </dd>
+            <dt>Duché</dt>
+            <dd>
+              {duchy.name}
+              {duchy.holderId ? (
+                <>
+                  {' '}
+                  (<CharLink state={game} id={duchy.holderId} />)
+                </>
+              ) : (
+                ' (vacant)'
+              )}
+            </dd>
+            {c.occupation && (
+              <>
+                <dt>Occupé par</dt>
+                <dd className="bad">
+                  <CharLink state={game} id={c.occupation.byRulerId} />
+                </dd>
+              </>
+            )}
+          </dl>
+          {holder && holder.id !== pl && (
+            <div className="row small" style={{ marginTop: 6 }}>
+              <span className="grow muted">Opinion de {holder.name} envers vous</span>
+              <b>{signed(opinionOf(game, holder.id, pl).total)}</b>
+            </div>
           )}
-        </dl>
-        {holder && holder.id !== pl && (
-          <div className="row small" style={{ marginTop: 6 }}>
-            <span className="grow muted">Opinion de {holder.name} envers vous</span>
-            <b>{signed(opinionOf(game, holder.id, pl).total)}</b>
+        </Section>
+      )}
+
+      {tab === 'apercu' && <CapitalSection game={game} c={c} />}
+
+      {tab === 'economie' && (
+        <Section title="Économie et défense">
+          <div className="small muted">
+            Développement {c.development} / {countyDevMax(c)}
           </div>
-        )}
-      </Section>
+          <Bar value={c.development} max={countyDevMax(c)} color="var(--gold)" />
+          <dl className="kv" style={{ marginTop: 8 }}>
+            <dt>Revenus du comté</dt>
+            <dd>{countyIncome(c).toFixed(1)} or / saison</dd>
+            <dt className="small">· développement</dt>
+            <dd className="small">
+              {(c.development * BALANCE.economy.incomePerDevelopment).toFixed(1)}
+            </dd>
+            <dt className="small">· bâtiments</dt>
+            <dd className="small">{buildingIncome.toFixed(1)}</dd>
+            {mine && (
+              <>
+                <dt className="small">· gestion du souverain</dt>
+                <dd className="small">×{incomeMultiplier(game, pl).toFixed(2)}</dd>
+              </>
+            )}
+            {isCapital(c) && (
+              <>
+                <dt className="small">· capitale (cour, marchés)</dt>
+                <dd className="small">×{BALANCE.capital.incomeMult.toFixed(2)}</dd>
+              </>
+            )}
+            <dt>Levées</dt>
+            <dd>
+              {Math.round(c.levyPool)} / {Math.round(countyMaxLevies(c) * countyLevyMult(game, c))}{' '}
+              hommes
+            </dd>
+            <dt>Fortification</dt>
+            <dd>
+              {fortLevel(c)} / {isCapital(c) ? BALANCE.capital.fortMax : 3} — siège de{' '}
+              {1 + fortLevel(c)} saison(s)
+            </dd>
+            <dt>Route</dt>
+            <dd>{hasRoad(c) ? 'oui (2 comtés par saison)' : 'non'}</dd>
+            {c.siege && (
+              <>
+                <dt>Siège</dt>
+                <dd>
+                  {c.siege.progress} / {1 + fortLevel(c)} saisons
+                </dd>
+              </>
+            )}
+          </dl>
+        </Section>
+      )}
 
-      <CapitalSection game={game} c={c} />
-
-      <Section title="Économie et défense">
-        <div className="small muted">
-          Développement {c.development} / {countyDevMax(c)}
-        </div>
-        <Bar value={c.development} max={countyDevMax(c)} color="var(--gold)" />
-        <dl className="kv" style={{ marginTop: 8 }}>
-          <dt>Revenus du comté</dt>
-          <dd>{countyIncome(c).toFixed(1)} or / saison</dd>
-          <dt className="small">· développement</dt>
-          <dd className="small">
-            {(c.development * BALANCE.economy.incomePerDevelopment).toFixed(1)}
-          </dd>
-          <dt className="small">· bâtiments</dt>
-          <dd className="small">{buildingIncome.toFixed(1)}</dd>
-          {mine && (
-            <>
-              <dt className="small">· gestion du souverain</dt>
-              <dd className="small">×{incomeMultiplier(game, pl).toFixed(2)}</dd>
-            </>
-          )}
-          {isCapital(c) && (
-            <>
-              <dt className="small">· capitale (cour, marchés)</dt>
-              <dd className="small">×{BALANCE.capital.incomeMult.toFixed(2)}</dd>
-            </>
-          )}
-          <dt>Levées</dt>
-          <dd>
-            {Math.round(c.levyPool)} / {Math.round(countyMaxLevies(c) * countyLevyMult(game, c))}{' '}
-            hommes
-          </dd>
-          <dt>Fortification</dt>
-          <dd>
-            {fortLevel(c)} / {isCapital(c) ? BALANCE.capital.fortMax : 3} — siège de{' '}
-            {1 + fortLevel(c)} saison(s)
-          </dd>
-          <dt>Route</dt>
-          <dd>{hasRoad(c) ? 'oui (2 comtés par saison)' : 'non'}</dd>
-          {c.siege && (
-            <>
-              <dt>Siège</dt>
-              <dd>
-                {c.siege.progress} / {1 + fortLevel(c)} saisons
-              </dd>
-            </>
-          )}
-        </dl>
-      </Section>
-
-      {(mine || inMyRealm) && (
+      {tab === 'economie' && (mine || inMyRealm) && (
         <Section title="Économie locale">
           <CountyEconomy game={game} id={id} />
         </Section>
       )}
 
-      <Section title={`Terrain : ${terrain.label}`}>
-        <ul className="fx-list small">
-          {terrainEffects(c.terrain).map((f) => (
-            <li key={f}>{f}</li>
-          ))}
-          {c.rivers.length > 0 && (
-            <li>
-              Rivière avec {c.rivers.map((r) => game.counties[r]?.name).join(', ')} : l’attaquant
-              qui la franchit attaque ×{String(RIVER.attackerAttack).replace('.', ',')} aux rounds 1
-              et 2
-            </li>
-          )}
-          {terrainEffects(c.terrain).length === 0 && <li>Aucun effet particulier.</li>}
-        </ul>
-      </Section>
+      {tab === 'terrain' && (
+        <Section title={`Terrain : ${terrain.label}`}>
+          <ul className="fx-list small">
+            {terrainEffects(c.terrain).map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+            {c.rivers.length > 0 && (
+              <li>
+                Rivière avec {c.rivers.map((r) => game.counties[r]?.name).join(', ')} : l’attaquant
+                qui la franchit attaque ×{String(RIVER.attackerAttack).replace('.', ',')} aux rounds
+                1 et 2
+              </li>
+            )}
+            {terrainEffects(c.terrain).length === 0 && <li>Aucun effet particulier.</li>}
+          </ul>
+        </Section>
+      )}
 
-      {armiesHere.length > 0 && (
+      {tab === 'terrain' && armiesHere.length > 0 && (
         <Section title="Armées présentes">
           {armiesHere.map((a) => {
             const v = visibleMen(game, a.id);
@@ -635,52 +715,54 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
         </button>
       )}
 
-      <Section title={`Bâtiments (${c.buildings.length} / ${countySlots(c)})`}>
-        {c.buildings.length === 0 && !c.construction && (
-          <p className="muted small">Aucun bâtiment.</p>
-        )}
-        {c.buildings.map((b) => (
-          <div key={b.type} className="row small" style={{ padding: '4px 0' }}>
-            <b className="grow">
-              {BUILDINGS[b.type].name} {b.level}
-            </b>
-            <span className="muted">{BUILDINGS[b.type].description}</span>
-          </div>
-        ))}
-        {c.construction && (
-          <p className="small">
-            Chantier : {BUILDINGS[c.construction.type].name} niv. {c.construction.level} — encore{' '}
-            {c.construction.remaining} saison(s)
-          </p>
-        )}
-        {mine &&
-          BUILDING_TYPES.map((t) => {
-            const chk = canBuild(game, pl, id, t);
-            if (buildingLevel(c, t) >= 2) return null;
-            return (
-              <div key={t} className="list-item">
-                <div className="grow">
-                  <b>
-                    {BUILDINGS[t].name} {chk.level}
-                  </b>
-                  <div className="small muted">
-                    {BUILDINGS[t].description} {chk.cost} or, {chk.seasons} saisons.
-                    {!chk.ok && chk.reason ? <span className="bad"> {chk.reason}</span> : null}
+      {tab === 'batiments' && (
+        <Section title={`Bâtiments (${c.buildings.length} / ${countySlots(c)})`}>
+          {c.buildings.length === 0 && !c.construction && (
+            <p className="muted small">Aucun bâtiment.</p>
+          )}
+          {c.buildings.map((b) => (
+            <div key={b.type} className="small" style={{ padding: '4px 0' }}>
+              <b>
+                {BUILDINGS[b.type].name} {b.level}
+              </b>{' '}
+              <span className="muted">{BUILDINGS[b.type].description}</span>
+            </div>
+          ))}
+          {c.construction && (
+            <p className="small">
+              Chantier : {BUILDINGS[c.construction.type].name} niv. {c.construction.level} — encore{' '}
+              {c.construction.remaining} saison(s)
+            </p>
+          )}
+          {mine &&
+            BUILDING_TYPES.map((t) => {
+              const chk = canBuild(game, pl, id, t);
+              if (buildingLevel(c, t) >= 2) return null;
+              return (
+                <div key={t} className="list-item">
+                  <div className="grow">
+                    <b>
+                      {BUILDINGS[t].name} {chk.level}
+                    </b>
+                    <div className="small muted">
+                      {BUILDINGS[t].description} {chk.cost} or, {chk.seasons} saisons.
+                      {!chk.ok && chk.reason ? <span className="bad"> {chk.reason}</span> : null}
+                    </div>
                   </div>
+                  <button
+                    className="btn small"
+                    disabled={!chk.ok}
+                    onClick={() => dispatch({ type: 'build', countyId: id, building: t })}
+                  >
+                    Bâtir
+                  </button>
                 </div>
-                <button
-                  className="btn small"
-                  disabled={!chk.ok}
-                  onClick={() => dispatch({ type: 'build', countyId: id, building: t })}
-                >
-                  Bâtir
-                </button>
-              </div>
-            );
-          })}
-      </Section>
+              );
+            })}
+        </Section>
+      )}
 
-      {claimants.length > 0 && (
+      {tab === 'apercu' && claimants.length > 0 && (
         <Section title="Revendiqué par">
           <div className="row wrap" style={{ gap: 6 }}>
             {claimants.map((x) => (
@@ -690,7 +772,7 @@ function CountyDetail({ game, id }: { game: GameState; id: string }) {
         </Section>
       )}
 
-      {mine && (
+      {tab === 'batiments' && mine && (
         <>
           <button
             className="btn block ghost"
@@ -830,7 +912,7 @@ function PlotActions({ game, id }: { game: GameState; id: string }) {
     return (
       <p className="small muted">
         Un complot est déjà en cours contre {game.characters[current.targetId]?.name ?? '—'} : un
-        seul à la fois (Intrigues → Complots).
+        seul à la fois (Monde › Complots).
       </p>
     );
   const types = (Object.keys(PLOT_INFO) as PlotType[]).filter(
@@ -864,7 +946,7 @@ function PlotActions({ game, id }: { game: GameState; id: string }) {
         })}
       </div>
       <p className="small muted" style={{ margin: '6px 0 0' }}>
-        Ajoutez des agents et suivez le complot dans Intrigues → Complots.
+        Ajoutez des agents et suivez le complot dans Monde › Complots.
       </p>
     </>
   );

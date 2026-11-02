@@ -20,7 +20,16 @@ import {
 import { economyOf } from '../../engine/realm';
 import type { Character, GameState } from '../../engine/state';
 import { useStore } from '../store';
-import { Bar, CharLine, Portrait, Segmented, Skills, TraitChips, signed } from './common';
+import {
+  Bar,
+  CardTitle,
+  CharLine,
+  Portrait,
+  Segmented,
+  Skills,
+  TraitChips,
+  signed,
+} from './common';
 
 const E = BALANCE.entourage;
 
@@ -132,11 +141,9 @@ export function CandidatesCard({ game }: { game: GameState }) {
   const list = game.candidates ?? [];
   return (
     <div className="card" id="focus-candidats">
-      <h3>Candidats de passage</h3>
-      <p className="small muted">
-        De nouveaux visages se présentent chaque printemps. Une prime d’engagement, puis un salaire
-        si la cour dépasse ses places gratuites. Les talents très recherchés exigent du prestige.
-      </p>
+      <CardTitle help="De nouveaux visages se présentent chaque printemps. Une prime d’engagement, puis un salaire si la cour dépasse ses places gratuites. Les talents très recherchés exigent du prestige.">
+        Candidats de passage
+      </CardTitle>
       {list.length === 0 && <p className="muted">Personne ne se présente pour l’instant.</p>}
       {list.map((cand) => {
         const c = game.characters[cand.id];
@@ -191,12 +198,11 @@ export function WardsCard({ game }: { game: GameState }) {
   if (!here.length && !options.length) return null;
   return (
     <div className="card" id="focus-pupilles">
-      <h3>Pupilles</h3>
-      <p className="small muted">
-        Les enfants de vos vassaux peuvent grandir à votre cour : ils sont éduqués par vos
-        courtisans, le vassal vous en est reconnaissant (+{E.ward.vassalOpinion} d’opinion tant que
-        l’enfant reste), et à seize ans vous décidez de son avenir.
-      </p>
+      <CardTitle
+        help={`Les enfants de vos vassaux peuvent grandir à votre cour : ils sont éduqués par vos courtisans, le vassal vous en est reconnaissant (+${E.ward.vassalOpinion} d’opinion tant que l’enfant reste), et à seize ans vous décidez de son avenir.`}
+      >
+        Pupilles
+      </CardTitle>
       {here.map((k) => (
         <CharLine key={k.id} state={game} c={k} extra="pupille à votre cour" />
       ))}

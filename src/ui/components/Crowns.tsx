@@ -20,7 +20,7 @@ import type { GameState } from '../../engine/state';
 import { canDeclareWar } from '../../engine/war';
 import { useStore } from '../store';
 import { AcceptanceView } from './Diplomacy';
-import { CharLink, Portrait, Segmented, Tip } from './common';
+import { CardTitle, CharLink, Portrait, Segmented, Tip } from './common';
 
 const K = BALANCE.crowns;
 
@@ -51,11 +51,9 @@ export function UnionsCard({ game }: { game: GameState }) {
   if (!list.length) return null;
   return (
     <div className="card">
-      <h3>Couronnes réunies</h3>
-      <p className="small muted" style={{ marginTop: 0 }}>
-        Union personnelle : deux royaumes sous votre tête, chacun ses coutumes. La couronne où vous
-        ne résidez pas grogne (souverain lointain) jusqu’à la fusion.
-      </p>
+      <CardTitle help="Union personnelle : deux royaumes sous votre tête, chacun ses coutumes. La couronne où vous ne résidez pas grogne (souverain lointain) jusqu’à la fusion.">
+        Couronnes réunies
+      </CardTitle>
       {list.map((u) => {
         const chk = canFuse(game, game.playerId, u.id);
         const years = Math.floor((game.turn - u.since) / 4);
@@ -96,13 +94,10 @@ export function ClaimsCard({ game }: { game: GameState }) {
   const mine = pressableClaims(game, pl);
   const threats = claimsOnHouse(game, pl);
   return (
-    <div className="card">
-      <h3>Droits dynastiques</h3>
-      <p className="small muted" style={{ marginTop: 0 }}>
-        Un enfant né d’une princesse étrangère hérite de droits sur la maison de sa mère (sauf
-        renonciation). Un droit est fort quand la maison visée est fragile : souverain enfant,
-        captif ou sans enfant.
-      </p>
+    <div className="card" id="focus-droits">
+      <CardTitle help="Un enfant né d’une princesse étrangère hérite de droits sur la maison de sa mère (sauf renonciation). Un droit est fort quand la maison visée est fragile : souverain enfant, captif ou sans enfant.">
+        Droits dynastiques
+      </CardTitle>
       {mine.length === 0 && <p className="small muted">Aucun droit à faire valoir.</p>}
       {mine.map((x) => {
         const c = game.characters[x.claimantId];

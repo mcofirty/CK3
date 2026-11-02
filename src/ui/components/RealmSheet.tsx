@@ -93,13 +93,10 @@ export function RealmSheet({ game }: { game: GameState }) {
   const counties = realmCounties(game, id);
   const pop = counties.reduce((s, c) => s + populationOf(c), 0);
   const cap = capitalOf(game, id);
-  const line = successionLine(game, id);
   const claimants = claimsOnHouse(game, id);
   const points = influenceOf(game, id);
   const support = supportOf(game, id);
   const supported = support ? game.characters[support] : undefined;
-  const acclaimed = mine ? undefined : acclaimedHeir(game, r);
-  const nextRuler = acclaimed ?? line[0];
   const seat = game.council.chancelier;
   const chancellorOn = seat.task === 'influence' && seat.targetId === id && !!seat.holderId;
   const unions = unionsOf(game, id);
@@ -165,68 +162,7 @@ export function RealmSheet({ game }: { game: GameState }) {
         </dl>
       </div>
 
-      <h3 className="settings-title">Ligne de succession</h3>
-      <div className="settings-group trade-box">
-        {nextRuler ? (
-          <p className="small" style={{ margin: '0 0 6px' }}>
-            {acclaimed && acclaimed.id !== line[0]?.id ? (
-              <>
-                Les Grands acclameraient <b>{displayName(game, acclaimed)}</b>, votre candidat,
-                plutôt que {line[0] ? displayName(game, line[0]) : 'l’héritier'}.
-              </>
-            ) : (
-              <>
-                Héritier attendu : <b>{displayName(game, nextRuler)}</b>
-                {r.successionLaw === 'partage' && line.length > 1
-                  ? ' (les cadets recevront une part des comtés)'
-                  : ''}
-                .
-              </>
-            )}
-          </p>
-        ) : (
-          <p className="small bad" style={{ margin: '0 0 6px' }}>
-            Aucun héritier : la maison risque de s’éteindre.
-          </p>
-        )}
-        {line.map((c, i) => (
-          <PersonRow
-            key={c.id}
-            game={game}
-            ruler={r}
-            c={c}
-            rank={i + 1}
-            supported={support === c.id}
-            canSupport={!mine}
-          />
-        ))}
-      </div>
-
-      {claimants.length > 0 && (
-        <>
-          <h3 className="settings-title">Prétendants</h3>
-          <div className="settings-group trade-box">
-            {claimants.map((x) => {
-              const c = game.characters[x.claimantId];
-              return (
-                <div key={c.id}>
-                  <PersonRow
-                    game={game}
-                    ruler={r}
-                    c={c}
-                    supported={support === c.id}
-                    canSupport={!mine}
-                  />
-                  <p className="tiny muted" style={{ margin: '0 0 6px 50px' }}>
-                    Droit {x.strong ? 'fort' : 'faible'}
-                    {x.reasons.length ? ` : ${x.reasons.join(', ')}` : ''}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+      <SuccessionSection game={game} id={id} />
 
       {!mine && (
         <div className="card" style={{ marginTop: 12 }}>
@@ -300,5 +236,86 @@ export function RealmSheet({ game }: { game: GameState }) {
         Fiche détaillée du souverain ›
       </button>
     </Sheet>
+  );
+}
+
+/**
+ * Ligne de succession et prétendants d'un royaume. Pour le joueur : Royaume › Lois ;
+ * pour une autre cour : sa fiche de royaume (avec le soutien d'un candidat).
+ */
+export function SuccessionSection({ game, id }: { game: GameState; id: string }) {
+  const r = game.characters[id];
+  const pl = game.playerId;
+  const mine = id === pl;
+  const line = successionLine(game, id);
+  const claimants = claimsOnHouse(game, id);
+  const support = supportOf(game, id);
+  const acclaimed = mine ? undefined : acclaimedHeir(game, r);
+  const nextRuler = acclaimed ?? line[0];
+  return (
+    <>
+      <h3 className="settings-title">Ligne de succession</h3>
+      <div className="settings-group trade-box">
+        {nextRuler ? (
+          <p className="small" style={{ margin: '0 0 6px' }}>
+            {acclaimed && acclaimed.id !== line[0]?.id ? (
+              <>
+                Les Grands acclameraient <b>{displayName(game, acclaimed)}</b>, votre candidat,
+                plutôt que {line[0] ? displayName(game, line[0]) : 'l’héritier'}.
+              </>
+            ) : (
+              <>
+                Héritier attendu : <b>{displayName(game, nextRuler)}</b>
+                {r.successionLaw === 'partage' && line.length > 1
+                  ? ' (les cadets recevront une part des comtés)'
+                  : ''}
+                .
+              </>
+            )}
+          </p>
+        ) : (
+          <p className="small bad" style={{ margin: '0 0 6px' }}>
+            Aucun héritier : la maison risque de s’éteindre.
+          </p>
+        )}
+        {line.map((c, i) => (
+          <PersonRow
+            key={c.id}
+            game={game}
+            ruler={r}
+            c={c}
+            rank={i + 1}
+            supported={support === c.id}
+            canSupport={!mine}
+          />
+        ))}
+      </div>
+
+      {claimants.length > 0 && (
+        <>
+          <h3 className="settings-title">Prétendants</h3>
+          <div className="settings-group trade-box">
+            {claimants.map((x) => {
+              const c = game.characters[x.claimantId];
+              return (
+                <div key={c.id}>
+                  <PersonRow
+                    game={game}
+                    ruler={r}
+                    c={c}
+                    supported={support === c.id}
+                    canSupport={!mine}
+                  />
+                  <p className="tiny muted" style={{ margin: '0 0 6px 50px' }}>
+                    Droit {x.strong ? 'fort' : 'faible'}
+                    {x.reasons.length ? ` : ${x.reasons.join(', ')}` : ''}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </>
   );
 }

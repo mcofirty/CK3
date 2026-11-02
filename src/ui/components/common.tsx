@@ -316,17 +316,20 @@ export function Segmented<T extends string>({
   value,
   onChange,
   style,
+  className,
 }: {
   options: { value: T; label: ReactNode }[];
   value: T | null;
   onChange: (v: T) => void;
   style?: React.CSSProperties;
+  /** `subnav` : sous-onglets d'un écran, qui restent visibles au défilement. */
+  className?: string;
 }) {
   const i = options.findIndex((o) => o.value === value);
   const { drag, handlers } = useSlideSelect(options.length, (k) => onChange(options[k].value));
   return (
     <div
-      className={`segmented sliding${drag !== null ? ' dragging' : ''}`}
+      className={`segmented sliding${drag !== null ? ' dragging' : ''}${className ? ` ${className}` : ''}`}
       style={{
         ...style,
         ['--n' as string]: options.length,
@@ -926,7 +929,84 @@ export function CountyLink({ state, id }: { state: GameState; id?: string }) {
 // Icônes
 // ---------------------------------------------------------------------------
 
+/**
+ * Titre de carte avec aide repliée : l'explication s'affiche en touchant ⓘ
+ * (au lieu d'un paragraphe permanent en tête de carte).
+ */
+export function CardTitle({
+  children,
+  help,
+  extra,
+}: {
+  children: ReactNode;
+  help?: ReactNode;
+  extra?: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="card-title">
+        <h3>{children}</h3>
+        {extra && <span className="card-title-extra">{extra}</span>}
+        {help && (
+          <button
+            className={`help-btn${open ? ' on' : ''}`}
+            aria-label={open ? 'Masquer l’aide' : 'Afficher l’aide'}
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            i
+          </button>
+        )}
+      </div>
+      {help && open && <div className="help-text small muted">{help}</div>}
+    </>
+  );
+}
+
+/** Choix en grille (2 colonnes) : pour des libellés trop longs pour un sélecteur segmenté. */
+export function ChoiceGrid<T extends string>({
+  options,
+  value,
+  onChange,
+  cols = 2,
+}: {
+  options: { value: T; label: ReactNode; disabled?: boolean }[];
+  value: T | null;
+  onChange: (v: T) => void;
+  cols?: number;
+}) {
+  return (
+    <div className="choice-grid" style={{ ['--cols' as string]: cols }} role="radiogroup">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          role="radio"
+          aria-checked={o.value === value}
+          className={o.value === value ? 'on' : ''}
+          disabled={o.disabled}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export const Icon = {
+  regne: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 20V10l3 2V7l5-3 5 3v5l3-2v10z" strokeLinejoin="round" />
+      <path d="M10 20v-4h4v4" />
+    </svg>
+  ),
+  monde: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c3 3 3 14 0 17M12 3.5c-3 3-3 14 0 17" />
+    </svg>
+  ),
   cour: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M4 18h16l-1-9-4 3-3-6-3 6-4-3z" />

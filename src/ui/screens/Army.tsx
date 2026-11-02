@@ -3,7 +3,6 @@ import { BALANCE } from '../../data/balance';
 import { MERCENARIES } from '../../data/mercenaries';
 import { UNIT_TYPES, UNITS } from '../../data/units';
 import { mercCheck, negotiateChance } from '../../engine/war/campaignExtras';
-import { chanceOf, rallyAcceptance } from '../../engine/entourage';
 import { allied, displayName, isAdult, skill, warSide } from '../../engine/characters';
 import {
   availableLevies,
@@ -27,46 +26,61 @@ import {
   scoreFor,
   warsOf,
 } from '../../engine/war';
-import { Bar, Segmented, Sheet, Tip, signed } from '../components/common';
+import {
+  Bar,
+  CardTitle,
+  ChoiceGrid,
+  Segmented,
+  signed,
+  useFocusView,
+  usePager,
+} from '../components/common';
+import { Pip } from './Court';
 import { CallHelpSheet } from '../components/Diplomacy';
 import { PeaceSheet } from '../components/Peace';
 import { useStore } from '../store';
 
+const ARMY_VIEWS = ['troupes', 'guerres'] as const;
+type ArmyView = (typeof ARMY_VIEWS)[number];
+
 export function ArmyScreen({ game }: { game: GameState }) {
+  const [view, setView] = useState<ArmyView>('troupes');
+  const dir = usePager(ARMY_VIEWS, view, setView);
+  useFocusView(ARMY_VIEWS, setView);
+  const atWar = warsOf(game, game.playerId).length > 0;
+  return (
+    <>
+      <Segmented
+        className="subnav"
+        options={[
+          { value: 'troupes', label: 'Troupes' },
+          { value: 'guerres', label: <Pip on={atWar}>Guerres</Pip> },
+        ]}
+        value={view}
+        onChange={setView}
+      />
+      <div className={`view enter-${dir}`} key={view}>
+        {view === 'troupes' ? <TroopsView game={game} /> : <WarsView game={game} />}
+      </div>
+    </>
+  );
+}
+
+/** L'armée levée, ses commandants et son siège, le recrutement et les mercenaires. */
+function TroopsView({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
-  const setTab = useStore((s) => s.setTab);
-  const focusWar = useStore((s) => s.focusWar);
-  const clearFocusWar = useStore((s) => s.clearFocusWar);
+  const goTo = useStore((s) => s.goTo);
   const pl = game.playerId;
-  // Guerre tout juste rejointe : on la met en avant dans la carte Guerres.
-  useEffect(() => {
-    if (!focusWar) return;
-    const t = setTimeout(() => {
-      document
-        .getElementById(`war-${focusWar}`)
-        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }, 350);
-    const c = setTimeout(clearFocusWar, 3500);
-    return () => {
-      clearTimeout(t);
-      clearTimeout(c);
-    };
-  }, [focusWar, clearFocusWar]);
   const army = armyOf(game, pl);
   const standing = standingOf(game, pl);
   const cap = recruitCapacity(game, pl);
   const levies = availableLevies(game, pl).total;
   const raise = canRaise(game, pl);
-  const [declare, setDeclare] = useState(false);
-  const [callHelp, setCallHelp] = useState<string | null>(null);
-  const [peaceWar, setPeaceWar] = useState<string | null>(null);
-  const [confirmExec, setConfirmExec] = useState<string | null>(null);
   const commanders = [
     game.characters[pl],
     ...courtiersOf(game, pl),
     ...Object.values(game.characters).filter((c) => c.alive && c.liegeId === pl),
   ].filter((c) => c.alive && isAdult(game, c) && !c.imprisonedBy);
-  const prisoners = Object.values(game.characters).filter((c) => c.alive && c.imprisonedBy === pl);
   return (
     <>
       <div className="card">
@@ -87,7 +101,8 @@ export function ArmyScreen({ game }: { game: GameState }) {
             {!raise.ok && <p className="small bad">{raise.reason}</p>}
             <p className="small muted">
               Les levées sont gratuites tant qu’elles restent chez elles ; une fois levées, elles
-              coûtent 1 or par compagnie et par saison.
+              coûtent 1 or par compagnie et par saison. Une fois levée, déplacez l’armée depuis la
+              carte : touchez un comté, puis « Envoyer l’armée ici ».
             </p>
           </>
         )}
@@ -155,8 +170,8 @@ export function ArmyScreen({ game }: { game: GameState }) {
               Le souverain qui commande donne +10 de moral, mais risque blessure et capture.
             </p>
             <div className="row wrap" style={{ marginTop: 8 }}>
-              <button className="btn small" onClick={() => setTab('royaume')}>
-                Déplacer (carte)
+              <button className="btn small primary" onClick={() => goTo('royaume', 'carte')}>
+                Déplacer sur la carte
               </button>
               <button
                 className="btn small"
@@ -175,6 +190,10 @@ export function ArmyScreen({ game }: { game: GameState }) {
           </>
         )}
       </div>
+      {army && game.counties[army.location].siege?.armyId === army.id && (
+        <SiegeCard game={game} armyId={army.id} />
+      )}
+
       {army && game.counties[army.location].siege?.armyId === army.id && (
         <SiegeCard game={game} armyId={army.id} />
       )}
@@ -222,9 +241,35 @@ export function ArmyScreen({ game }: { game: GameState }) {
           );
         })}
       </div>
-
       <MercCard game={game} />
+    </>
+  );
+}
 
+/** Les guerres en cours (score, paix, appel à l'aide) et la déclaration de guerre. */
+function WarsView({ game }: { game: GameState }) {
+  const focusWar = useStore((s) => s.focusWar);
+  const clearFocusWar = useStore((s) => s.clearFocusWar);
+  const pl = game.playerId;
+  // Guerre tout juste rejointe : on la met en avant dans la carte Guerres.
+  useEffect(() => {
+    if (!focusWar) return;
+    const t = setTimeout(() => {
+      document
+        .getElementById(`war-${focusWar}`)
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 350);
+    const c = setTimeout(clearFocusWar, 3500);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(c);
+    };
+  }, [focusWar, clearFocusWar]);
+  const [callHelp, setCallHelp] = useState<string | null>(null);
+  const [peaceWar, setPeaceWar] = useState<string | null>(null);
+  const army = armyOf(game, pl);
+  return (
+    <>
       <div className="card">
         <h3>Guerres</h3>
         {warsOf(game, pl).length === 0 && <p className="muted">Vos terres sont en paix.</p>}
@@ -291,85 +336,20 @@ export function ArmyScreen({ game }: { game: GameState }) {
             </div>
           );
         })}
-        <button className="btn block" style={{ marginTop: 12 }} onClick={() => setDeclare(true)}>
-          Déclarer une guerre
-        </button>
       </div>
 
-      {prisoners.length > 0 && (
-        <div className="card">
-          <h3>Prisonniers</h3>
-          {prisoners.map((c) => (
-            <div key={c.id} className="list-item" style={{ flexWrap: 'wrap' }}>
-              <b className="grow">{displayName(game, c)}</b>
-              <button
-                className="btn small"
-                onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'or' })}
-              >
-                Rançon en or
-              </button>
-              {Object.values(game.counties).some((k) => k.holderId === c.id) && (
-                <button
-                  className="btn small"
-                  onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'comte' })}
-                >
-                  Exiger un comté
-                </button>
-              )}
-              {!Object.values(game.counties).some((k) => k.holderId === c.id) && (
-                <Tip
-                  text={`Lui proposer de vous servir (${BALANCE.entourage.rally.fee} or, une seule tentative) : chance ${Math.round(chanceOf(rallyAcceptance(game, c.id).score) * 100)} %.`}
-                >
-                  <button
-                    className="btn small"
-                    disabled={!!rallyAcceptance(game, c.id).blocked}
-                    onClick={() => dispatch({ type: 'rallyPrisoner', id: c.id })}
-                  >
-                    Rallier
-                  </button>
-                </Tip>
-              )}
-              {!Object.values(game.counties).some((k) => k.holderId === c.id) && (
-                <Tip text="Il vit à votre cour : tant qu’il y reste, sa famille ne peut pas vous attaquer.">
-                  <button
-                    className="btn small"
-                    onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'otage' })}
-                  >
-                    Garder en otage
-                  </button>
-                </Tip>
-              )}
-              <button
-                className="btn small ghost"
-                onClick={() => dispatch({ type: 'ransom', characterId: c.id, kind: 'liberer' })}
-              >
-                Libérer
-              </button>
-              <button
-                className={`btn small${confirmExec === c.id ? ' danger' : ' ghost'}`}
-                onClick={() => {
-                  if (confirmExec !== c.id) {
-                    setConfirmExec(c.id);
-                    return;
-                  }
-                  setConfirmExec(null);
-                  dispatch({ type: 'ransom', characterId: c.id, kind: 'executer' });
-                }}
-              >
-                {confirmExec === c.id ? 'Confirmer l’exécution' : 'Exécuter'}
-              </button>
-            </div>
-          ))}
-        </div>
+      {army && game.counties[army.location].siege?.armyId === army.id && (
+        <SiegeCard game={game} armyId={army.id} />
       )}
-      {declare && <DeclareWar game={game} onClose={() => setDeclare(false)} />}
+      <DeclareWar game={game} />
       {peaceWar && <PeaceSheet game={game} warId={peaceWar} onClose={() => setPeaceWar(null)} />}
       {callHelp && <CallHelpSheet game={game} warId={callHelp} onClose={() => setCallHelp(null)} />}
     </>
   );
 }
 
-function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void }) {
+/** Déclarer une guerre : casus belli et cibles possibles, directement dans la vue. */
+function DeclareWar({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const pl = game.playerId;
   const me = game.characters[pl];
@@ -384,9 +364,10 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
           )
         : [];
   return (
-    <Sheet onClose={onClose}>
-      <h2>Déclarer une guerre</h2>
-      <Segmented<CasusBelliType>
+    <div className="card" id="focus-declarer">
+      <CardTitle>Déclarer une guerre</CardTitle>
+      <ChoiceGrid<CasusBelliType>
+        cols={3}
         options={[
           { value: 'revendication', label: 'Revendication' },
           { value: 'conquete', label: 'Conquête' },
@@ -396,7 +377,7 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
         onChange={setCb}
       />
       <p className="tiny muted" style={{ margin: '6px 0 0' }}>
-        Droit dynastique (succession d’une autre maison) : Cour › Maison › Droits dynastiques.
+        Droit dynastique (succession d’une autre maison) : Royaume › Lois › Droits dynastiques.
       </p>
       <p className="small muted">
         {cb === 'revendication' &&
@@ -410,7 +391,6 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
           className="btn primary block"
           onClick={() => {
             dispatch({ type: 'declareWar', targetId: me.liegeId!, cb });
-            onClose();
           }}
         >
           Se soulever contre {game.characters[me.liegeId].name}
@@ -437,7 +417,6 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
               disabled={!chk.ok}
               onClick={() => {
                 dispatch({ type: 'declareWar', targetId: def, cb, countyId: c.id });
-                onClose();
               }}
             >
               Guerre
@@ -445,7 +424,7 @@ function DeclareWar({ game, onClose }: { game: GameState; onClose: () => void })
           </div>
         );
       })}
-    </Sheet>
+    </div>
   );
 }
 
@@ -518,11 +497,11 @@ function MercCard({ game }: { game: GameState }) {
   const contracts = (game.mercenaries ?? []).filter((m) => m.ownerId === pl);
   return (
     <div className="card">
-      <h3>Mercenaires</h3>
-      <p className="small muted">
-        Disponibles tout de suite, pour {BALANCE.mercenaries.contractSeasons} saisons. Leur solde
-        s’ajoute à l’entretien des troupes.
-      </p>
+      <CardTitle
+        help={`Disponibles tout de suite, pour ${BALANCE.mercenaries.contractSeasons} saisons. Leur solde s’ajoute à l’entretien des troupes.`}
+      >
+        Mercenaires
+      </CardTitle>
       {MERCENARIES.map((m) => {
         const contract = contracts.find((x) => x.id === m.id);
         const chk = mercCheck(game, pl, m.id);
