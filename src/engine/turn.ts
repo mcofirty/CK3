@@ -11,7 +11,7 @@ import { seasonCourt } from './court';
 import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
 import { seasonAbroad } from './abroad';
-import { takeSnapshot } from './digest';
+import { recordTreasury, takeSnapshot } from './digest';
 import { seasonPretenders, seasonUnions } from './crowns';
 import { seasonInfluence } from './influence';
 import { checkAchievements, computeEnding } from './endings';
@@ -123,6 +123,7 @@ export function startSeason(ctx: Ctx): void {
   autoFillCouncil(state);
   seasonEntourage(ctx);
   seasonCourt(ctx);
+  recordTreasury(state);
   drawSeasonEvents(ctx);
 }
 

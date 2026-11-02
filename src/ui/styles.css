@@ -2993,3 +2993,72 @@ button.plain {
   gap: 4px;
   margin-top: 4px;
 }
+
+/* Courbe du trésor */
+.treasury-chart svg {
+  display: block;
+  max-width: 100%;
+  touch-action: none;
+}
+.treasury-tip {
+  min-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.tc-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.tc-base {
+  stroke: var(--ink2);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+.tc-area {
+  fill: var(--gold);
+  opacity: 0.14;
+}
+.tc-line {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.tc-end,
+.tc-dot {
+  fill: var(--gold);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.tc-cross {
+  stroke: var(--ink2);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.tc-label {
+  fill: var(--ink2);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.tc-table summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+.tc-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.tc-table th,
+.tc-table td {
+  text-align: right;
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.tc-table th:first-child,
+.tc-table td:first-child {
+  text-align: left;
+}

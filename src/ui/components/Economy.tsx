@@ -21,6 +21,7 @@ import { fmtPop, RealmPopulation } from './Capital';
 import type { GameState, TaxLevel } from '../../engine/state';
 import { useStore } from '../store';
 import { Bar, CardTitle, Segmented, signed } from './common';
+import { TreasuryChart } from './TreasuryChart';
 import { TreasuryCard } from './Entourage';
 
 const L = BALANCE.local;
@@ -170,6 +171,7 @@ export function TreasuryView({ game }: { game: GameState }) {
             <span>dans un an</span>
           </div>
         </div>
+        <TreasuryChart game={game} />
         <div className="reasons" style={{ marginTop: 8 }}>
           {eco.gold.map((l) => (
             <div key={l.label} className="row small">

@@ -722,6 +722,8 @@ export const BALANCE = {
     healthStep: 10,
     /** Nombre maximal de personnages suivis. */
     maxFollowed: 8,
+    /** Saisons gardées dans la courbe du trésor (5 ans). */
+    treasurySeasons: 20,
   },
 } as const;
 

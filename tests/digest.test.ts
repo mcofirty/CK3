@@ -82,3 +82,17 @@ describe('Personnages suivis', () => {
     expect(ch.find((c) => c.id === single.id)?.married).toBe(true);
   });
 });
+
+describe('Courbe du trésor', () => {
+  it('note l’or à chaque saison et ne garde que les dernières', async () => {
+    const { BALANCE } = await import('../src/data/balance');
+    let s = newGame({ seed: 6 });
+    s = applyAction(s, { type: 'debugAdvance', years: 7 });
+    const h = s.treasuryHistory ?? [];
+    expect(h.length).toBe(BALANCE.digest.treasurySeasons);
+    const last = h[h.length - 1];
+    expect(last.turn).toBe(s.turn);
+    // Strictement croissant, sans doublon de saison.
+    for (let i = 1; i < h.length; i++) expect(h[i].turn).toBeGreaterThan(h[i - 1].turn);
+  });
+});

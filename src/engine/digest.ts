@@ -155,3 +155,17 @@ export function seasonDigest(state: GameState): SeasonDigest | undefined {
     newRuler,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Courbe du trésor
+// ---------------------------------------------------------------------------
+
+/** Note l'or du joueur au début de la saison et son revenu net (Royaume › Trésor). */
+export function recordTreasury(state: GameState): void {
+  const me = state.characters[state.playerId];
+  if (!me) return;
+  const net = state.ledger.gold.reduce((s, l) => s + l.value, 0);
+  const point = { turn: state.turn, gold: Math.round(me.gold), net: Math.round(net * 10) / 10 };
+  const list = (state.treasuryHistory ?? []).filter((p) => p.turn !== state.turn);
+  state.treasuryHistory = [...list, point].slice(-BALANCE.digest.treasurySeasons);
+}

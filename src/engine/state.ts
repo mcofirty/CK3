@@ -461,6 +461,8 @@ export interface GameState {
   lastSnapshot?: SeasonSnapshot;
   /** Personnages suivis par le joueur (épinglés depuis leur fiche). */
   followed?: string[];
+  /** Or du joueur au début de chaque saison et revenu net, les plus récents à la fin. */
+  treasuryHistory?: { turn: number; gold: number; net: number }[];
 }
 
 export interface SeasonSnapshot {
@@ -556,4 +558,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;

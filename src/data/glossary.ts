@@ -604,7 +604,7 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Bilan et personnages suivis',
-        text: 'Règne › Résumé ouvre chaque saison sur « Depuis la saison dernière » : or, prestige, piété et renommée gagnés ou perdus, comtés gagnés ou perdus, vassaux dont l’opinion a bougé, faits marquants. « Suivre », sur la fiche d’un personnage, l’épingle dans le Résumé (huit au plus) : mariage, naissance, titres, prison, santé, opinion ou mort y sont signalés.',
+        text: 'Royaume › Trésor trace l’or au début de chaque saison sur cinq ans (touchez la courbe pour lire une saison, ou affichez le tableau). Règne › Résumé ouvre chaque saison sur « Depuis la saison dernière » : or, prestige, piété et renommée gagnés ou perdus, comtés gagnés ou perdus, vassaux dont l’opinion a bougé, faits marquants. « Suivre », sur la fiche d’un personnage, l’épingle dans le Résumé (huit au plus) : mariage, naissance, titres, prison, santé, opinion ou mort y sont signalés.',
       },
       {
         term: 'Gestes',
