@@ -223,7 +223,6 @@ export const BALANCE = {
     educationSkillGain: 0.35,
     renownPerTitle: { duche: 2, royaume: 6 },
     marriageRenown: 15,
-    primogenitureCost: 400,
     courtSize: 4,
   },
 

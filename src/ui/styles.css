@@ -2599,3 +2599,17 @@ body {
   margin-left: -1.5px;
   background: var(--text, #222);
 }
+
+/* Lois et gouvernement */
+.law-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.law-row.current {
+  background: var(--glass-strong);
+  border-radius: 12px;
+  padding: 8px;
+}

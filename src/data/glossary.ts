@@ -4,6 +4,7 @@
  */
 import { AMBITIONS } from './ambitions';
 import { HOUSE_COLORS } from './heraldry';
+import { GOVERNMENTS, LAW_CHANGE_OPINION, LAW_COOLDOWN, SUCCESSION_LAWS } from './governments';
 import { BALANCE } from './balance';
 import { BUILDINGS, BUILDING_TYPES } from './buildings';
 import { DECISIONS } from './decisions';
@@ -29,6 +30,25 @@ export interface GlossarySection {
 }
 
 const B = BALANCE;
+const LAW_LIST = (Object.keys(SUCCESSION_LAWS) as (keyof typeof SUCCESSION_LAWS)[])
+  .map(
+    (k) =>
+      `${SUCCESSION_LAWS[k].name} (${SUCCESSION_LAWS[k].cost} prestige) : ${SUCCESSION_LAWS[k].description}`,
+  )
+  .join(' ');
+const GOV_LIST = (Object.keys(GOVERNMENTS) as (keyof typeof GOVERNMENTS)[])
+  .map((k) => {
+    const g = GOVERNMENTS[k];
+    const fx = [
+      g.income && `revenus ${g.income > 0 ? '+' : ''}${Math.round(g.income * 100)} %`,
+      g.levies && `levées ${g.levies > 0 ? '+' : ''}${Math.round(g.levies * 100)} %`,
+      g.vassalOpinion && `vassaux ${g.vassalOpinion > 0 ? '+' : ''}${g.vassalOpinion}`,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    return `${g.name}${fx ? ` (${fx})` : ''} : ${g.description}`;
+  })
+  .join(' ');
 const pc = (x: number) => `${Math.round(x * 100)} %`;
 const f = (x: number) => String(x).replace('.', ',');
 
@@ -196,7 +216,15 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Loi de succession',
-        text: `Partage : les comtés sont répartis entre les enfants, l’aîné gardant la capitale ; une couronne tenue en union revient au cadet. Primogéniture : tout va à l’aîné (coûte ${B.characters.primogenitureCost} de prestige à instaurer). Le conjoint n’hérite jamais : les terres d’une souveraine vont à ses enfants.`,
+        text: `Cour › Souverain › Maison › « Lois et gouvernement ». ${LAW_LIST}. Le gouvernement fixe les lois permises. Changer de loi coûte du prestige, irrite les vassaux (${LAW_CHANGE_OPINION} d’opinion) et ne peut se refaire avant ${LAW_COOLDOWN / 4} ans ; un aperçu montre qui hériterait sous chaque loi. Le conjoint n’hérite jamais : les terres d’une souveraine vont à ses enfants. Sous le partage, une couronne tenue en union revient au cadet.`,
+      },
+      {
+        term: 'Gouvernement',
+        text: `${GOV_LIST}. Réformer coûte prestige et or : passer de la tribu à la féodalité exige une capitale assez développée, centraliser exige une couronne royale. Une loi devenue interdite cède la place à la loi d’usage du nouveau gouvernement.`,
+      },
+      {
+        term: 'Élection',
+        text: 'Sous la loi élective, le souverain (3 voix) et chaque vassal (1 voix) votent pour l’adulte de la maison qu’ils préfèrent, selon leur opinion de lui et ses talents ; le souverain penche pour ses enfants, un vassal candidat vote pour lui-même. Les intentions de vote s’affichent dans « Lois et gouvernement ».',
       },
       {
         term: 'Loi agnatique',

@@ -122,6 +122,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
       repairRealms({ state: g, rng: new Rng(9100 + (g.turn ?? 0)) });
     return next;
   },
+  // Version 13 → 14 : gouvernements (féodalité par défaut) et lois de succession élargies.
+  13: (s) => ({ ...s, version: 14 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

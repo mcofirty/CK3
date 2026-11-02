@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { BALANCE } from '../../data/balance';
 import {
   ageOf,
   closeFamily,
@@ -31,7 +30,6 @@ import {
   CoatOfArms,
   Portrait,
   Skills,
-  Tip,
   Segmented,
   usePager,
   TraitChips,
@@ -40,7 +38,10 @@ import { AmbitionCard, LegacyTree, RelationsList, StressGauge } from '../compone
 import { perkPoints } from '../../engine/progression';
 import { CandidatesCard, CourtCard, WardsCard } from '../components/Entourage';
 import { useStore } from '../store';
-import { AgnaticLaw, ClaimsCard, UnionsCard } from '../components/Crowns';
+import { ClaimsCard, UnionsCard } from '../components/Crowns';
+import { LawsSheet } from '../components/Laws';
+import { GOVERNMENTS, SUCCESSION_LAWS } from '../../data/governments';
+import { governmentOf } from '../../engine/government';
 import { houseColorOf } from '../../engine/heraldry';
 
 const COURT_VIEWS = ['souverain', 'entourage', 'conseil', 'arbre'] as const;
@@ -99,6 +100,7 @@ export function CharacterCard({ game, c }: { game: GameState; c: Character }) {
 }
 
 function RulerView({ game }: { game: GameState }) {
+  const [laws, setLaws] = useState(false);
   const setRealmSheet = useStore((s) => s.setRealmSheet);
   const dispatch = useStore((s) => s.dispatch);
   const inspect = useStore((s) => s.inspect);
@@ -155,9 +157,11 @@ function RulerView({ game }: { game: GameState }) {
           <dd>
             {heir ? `${heir.name} (${ageOf(game, heir)} ans)` : <span className="bad">aucun</span>}
           </dd>
+          <dt>Gouvernement</dt>
+          <dd>{GOVERNMENTS[governmentOf(game, p.id)].name}</dd>
           <dt>Loi de succession</dt>
           <dd>
-            {p.successionLaw === 'partage' ? 'Partage' : 'Primogéniture'}
+            {SUCCESSION_LAWS[p.successionLaw].name}
             {p.agnatic ? ', agnatique' : ''}
           </dd>
           <dt>Revendications</dt>
@@ -168,19 +172,9 @@ function RulerView({ game }: { game: GameState }) {
               .join(', ') || '—'}
           </dd>
         </dl>
-        {p.successionLaw === 'partage' && (
-          <Tip text="Transmet tous les titres et comtés à l’aîné, sans partage entre les enfants.">
-            <button
-              className="btn block"
-              style={{ marginTop: 8 }}
-              disabled={p.prestige < BALANCE.characters.primogenitureCost}
-              onClick={() => dispatch({ type: 'changeLaw', law: 'primogeniture' })}
-            >
-              Adopter la Primogéniture ({BALANCE.characters.primogenitureCost} prestige)
-            </button>
-          </Tip>
-        )}
-        <AgnaticLaw game={game} />
+        <button className="btn block" style={{ marginTop: 8 }} onClick={() => setLaws(true)}>
+          Lois et gouvernement ›
+        </button>
         <button
           className="btn block ghost"
           style={{ marginTop: 8 }}
@@ -213,6 +207,7 @@ function RulerView({ game }: { game: GameState }) {
           ))}
         </div>
       )}
+      {laws && <LawsSheet game={game} onClose={() => setLaws(false)} />}
     </>
   );
 }

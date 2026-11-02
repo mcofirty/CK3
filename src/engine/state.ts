@@ -19,7 +19,9 @@ export type Difficulty = 'facile' | 'normal' | 'difficile';
 export type CouncilPost = 'chancelier' | 'marechal' | 'intendant' | 'espion' | 'chapelain';
 export type BuildingType =
   'marche' | 'ferme' | 'caserne' | 'ecuries' | 'archerie' | 'muraille' | 'chapelle' | 'route';
-export type SuccessionLaw = 'partage' | 'primogeniture';
+export type SuccessionLaw =
+  'partage' | 'primogeniture' | 'ultimogeniture' | 'seniorite' | 'elective';
+export type GovernmentId = 'tribal' | 'feodal' | 'centralise';
 export type TaxLevel = 'faible' | 'normal' | 'eleve' | 'ecrasant';
 export type ConscriptionLevel = 'legere' | 'normale' | 'lourde';
 
@@ -76,6 +78,10 @@ export interface Character {
   /** Tour du dernier déplacement de capitale. */
   capitalMovedTurn?: number;
   successionLaw: SuccessionLaw;
+  /** Gouvernement du souverain (féodalité par défaut). */
+  government?: GovernmentId;
+  /** Tour du dernier changement de loi de succession. */
+  lawChangedTurn?: number;
   imprisonedBy?: string;
   /** Graine pour le portrait. */
   seed: number;
@@ -520,4 +526,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;

@@ -5,6 +5,7 @@ import { TRAITS } from '../../data/traits';
 import { addOpinion, demesneLimit, heldCounties, opinion, perkBonus, skill } from '../characters';
 import { gainXp, record } from '../progression';
 import { courtPayroll } from '../entourage/roster';
+import { govDef } from '../government';
 import {
   contentmentOf,
   countyDevMax,
@@ -316,6 +317,7 @@ export function incomeMultiplier(state: GameState, rulerId: string): number {
   for (const t of r.traits) m *= TRAITS[t]?.income ?? 1;
   m *= 1 + perkBonus(state, r, 'income');
   m *= 1 + edictSum(state, rulerId, 'income');
+  m *= 1 + govDef(state, rulerId).income;
   if (rulerId !== state.playerId) m *= E.aiIncomeMultiplier[state.difficulty];
   return m;
 }

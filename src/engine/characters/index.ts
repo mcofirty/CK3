@@ -1,5 +1,6 @@
 /** Personnages : compétences, santé, opinion, noms, création. */
 import { distantFactor } from '../crowns';
+import { govDef } from '../government';
 import { BALANCE } from '../../data/balance';
 import { NAMES } from '../../data/names';
 import { LEGACIES, PERKS, type PerkKey } from '../../data/perks';
@@ -258,6 +259,8 @@ export function opinionOf(state: GameState, fromId: string, toId: string): Opini
   if (from.lovers?.includes(toId)) push('Amant', BALANCE.relations.loverOpinion);
   if (from.liegeId === toId) {
     push('Vassal', O.vassalBase);
+    const gov = govDef(state, toId);
+    if (gov.vassalOpinion) push(`Gouvernement : ${gov.name}`, gov.vassalOpinion);
     push('Talents et héritages du suzerain', perkBonus(state, to, 'vassalOpinion'));
     for (const t of to.traits) {
       const v = TRAITS[t]?.vassalOpinion;

@@ -19,6 +19,8 @@ import { useStore } from '../store';
 import { fmtPop } from './Capital';
 import { Bar, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
 import { houseColorOf } from '../../engine/heraldry';
+import { GOVERNMENTS, SUCCESSION_LAWS } from '../../data/governments';
+import { governmentOf } from '../../engine/government';
 
 const I = BALANCE.influence;
 
@@ -101,7 +103,7 @@ export function RealmSheet({ game }: { game: GameState }) {
   const seat = game.council.chancelier;
   const chancellorOn = seat.task === 'influence' && seat.targetId === id && !!seat.holderId;
   const unions = unionsOf(game, id);
-  const law = `${r.successionLaw === 'partage' ? 'Partage' : 'Primogéniture'}${r.agnatic ? ', agnatique' : ''}`;
+  const law = `${SUCCESSION_LAWS[r.successionLaw].name}${r.agnatic ? ', agnatique' : ''}`;
   return (
     <Sheet onClose={() => close(null)}>
       <div className="row">
@@ -126,6 +128,8 @@ export function RealmSheet({ game }: { game: GameState }) {
         <dl className="kv" style={{ marginTop: 6 }}>
           <dt>Maison</dt>
           <dd>{dyn?.name ?? '—'}</dd>
+          <dt>Gouvernement</dt>
+          <dd>{GOVERNMENTS[governmentOf(game, id)].name}</dd>
           <dt>Loi de succession</dt>
           <dd>{law}</dd>
           {!mine && (

@@ -18,6 +18,7 @@ import {
   independentRulers,
 } from './realm';
 import { assignHouseColors } from './heraldry';
+import { GOVERNMENTS } from '../data/governments';
 import { autoEducate } from './diplomacy';
 import { Rng } from './rng';
 import {
@@ -27,6 +28,7 @@ import {
   type County,
   type Difficulty,
   type GameState,
+  type GovernmentId,
   type Terrain,
 } from './state';
 import { emptyUnits } from './units';
@@ -305,6 +307,25 @@ export function newGame(opts: NewGameOptions = {}): GameState {
 
   applyOriginWorld(ctx, origin, border);
   worldTwists(ctx);
+
+  // Gouvernements et lois des souverains de l'IA (générateur à part) : petites tribus,
+  // féodalités, et quelques grandes couronnes centralisées.
+  {
+    const g = new Rng(seed ^ 0x0606);
+    for (const id of independentRulers(state)) {
+      if (id === state.playerId) continue;
+      const r = state.characters[id];
+      const size = Object.values(state.counties).filter((c) => countyRuler(state, c) === id).length;
+      const gov: GovernmentId =
+        size <= 4 && g.chance(0.5)
+          ? 'tribal'
+          : size >= 8 && g.chance(0.4)
+            ? 'centralise'
+            : 'feodal';
+      r.government = gov;
+      r.successionLaw = g.pick(GOVERNMENTS[gov].laws);
+    }
+  }
 
   // Couleurs de maison : distinctes pour les souverains (générateur à part, pour ne pas
   // modifier le reste de la partie).

@@ -5,6 +5,7 @@ import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '.
 import { ensureCapitals, isIndependent, realmCounties, realmName } from '../realm';
 import { createUnion, grantHouseClaims, inheritUnions, pactHeir } from '../crowns';
 import { acclaimedHeir, afterSuccession } from '../influence';
+import { electionResults } from '../government';
 import { newHouseColor } from '../heraldry';
 import { Rng } from '../rng';
 import type { Character, GameState } from '../state';
@@ -19,6 +20,7 @@ import {
   hasTrait,
   healthOf,
   heldCounties,
+  isAdult,
   livingChildren,
   perkBonus,
   removeTrait,
@@ -271,7 +273,32 @@ export function heirsOf(state: GameState, c: Character): Character[] {
       .filter((x) => x.alive && x.dynastyId === c.dynastyId)
       .sort((a, b) => a.birthTurn - b.birthTurn)
       .forEach(add);
-  return res;
+  return orderByLaw(state, c, res);
+}
+
+/** Réordonne la lignée selon la loi de succession du défunt. */
+function orderByLaw(state: GameState, c: Character, line: Character[]): Character[] {
+  const front = (first: Character[]) => [...first, ...line.filter((x) => !first.includes(x))];
+  switch (c.successionLaw) {
+    case 'ultimogeniture': {
+      // Le plus jeune des enfants d'abord, puis l'ordre habituel.
+      const kids = line.filter((x) => c.childrenIds.includes(x.id));
+      return front([...kids].sort((a, b) => b.birthTurn - a.birthTurn));
+    }
+    case 'seniorite': {
+      // Le plus âgé des adultes de la maison, enfants compris.
+      const elders = line
+        .filter((x) => x.dynastyId && x.dynastyId === c.dynastyId && isAdult(state, x))
+        .sort((a, b) => a.birthTurn - b.birthTurn);
+      return front(elders);
+    }
+    case 'elective': {
+      const ballot = electionResults(state, c, line);
+      return ballot.length ? front([state.characters[ballot[0].candidateId]]) : line;
+    }
+    default:
+      return line;
+  }
 }
 
 export function succession(ctx: Ctx, id: string): void {
@@ -367,6 +394,7 @@ export function succession(ctx: Ctx, id: string): void {
   if (heir.liegeId === heir.id) heir.liegeId = undefined;
   heir.courtId = heir.id;
   heir.successionLaw = law;
+  if (!heirWasLanded && dead.government) heir.government = dead.government;
   heir.imprisonedBy = undefined;
   heir.claims = [...new Set([...heir.claims, ...dead.claims])];
   for (const [, to] of shares) {

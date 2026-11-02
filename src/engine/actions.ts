@@ -16,6 +16,7 @@ import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { courtGrandees, setSupport } from './influence';
 import { autoEducate } from './diplomacy';
 import { dropPeaceEvent, negotiatePeace } from './peace';
+import { changeSuccessionLaw, reformGovernment } from './laws';
 import { BALANCE } from '../data/balance';
 import {
   answerDuel,
@@ -29,7 +30,7 @@ import {
   startBattle,
 } from './battle/engine';
 import type { FrontId, Preset, SideOrders } from './battle/types';
-import type { PeaceTerms } from './state';
+import type { GovernmentId, PeaceTerms } from './state';
 import {
   addOpinion,
   ageOf,
@@ -170,6 +171,7 @@ export type Action =
   | { type: 'abandonPlot'; plotId: string }
   | { type: 'createTitle'; titleId: string }
   | { type: 'changeLaw'; law: SuccessionLaw }
+  | { type: 'reformGovernment'; to: GovernmentId }
   | { type: 'grantCounty'; countyId: string; characterId: string }
   | { type: 'battleDeploy'; preset: Preset }
   | { type: 'battleMove'; unit: UnitType; from: FrontId | 'reserve'; to: FrontId | 'reserve' }
@@ -429,17 +431,13 @@ function dispatch(ctx: Ctx, a: Action): void {
       createTitle(ctx, pl, a.titleId);
       break;
     case 'changeLaw':
-      if (
-        a.law === 'primogeniture' &&
-        me.successionLaw !== 'primogeniture' &&
-        me.prestige >= BALANCE.characters.primogenitureCost
-      ) {
-        me.prestige -= BALANCE.characters.primogenitureCost;
-        me.successionLaw = 'primogeniture';
+      if (changeSuccessionLaw(state, pl, a.law))
         for (const v of vassalsOf(state, pl))
           if (opinion(state, v, pl) < 0)
             notify(state, `${state.characters[v].name} désapprouve la nouvelle loi.`);
-      } else if (a.law === 'partage') me.successionLaw = 'partage';
+      break;
+    case 'reformGovernment':
+      reformGovernment(state, pl, a.to);
       break;
     case 'grantCounty': {
       const c = state.counties[a.countyId];

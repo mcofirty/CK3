@@ -7,6 +7,7 @@ import { BUILDINGS } from '../../data/buildings';
 import { EDICT_BY_ID, type EdictDef } from '../../data/edicts';
 import { clamp } from '../context';
 import { distantFactor } from '../crowns';
+import { governmentLevies } from '../government';
 import type { ConscriptionLevel, County, GameState, TaxLevel } from '../state';
 
 const L = BALANCE.local;
@@ -115,6 +116,7 @@ export function countyLevyMult(state: GameState, c: County): number {
     contentLeviesMult(c) *
     vitalityOf(c) *
     (isCapital(c) ? CAP.leviesMult : 1) *
+    governmentLevies(state, c.holderId) *
     (1 + edictSum(state, c.holderId, 'levies'))
   );
 }
