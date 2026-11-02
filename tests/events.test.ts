@@ -166,3 +166,24 @@ describe('Texte des événements', () => {
     );
   });
 });
+
+describe('Protagonistes emprisonnés', () => {
+  it('un vassal au cachot ne banquette pas, et un événement déjà tiré disparaît', async () => {
+    const { vassalsOf } = await import('../src/engine/realm');
+    const { dropStaleEvents } = await import('../src/engine/events/engine');
+    const s = newGame({ seed: 3 });
+    const ctx: Ctx = { state: s, rng: new Rng(5) };
+    const vs = vassalsOf(s, s.playerId);
+    expect(vs.length).toBeGreaterThan(0);
+    for (const v of vs) s.characters[v].imprisonedBy = s.playerId;
+    expect(buildScope(ctx, { ...EVENTS.vassal_banquet_01, conditions: [] })).toBeNull();
+    s.pendingEvents = [
+      { uid: 'x', eventId: 'vassal_banquet_01', scope: { souverain: s.playerId, vassal: vs[0] } },
+    ];
+    dropStaleEvents(s);
+    expect(s.pendingEvents).toHaveLength(0);
+    s.characters[vs[0]].imprisonedBy = undefined;
+    const scope = buildScope(ctx, { ...EVENTS.vassal_banquet_01, conditions: [] });
+    expect(scope?.vassal).toBe(vs[0]);
+  });
+});

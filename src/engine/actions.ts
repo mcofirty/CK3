@@ -65,7 +65,7 @@ import {
   marriageAcceptance,
   sendGift,
 } from './diplomacy';
-import { chooseEvent } from './events/engine';
+import { chooseEvent, dropStaleEvents } from './events/engine';
 import { addAgent, startPlot } from './intrigue';
 import { takeLegacy, takePerk } from './progression';
 import { createTitle, moveCapital, startBuilding, vassalsOf } from './realm';
@@ -195,6 +195,8 @@ export function applyAction(state: GameState, action: Action): GameState {
   dispatch(ctx, action);
   // Tout enfant arrivé à la cour (naissance, pupille, événement) reçoit son éducateur.
   autoEducate(s);
+  // Un événement dont le protagoniste vient d'être emprisonné n'a plus de sens.
+  dropStaleEvents(s);
   // Une partie peut s'achever hors de la fin de saison (mort pendant un événement, une bataille).
   if (s.gameOver && !s.gameOver.done) finishGame(s);
   s.rng = ctx.rng.s;

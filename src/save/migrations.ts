@@ -8,6 +8,7 @@ import { ensureCapitals, independentRulers } from '../engine/realm';
 import { assignHouseColors } from '../engine/heraldry';
 import { grantHouseClaims } from '../engine/crowns';
 import { repairRealms } from '../engine/characters/lifecycle';
+import { dropStaleEvents } from '../engine/events/engine';
 import { Rng } from '../engine/rng';
 import { SAVE_VERSION, type GameState } from '../engine/state';
 
@@ -153,5 +154,7 @@ export function migrate(raw: unknown): GameState {
   for (const k of ['characters', 'counties', 'playerId', 'turn'] as const) {
     if (!(k in s)) throw new SaveError('Sauvegarde incomplète.');
   }
-  return s as unknown as GameState;
+  const g = s as unknown as GameState;
+  if (Array.isArray(g.pendingEvents) && g.characters) dropStaleEvents(g);
+  return g;
 }

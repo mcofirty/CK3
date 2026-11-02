@@ -93,7 +93,46 @@ export function rolesOf(def: EventDef): Role[] {
   return roles;
 }
 
+/** Rôles qui désignent un personnage libre (le rôle « prisonnier » vise justement un captif). */
+const FREE_ROLES: readonly Role[] = [
+  'conjoint',
+  'heritier',
+  'enfant',
+  'vassal',
+  'rival',
+  'courtisan',
+  'complotiste',
+  'ami',
+  'ennemi',
+  'amant',
+  'proche',
+];
+
+/**
+ * Candidats d'un rôle. Un personnage emprisonné ne peut pas banqueter, comploter
+ * ni courtiser : il n'est retenu que pour le rôle « prisonnier ».
+ */
 function candidates(ctx: Ctx, role: Role): string[] {
+  const list = roleCandidates(ctx, role);
+  if (!FREE_ROLES.includes(role)) return list;
+  return list.filter((id) => !ctx.state.characters[id]?.imprisonedBy);
+}
+
+/**
+ * Retire les événements en attente dont un protagoniste est entre-temps jeté au cachot
+ * (par un autre événement de la même saison, ou dans une ancienne sauvegarde).
+ */
+export function dropStaleEvents(state: GameState): void {
+  state.pendingEvents = state.pendingEvents.filter((e) => {
+    if (e.inline || e.eventId.startsWith('sys_')) return true;
+    return !FREE_ROLES.some((r) => {
+      const id = e.scope[r];
+      return id !== undefined && !!state.characters[id]?.imprisonedBy;
+    });
+  });
+}
+
+function roleCandidates(ctx: Ctx, role: Role): string[] {
   const { state } = ctx;
   const p = player(state);
   switch (role) {
@@ -135,9 +174,7 @@ function candidates(ctx: Ctx, role: Role): string[] {
     case 'ennemi':
       return p.rivals.filter((id) => state.characters[id]?.alive);
     case 'amant':
-      return (p.lovers ?? []).filter(
-        (id) => state.characters[id]?.alive && !state.characters[id].imprisonedBy,
-      );
+      return (p.lovers ?? []).filter((id) => state.characters[id]?.alive);
     case 'proche':
       return companions(state).map((c) => c.id);
     default:
