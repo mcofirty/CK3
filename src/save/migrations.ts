@@ -127,6 +127,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   13: (s) => ({ ...s, version: 14 }),
   // Version 14 → 15 : instantané de fin de saison (bilan), absent tant qu'aucune saison n'est finie.
   14: (s) => ({ ...s, version: 15 }),
+  // Version 15 → 16 : personnages suivis.
+  15: (s) => ({ ...s, followed: [], version: 16 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

@@ -718,6 +718,10 @@ export const BALANCE = {
   digest: {
     /** Écart d'opinion d'un vassal à partir duquel il est signalé. */
     opinionStep: 5,
+    /** Écart de santé d'un personnage suivi à partir duquel il est signalé. */
+    healthStep: 10,
+    /** Nombre maximal de personnages suivis. */
+    maxFollowed: 8,
   },
 } as const;
 

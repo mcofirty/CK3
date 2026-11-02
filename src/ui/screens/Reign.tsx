@@ -9,7 +9,8 @@ import { totalMen } from '../../engine/units';
 import { armyOf, scoreFor, warsOf } from '../../engine/war';
 import { attention, type AttentionItem } from '../attention';
 import { AchievementList, DynastyBook } from '../components/Book';
-import { seasonDigest } from '../../engine/digest';
+import { BALANCE } from '../../data/balance';
+import { followedChanges, seasonDigest, type FollowedChange } from '../../engine/digest';
 import {
   CardTitle,
   CountyLink,
@@ -118,6 +119,7 @@ function Summary({ game }: { game: GameState }) {
       </div>
 
       <SinceLastSeason game={game} />
+      <FollowedCard game={game} />
 
       <div className="card" id="focus-afaire">
         <CardTitle extra={items.length ? String(items.length) : undefined}>
@@ -290,6 +292,84 @@ function SinceLastSeason({ game }: { game: GameState }) {
       ))}
     </div>
   );
+}
+
+/** Les personnages que le joueur suit, et ce qui leur est arrivé depuis la saison dernière. */
+function FollowedCard({ game }: { game: GameState }) {
+  const inspect = useStore((s) => s.inspect);
+  const dispatch = useStore((s) => s.dispatch);
+  const ids = (game.followed ?? []).filter((id) => game.characters[id]);
+  if (!ids.length) return null;
+  const changes = new Map(followedChanges(game).map((c) => [c.id, c]));
+  return (
+    <div className="card">
+      <CardTitle
+        extra={String(ids.length)}
+        help="Touchez « Suivre » sur la fiche d’un personnage : ce qui lui arrive (mariage, naissance, titres, prison, santé, opinion, mort) s’affiche ici à chaque saison."
+      >
+        Personnages suivis
+      </CardTitle>
+      {ids.map((id) => {
+        const c = game.characters[id];
+        const ch = changes.get(id);
+        const notes = ch ? followedNotes(ch) : [];
+        return (
+          <div key={id} className="followed-row">
+            <button className="followed-main plain" onClick={() => inspect({ kind: 'perso', id })}>
+              <Portrait state={game} c={c} size={44} />
+              <span className="grow">
+                <b>{displayName(game, c)}</b>
+                <span className="small muted">
+                  {c.alive
+                    ? `${titleOf(game, id) || 'sans titre'} · ${ageOf(game, c)} ans · opinion ${signed(opinion(game, id, game.playerId))}`
+                    : `† à ${ageOf(game, c)} ans`}
+                </span>
+                {notes.length > 0 && (
+                  <span className="followed-notes">
+                    {notes.map((n) => (
+                      <span key={n.text} className={`chip ${n.cls}`}>
+                        {n.text}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </span>
+            </button>
+            {!c.alive && (
+              <button
+                className="btn small ghost"
+                onClick={() => dispatch({ type: 'toggleFollow', id })}
+              >
+                Retirer
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function followedNotes(ch: FollowedChange): { text: string; cls: string }[] {
+  const n: { text: string; cls: string }[] = [];
+  if (ch.died) n.push({ text: 'mort', cls: 'bad' });
+  if (ch.married) n.push({ text: 'marié', cls: 'good' });
+  if (ch.widowed) n.push({ text: 'veuf', cls: '' });
+  if (ch.births)
+    n.push({ text: ch.births > 1 ? `${ch.births} naissances` : 'naissance', cls: 'good' });
+  if (ch.titlesGained) n.push({ text: 'nouveau titre', cls: 'good' });
+  if (ch.titlesLost) n.push({ text: 'titre perdu', cls: 'bad' });
+  if (ch.imprisoned) n.push({ text: 'emprisonné', cls: 'bad' });
+  if (ch.freed) n.push({ text: 'libéré', cls: 'good' });
+  if (ch.newLiege) n.push({ text: 'change de suzerain', cls: '' });
+  if (Math.abs(ch.health) >= BALANCE.digest.healthStep)
+    n.push({ text: `santé ${signed(Math.round(ch.health))}`, cls: ch.health > 0 ? 'good' : 'bad' });
+  if (Math.abs(ch.opinion) >= BALANCE.digest.opinionStep)
+    n.push({
+      text: `opinion ${signed(Math.round(ch.opinion))}`,
+      cls: ch.opinion > 0 ? 'good' : 'bad',
+    });
+  return n;
 }
 
 function Journal({ game }: { game: GameState }) {

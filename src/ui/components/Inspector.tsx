@@ -63,6 +63,7 @@ import { CapitalSection } from './Capital';
 import { claimInfo } from '../../engine/crowns';
 import { countyValue } from '../../engine/diplomacy/trade';
 import { PERKS } from '../../data/perks';
+import { isFollowed } from '../../engine/digest';
 
 export function Inspector({ game }: { game: GameState }) {
   const stack = useStore((s) => s.inspectStack);
@@ -131,7 +132,9 @@ function CharacterDetail({
   );
   const setRealmSheet = useStore((s) => s.setRealmSheet);
   const inspectClose = useStore((s) => s.inspectClose);
+  const dispatch = useStore((s) => s.dispatch);
   const c = game.characters[id];
+  const followed = isFollowed(game, id);
   const pl = game.playerId;
   const dyn = c.dynastyId ? game.dynasties[c.dynastyId] : undefined;
   const age = ageOf(game, c);
@@ -192,6 +195,16 @@ function CharacterDetail({
             ))}
             {relation && <span className={`chip ${relation.cls}`}>{relation.t}</span>}
           </div>
+          {id !== pl && (c.alive || followed) && (
+            <button
+              className={`btn small follow-btn${followed ? ' on' : ''}`}
+              aria-pressed={followed}
+              disabled={!followed && (game.followed?.length ?? 0) >= BALANCE.digest.maxFollowed}
+              onClick={() => dispatch({ type: 'toggleFollow', id })}
+            >
+              {followed ? '★ Suivi' : '☆ Suivre'}
+            </button>
+          )}
         </div>
         {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={44} />}
       </div>

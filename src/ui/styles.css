@@ -2956,3 +2956,40 @@ button.plain {
   min-height: 44px;
   border-bottom: 1px solid var(--line);
 }
+
+/* Personnages suivis */
+.follow-btn {
+  margin-top: 8px;
+}
+.follow-btn.on {
+  color: var(--gold);
+  border-color: currentColor;
+}
+.followed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.followed-row:last-child {
+  border-bottom: 0;
+}
+.followed-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.followed-main .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.followed-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}

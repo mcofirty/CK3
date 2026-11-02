@@ -603,6 +603,10 @@ const concepts: GlossarySection[] = [
         text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide.',
       },
       {
+        term: 'Bilan et personnages suivis',
+        text: 'Règne › Résumé ouvre chaque saison sur « Depuis la saison dernière » : or, prestige, piété et renommée gagnés ou perdus, comtés gagnés ou perdus, vassaux dont l’opinion a bougé, faits marquants. « Suivre », sur la fiche d’un personnage, l’épingle dans le Résumé (huit au plus) : mariage, naissance, titres, prison, santé, opinion ou mort y sont signalés.',
+      },
+      {
         term: 'Gestes',
         text: 'Glissez horizontalement pour changer de sous-vue puis d’onglet (depuis le bord de l’écran, même sur la carte), et vers le bas pour fermer une fenêtre. Appui long sur un élément marqué pour une infobulle.',
       },

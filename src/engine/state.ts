@@ -459,6 +459,8 @@ export interface GameState {
   treasury?: 'prudent' | 'manuel';
   /** Instantané pris à la dernière fin de saison (bilan « Depuis la saison dernière »). */
   lastSnapshot?: SeasonSnapshot;
+  /** Personnages suivis par le joueur (épinglés depuis leur fiche). */
+  followed?: string[];
 }
 
 export interface SeasonSnapshot {
@@ -472,6 +474,19 @@ export interface SeasonSnapshot {
   counties: string[];
   /** Opinion de chaque vassal envers le joueur. */
   opinions: Record<string, number>;
+  /** Personnages suivis, tels qu'ils étaient. */
+  followed?: Record<string, FollowedSnapshot>;
+}
+
+export interface FollowedSnapshot {
+  alive: boolean;
+  health: number;
+  spouseId?: string;
+  liegeId?: string;
+  imprisoned: boolean;
+  titles: number;
+  children: number;
+  opinion: number;
 }
 
 export interface Candidate {
@@ -541,4 +556,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;

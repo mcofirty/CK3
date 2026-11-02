@@ -12,6 +12,7 @@ import {
   setAgnatic,
   type MarriageClause,
 } from './crowns';
+import { toggleFollow } from './digest';
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { courtGrandees, setSupport } from './influence';
 import { autoEducate } from './diplomacy';
@@ -192,6 +193,7 @@ export type Action =
   | { type: 'battleChallenge' }
   | { type: 'battleClose' }
   | { type: 'dismissTutorial' }
+  | { type: 'toggleFollow'; id: string }
   | { type: 'takePerk'; characterId: string; perkId: string }
   | { type: 'takeLegacy'; legacyId: string }
   | { type: 'debugGold'; amount: number }
@@ -494,6 +496,9 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'dismissTutorial':
       state.tutorialSeen = true;
+      break;
+    case 'toggleFollow':
+      toggleFollow(state, a.id);
       break;
     case 'siegeMode': {
       const army = state.armies[a.armyId];
