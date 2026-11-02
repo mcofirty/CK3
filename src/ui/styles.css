@@ -3093,3 +3093,15 @@ button.plain {
     width: 34px;
   }
 }
+
+/* Tri des partis à marier */
+.match-sort {
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.match-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
