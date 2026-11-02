@@ -8,6 +8,7 @@ import { perkPoints } from '../engine/progression';
 import { capitalOccupied, economyOf, vassalsOf } from '../engine/realm';
 import type { GameState } from '../engine/state';
 import { warsOf } from '../engine/war';
+import { wallStatus } from '../engine/scenario/wall';
 import { signed } from './components/common';
 import type { Inspected, Tab } from './store';
 
@@ -124,6 +125,21 @@ export function attention(g: GameState): AttentionItem[] {
       level: 'info',
       endSeason: true,
     });
+  if (g.wall) {
+    const st = wallStatus(g);
+    if (st !== 'tient')
+      res.push({
+        text:
+          st === 'tombe'
+            ? 'Le Mur est tombé : la Longue Nuit a commencé.'
+            : 'Le Mur vacille face aux Autres.',
+        detail: 'Monde › Le Mur',
+        label: 'Voir le Mur',
+        go: { tab: 'monde', view: 'mur' },
+        level: st === 'tombe' ? 'bad' : 'warn',
+        endSeason: st === 'tombe',
+      });
+  }
   const prisoners = Object.values(g.characters).filter((c) => c.alive && c.imprisonedBy === pl);
   if (prisoners.length)
     res.push({

@@ -7,7 +7,7 @@ const VIEWS: Record<string, string[]> = {
   cour: ['souverain', 'maison', 'conseil', 'courtisans'],
   royaume: ['carte', 'domaine', 'tresor', 'lois'],
   armee: ['troupes', 'guerres'],
-  monde: ['cours', 'complots', 'nouvelles'],
+  monde: ['cours', 'complots', 'nouvelles', 'mur', 'essos'],
 };
 
 describe('Aides au premier passage', () => {

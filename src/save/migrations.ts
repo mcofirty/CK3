@@ -133,6 +133,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   16: (s) => ({ ...s, treasuryHistory: [], version: 17 }),
   // Version 17 → 18 : scénarios (Westeros), libellés de titres, emblèmes de maison.
   17: (s) => ({ ...s, version: 18 }),
+  // Version 18 → 19 : le Mur et Essos (mode Trône de fer), comtés submergés par les morts.
+  18: (s) => ({ ...s, version: 19 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

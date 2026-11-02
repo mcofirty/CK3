@@ -282,6 +282,7 @@ export const HOUSES: WHouse[] = [
       }),
       m('benjen', 'Benjen', 35, {
         vows: true,
+        court: 'jeor',
         traits: ['courageux'],
         skills: [6, 13, 6, 8, 7],
       }),
@@ -682,6 +683,7 @@ export const HOUSES: WHouse[] = [
       m('mormont_pere', 'Brandon', 52, { house: null, dead: 'mort à la mer' }),
       m('jeor', 'Jeor', 70, {
         vows: true,
+        court: 'jeor',
         traits: ['juste', 'veteran'],
         skills: [10, 14, 9, 7, 9],
       }),
@@ -752,6 +754,7 @@ export const HOUSES: WHouse[] = [
         father: 'randyll',
         mother: 'melessa',
         vows: true,
+        court: 'jeor',
         traits: ['erudit', 'lache'],
         skills: [8, 2, 8, 6, 15],
       }),

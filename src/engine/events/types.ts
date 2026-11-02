@@ -137,6 +137,20 @@ export interface Effect {
   opinion?: { cible: OpinionTarget; valeur: number; raison?: string };
   /** Opinion de tous les vassaux envers le souverain. */
   opinion_vassaux?: number;
+  /** Le Mur (mode Trône de fer) : frères, vivres, menace, sauvageons, verredragon ; le comté du rôle « comte » tombe aux morts ou est libéré. */
+  mur?: {
+    hommes?: number;
+    vivres?: number;
+    menace?: number;
+    sauvageons?: number;
+    verredragon?: number;
+    submerger?: boolean;
+    liberer?: boolean;
+  };
+  /** Daenerys en Essos (mode Trône de fer). */
+  essos?: { armee?: number; mort?: boolean };
+  /** Le personnage du rôle prend le noir (vœux, départ pour le Mur). */
+  prendre_le_noir?: Role;
   /** Influence du souverain à la cour du rôle désigné (un souverain indépendant). */
   influence?: { cible: OpinionTarget; valeur: number };
   trait_ajout?: string | { cible: Role; trait: string };

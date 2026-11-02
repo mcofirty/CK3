@@ -107,7 +107,7 @@ function specsFor(houseId: string): Spec[] {
             {
               libelle: 'Le laisser partir pour le Mur',
               effets: [
-                { trait_ajout: { cible: 'courtisan', trait: 'voeux' } },
+                { prendre_le_noir: 'courtisan' },
                 { opinion: { cible: 'courtisan', valeur: 15, raison: 'Il a respecté son choix' } },
                 { drapeau: 'jon_garde_de_nuit' },
               ],

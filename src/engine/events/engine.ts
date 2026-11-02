@@ -1,4 +1,6 @@
 /** Moteur d'événements narratifs et langage d'effets (section 6). */
+import { applyWallEffect, takeTheBlack, wallEffectLabels } from '../scenario/wall';
+import { applyEssosEffect, essosEffectLabels } from '../scenario/essos';
 import { gainInfluence } from '../influence';
 import { cession } from '../diplomacy/trade';
 import { setUnionPrivileges, settlePretender } from '../crowns';
@@ -501,6 +503,9 @@ export function effectLabels(
     if (e.opinion_vassaux) out.push(`Opinion des vassaux : ${sign(e.opinion_vassaux)}`);
     if (e.influence)
       out.push(`Influence à la cour de ${name(e.influence.cible)} : ${sign(e.influence.valeur)}`);
+    if (e.mur) out.push(...wallEffectLabels(e.mur, scope.comte ? name('comte') : undefined));
+    if (e.essos) out.push(...essosEffectLabels(e.essos));
+    if (e.prendre_le_noir) out.push(`${name(e.prendre_le_noir)} prend le noir et part pour le Mur`);
     if (e.trait_ajout) {
       const t =
         typeof e.trait_ajout === 'string'
@@ -678,6 +683,15 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     if (e.influence) {
       const c = who(e.influence.cible);
       if (c) gainInfluence(state, c.id, e.influence.valeur);
+    }
+    if (e.mur) applyWallEffect(state, e.mur, scope.comte);
+    if (e.essos) applyEssosEffect(ctx, e.essos);
+    if (e.prendre_le_noir) {
+      const c = who(e.prendre_le_noir);
+      if (c) {
+        takeTheBlack(state, c.id);
+        if (state.wall) state.wall.men += 1;
+      }
     }
     if (e.opinion_vassaux)
       for (const v of vassalsOf(state, p.id))

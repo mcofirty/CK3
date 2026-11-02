@@ -4,10 +4,42 @@
  * enfant) ; un grand seigneur libre ceint la couronne de son ancien royaume.
  */
 import { BALANCE } from '../../data/balance';
+import type { GameState } from '../state';
 import { atWar, isAdult, opinion } from '../characters';
 import { chronicle, notify, worldNews, type Ctx } from '../context';
 import { titleOf, vassalsOf } from '../realm';
 import { declareWar } from '../war';
+import { ensureCommander, seasonWall } from './wall';
+import { seasonEssos, settleLandingChoice } from './essos';
+
+/**
+ * Qui tient Port-Réal tient le Trône de fer : un souverain indépendant qui prend la ville
+ * reçoit la couronne, et les vassaux de l'ancien roi plient le genou devant lui.
+ */
+export function ironThrone(state: GameState): void {
+  const crown = state.kingdoms.k_couronnes;
+  const city = state.counties.port_real;
+  if (!crown || !city) return;
+  const holder = state.characters[city.holderId];
+  if (!holder?.alive || holder.liegeId || crown.holderId === holder.id) return;
+  const old = crown.holderId ? state.characters[crown.holderId] : undefined;
+  crown.holderId = holder.id;
+  const duchy = state.duchies.d_couronne;
+  if (duchy && duchy.holderId === old?.id) duchy.holderId = holder.id;
+  if (old) {
+    for (const v of vassalsOf(state, old.id)) {
+      if (v === holder.id) continue;
+      const c = state.characters[v];
+      if (c && !atWar(state, v, holder.id)) c.liegeId = holder.id;
+    }
+    if (old.alive && Object.values(state.counties).some((k) => k.holderId === old.id))
+      old.liegeId = holder.id;
+  }
+  const title = titleOf(state, holder.id);
+  chronicle(state, `${holder.name} s’assied sur le Trône de fer : ${title}.`, 'titre');
+  worldNews(state, `${holder.name} s’empare de Port-Réal et du Trône de fer.`, 'titre', holder.id);
+  if (holder.id === state.playerId) notify(state, 'Le Trône de fer est à vous.');
+}
 
 const W = BALANCE.westeros;
 
@@ -15,6 +47,11 @@ export function seasonWesteros(ctx: Ctx): void {
   const { state, rng } = ctx;
   if (state.scenario !== 'westeros') return;
   const flags = (state.flags ??= {});
+  settleLandingChoice(state);
+  ironThrone(state);
+  ensureCommander(ctx);
+  seasonWall(ctx);
+  seasonEssos(ctx);
   const king = state.kingdoms.k_couronnes?.holderId;
   const crown = king ? state.characters[king] : undefined;
   if (crown?.alive) {

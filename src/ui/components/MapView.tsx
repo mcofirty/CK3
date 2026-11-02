@@ -471,6 +471,18 @@ export function MapView({
               />
             );
           })}
+        {MAP_DATA.counties
+          .filter((m) => game.counties[m.id]?.blighted)
+          .map((m) => (
+            <polygon
+              key={`mort-${m.id}`}
+              points={pts(m.polygon)}
+              fill="#0e1c2a"
+              opacity={0.55}
+              className="blighted"
+              pointerEvents="none"
+            />
+          ))}
         {rulers.map((r) => (
           <path
             key={r}
@@ -647,7 +659,8 @@ export function MapView({
           <g pointerEvents="none">
             <polyline
               points={pts(MAP_DATA.wall)}
-              stroke="#eef4f8"
+              stroke={game.wall?.fallenTurn !== undefined ? '#6b7884' : '#eef4f8'}
+              strokeDasharray={game.wall?.fallenTurn !== undefined ? '40 26' : undefined}
               strokeWidth={16}
               strokeLinecap="round"
               fill="none"
@@ -668,7 +681,7 @@ export function MapView({
               textAnchor="middle"
               fill="#2f3d48"
             >
-              Le Mur
+              {game.wall?.fallenTurn !== undefined ? 'Le Mur (tombé)' : 'Le Mur'}
             </text>
           </g>
         )}

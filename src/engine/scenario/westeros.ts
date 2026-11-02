@@ -31,6 +31,8 @@ import {
 import { emptyUnits } from '../units';
 import { emptyState, rollEventBias, trimStanding } from '../world';
 import { buildWesterosMap } from './westerosMap';
+import { initWall } from './wall';
+import { initEssos } from './essos';
 
 export interface WesterosOptions {
   seed?: number;
@@ -441,6 +443,8 @@ export function newWesterosGame(opts: WesterosOptions): GameState {
     kind: 'deces',
   });
   state.flags = { westeros: 0, [`maison_${house.id}`]: 0 };
+  initWall(state, idOf('jeor'));
+  initEssos(state);
   state.pendingEvents.push(...openingEvents(state, house.id, idOf));
   recordRuler(state, state.playerId);
   generateCandidates(ctx);

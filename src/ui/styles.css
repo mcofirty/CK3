@@ -3337,3 +3337,67 @@ button.plain {
 .map-wall {
   filter: drop-shadow(0 2px 3px rgba(40, 60, 80, 0.35));
 }
+
+/* Le Mur et Essos */
+.essos-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.essos-hero .grow {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.essos-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--line);
+}
+.essos-steps li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 8px 16px;
+}
+.essos-steps li::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--line);
+}
+.essos-steps li.done::before {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.essos-steps li.now::before {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.essos-steps li.next {
+  opacity: 0.55;
+}
+.long-night {
+  background: linear-gradient(160deg, rgba(20, 35, 50, 0.85), rgba(10, 16, 24, 0.92));
+  color: #e8edf1;
+}
+.long-night .muted {
+  color: #9aa6b2;
+}
+/* Cinq sous-onglets (Monde du mode Trône de fer) : libellés sur une ligne. */
+.segmented.subnav[style*='--n: 5'] button {
+  font-size: 13px;
+  padding: 4px 0;
+  letter-spacing: -0.02em;
+  overflow-wrap: normal;
+  hyphens: manual;
+  white-space: nowrap;
+}

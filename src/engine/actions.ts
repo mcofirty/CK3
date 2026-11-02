@@ -13,6 +13,8 @@ import {
   type MarriageClause,
 } from './crowns';
 import { toggleFollow } from './digest';
+import { wallAction, type WallAction } from './scenario/wall';
+import { essosAction, type EssosAction } from './scenario/essos';
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { courtGrandees, setSupport } from './influence';
 import { autoEducate } from './diplomacy';
@@ -194,6 +196,8 @@ export type Action =
   | { type: 'battleClose' }
   | { type: 'dismissTutorial' }
   | { type: 'toggleFollow'; id: string }
+  | { type: 'wallAct'; action: WallAction }
+  | { type: 'essosAct'; action: EssosAction }
   | { type: 'takePerk'; characterId: string; perkId: string }
   | { type: 'takeLegacy'; legacyId: string }
   | { type: 'debugGold'; amount: number }
@@ -499,6 +503,12 @@ function dispatch(ctx: Ctx, a: Action): void {
       break;
     case 'toggleFollow':
       toggleFollow(state, a.id);
+      break;
+    case 'wallAct':
+      wallAction(ctx, a.action);
+      break;
+    case 'essosAct':
+      essosAction(ctx, a.action);
       break;
     case 'siegeMode': {
       const army = state.armies[a.armyId];
