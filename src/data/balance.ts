@@ -614,6 +614,34 @@ export const BALANCE = {
     perjuryOpinion: -10,
   },
 
+  /** Négociation de paix (engine/peace.ts). */
+  peace: {
+    /** Points d'acceptation par point de score de guerre (vu de celui qui doit accepter). */
+    scoreWeight: 1,
+    /** Valeur d'un comté en points : base + développement, puis selon son statut. */
+    countyBase: 30,
+    countyPerDev: 4,
+    capitalMult: 2.5,
+    /** Comté occupé par le vainqueur : il le tient déjà. */
+    occupiedMult: 0.5,
+    /** Objectif de la guerre (non occupé). */
+    objectiveMult: 0.9,
+    /** Ni occupé ni objectif : exorbitant. */
+    farMult: 1.5,
+    /** 1 point d'acceptation pour tant d'or. */
+    goldPerPoint: 8,
+    /** Lassitude : saisons de guerre avant que la paix tente, puis points par saison. */
+    exhaustionStart: 8,
+    exhaustionPerSeason: 1,
+    exhaustionMax: 20,
+    /** Sa capitale est occupée : il veut la paix. */
+    capitalOccupied: 15,
+    /** Rapport de force : points au plus. */
+    strengthWeight: 10,
+    /** L'IA ne réclame pas plus que cette part du trésor du vaincu. */
+    maxGoldShare: 0.5,
+  },
+
   /** Influence dans les cours étrangères (engine/influence.ts). */
   influence: {
     max: 100,

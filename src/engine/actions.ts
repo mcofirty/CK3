@@ -15,6 +15,7 @@ import {
 import { proposeTrade, type TradeOffer } from './diplomacy/trade';
 import { courtGrandees, setSupport } from './influence';
 import { autoEducate } from './diplomacy';
+import { dropPeaceEvent, negotiatePeace } from './peace';
 import { BALANCE } from '../data/balance';
 import {
   answerDuel,
@@ -28,6 +29,7 @@ import {
   startBattle,
 } from './battle/engine';
 import type { FrontId, Preset, SideOrders } from './battle/types';
+import type { PeaceTerms } from './state';
 import {
   addOpinion,
   ageOf,
@@ -124,6 +126,7 @@ export type Action =
       claimantId?: string;
     }
   | { type: 'peace'; warId: string; kind: 'exiger' | 'blanche' | 'capituler' }
+  | { type: 'negotiatePeace'; terms: PeaceTerms; eventUid?: string }
   | { type: 'ransom'; characterId: string; kind: 'or' | 'comte' | 'liberer' | 'otage' | 'executer' }
   | { type: 'takeDecision'; id: string }
   | { type: 'siegeMode'; armyId: string; mode?: 'blocus' | 'negocier' }
@@ -298,6 +301,12 @@ function dispatch(ctx: Ctx, a: Action): void {
       else if (a.kind === 'capituler')
         endWar(ctx, a.warId, iAmAttacker ? 'defenseur' : 'attaquant');
       else endWar(ctx, a.warId, 'blanche');
+      break;
+    }
+    case 'negotiatePeace': {
+      const w = state.wars[a.terms.warId];
+      if (!w || (w.attackerId !== pl && w.defenderId !== pl)) break;
+      if (negotiatePeace(ctx, pl, a.terms) && a.eventUid) dropPeaceEvent(state, a.eventUid);
       break;
     }
     case 'ransom': {

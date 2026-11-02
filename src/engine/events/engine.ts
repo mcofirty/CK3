@@ -576,7 +576,19 @@ export function effectLabels(
           : `Vous cédez ${c} · +${e.cession.prix} or`,
       );
     }
-    if (e.paix) out.push(e.paix.issue === 'blanche' ? 'Paix blanche' : 'Fin de la guerre');
+    if (e.paix) {
+      const t = e.paix.termes;
+      const parts = [e.paix.issue === 'blanche' ? 'Paix blanche' : 'Fin de la guerre'];
+      if (t?.comtes.length)
+        parts.push(
+          t.comtes
+            .map((id) => state.counties[id]?.name)
+            .filter(Boolean)
+            .join(', '),
+        );
+      if (t && t.or > 0) parts.push(`${t.or} or`);
+      out.push(parts.join(' · '));
+    }
     if (e.rejoindre_guerre) out.push('Vous entrez en guerre');
     if (e.tribut)
       out.push(`${e.tribut.de === state.playerId ? '-' : '+'}${e.tribut.montant} or (tribut)`);
@@ -834,7 +846,23 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
       setUnionPrivileges(state, e.union_privileges.union, e.union_privileges.mode);
     if (e.pretendant)
       settlePretender(state, e.pretendant.id, e.pretendant.action, e.pretendant.souverain);
-    if (e.paix && state.wars[e.paix.warId]) endWar(ctx, e.paix.warId, e.paix.issue);
+    if (e.paix && state.wars[e.paix.warId]) {
+      const t = e.paix.termes;
+      endWar(
+        ctx,
+        e.paix.warId,
+        e.paix.issue,
+        t
+          ? {
+              warId: e.paix.warId,
+              outcome: e.paix.issue,
+              counties: t.comtes,
+              gold: t.or,
+              payerId: t.payeur,
+            }
+          : undefined,
+      );
+    }
     if (e.rejoindre_guerre && state.wars[e.rejoindre_guerre.warId]) {
       joinWar(
         state,

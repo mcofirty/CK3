@@ -41,7 +41,7 @@ import {
   recruitCapacity,
   standingOf,
 } from '../realm';
-import type { Army, CasusBelliType, County, GameState, UnitType, War } from '../state';
+import type { Army, CasusBelliType, County, GameState, PeaceTerms, UnitType, War } from '../state';
 import { addUnits, armyStrength, emptyUnits, totalMen } from '../units';
 import { hurtPopulation, isCapital } from '../economy/local';
 import {
@@ -1015,7 +1015,43 @@ export function transferCounty(state: GameState, countyId: string, newHolder: st
   }
 }
 
-export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
+/** Applique les conditions négociées : comtés cédés au vainqueur, or versé. */
+function applyPeaceTerms(
+  state: GameState,
+  w: War,
+  outcome: PeaceOutcome,
+  terms: PeaceTerms,
+): string {
+  const winner =
+    outcome === 'attaquant' ? w.attackerId : outcome === 'defenseur' ? w.defenderId : undefined;
+  const loser =
+    outcome === 'attaquant' ? w.defenderId : outcome === 'defenseur' ? w.attackerId : undefined;
+  const parts: string[] = [];
+  if (winner && loser) {
+    const names: string[] = [];
+    for (const id of terms.counties) {
+      const c = state.counties[id];
+      if (!c || countyRuler(state, c) !== loser) continue;
+      transferCounty(state, id, winner);
+      names.push(c.name);
+    }
+    if (names.length) parts.push(`${state.characters[winner].name} obtient ${names.join(', ')}`);
+  }
+  const payer = winner ? loser : terms.payerId;
+  const payee = winner ? winner : payer === w.attackerId ? w.defenderId : w.attackerId;
+  if (payer && payee && terms.gold > 0) {
+    const p = state.characters[payer];
+    const amount = Math.max(0, Math.min(Math.round(terms.gold), Math.floor(p.gold)));
+    if (amount > 0) {
+      p.gold -= amount;
+      state.characters[payee].gold += amount;
+      parts.push(`${p.name} verse ${amount} or`);
+    }
+  }
+  return parts.length ? `${parts.join(' ; ')}.` : '';
+}
+
+export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome, terms?: PeaceTerms): void {
   const { state } = ctx;
   const w = state.wars[warId];
   if (!w) return;
@@ -1038,6 +1074,8 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
       detail = `${att.name} obtient son indépendance.`;
     } else if (w.cb === 'dynastique' && w.claimantId) {
       detail = resolveDynasticWar(state, w.attackerId, w.defenderId, w.claimantId);
+    } else if (terms) {
+      detail = applyPeaceTerms(state, w, outcome, terms);
     } else {
       const gained: string[] = [];
       if (
@@ -1062,9 +1100,10 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
       detail = gained.length ? `${att.name} obtient ${gained.join(', ')}.` : '';
     }
   } else if (outcome === 'defenseur') {
-    const pay = Math.max(0, Math.min(att.gold, 100));
+    const pay = terms ? 0 : Math.max(0, Math.min(att.gold, 100));
     att.gold -= pay;
     def.gold += pay;
+    if (terms) detail = applyPeaceTerms(state, w, outcome, terms);
     if (w.cb === 'independance') {
       for (const id of [w.attackerId, ...w.attackerAllies]) {
         const c = state.characters[id];
@@ -1075,7 +1114,9 @@ export function endWar(ctx: Ctx, warId: string, outcome: PeaceOutcome): void {
         }
       }
     }
-    detail = pay ? `${att.name} verse ${pay} or de réparations.` : '';
+    if (!terms) detail = pay ? `${att.name} verse ${pay} or de réparations.` : '';
+  } else if (terms) {
+    detail = applyPeaceTerms(state, w, outcome, terms);
   }
   if (winnerId && loserId) {
     state.characters[winnerId].prestige += W.peaceWinnerPrestige;

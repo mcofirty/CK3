@@ -201,7 +201,12 @@ export interface Effect {
   pretendant?: { id: string; action: 'accueillir' | 'livrer' | 'congedier'; souverain: string };
   /** Cession d'un comté contre or (négociée par l'IA). */
   cession?: { comte: string; vendeur: string; acheteur: string; prix: number };
-  paix?: { warId: string; issue: 'attaquant' | 'defenseur' | 'blanche' };
+  paix?: {
+    warId: string;
+    issue: 'attaquant' | 'defenseur' | 'blanche';
+    /** Conditions négociées (comtés, or) ; absentes : conditions d'usage. */
+    termes?: { comtes: string[]; or: number; payeur?: string };
+  };
   rejoindre_guerre?: { warId: string; allie: string; camp: 'attaquant' | 'defenseur' };
   tribut?: { de: string; a: string; montant: number };
   /** Avenir d'un pupille devenu adulte. */

@@ -431,11 +431,11 @@ const concepts: GlossarySection[] = [
       },
       {
         term: 'Score de guerre',
-        text: 'De −100 à +100 du point de vue de l’attaquant. Il monte avec les batailles gagnées, les occupations, la capture du souverain adverse et l’objectif tenu. À +50 vous pouvez exiger la paix ; à +100 elle est imposée.',
+        text: 'De −100 à +100 du point de vue de l’attaquant. Il monte avec les batailles gagnées, les occupations, la capture du souverain adverse et l’objectif tenu. Il pèse sur l’acceptation d’une paix : à +100 elle est imposée.',
       },
       {
         term: 'Paix',
-        text: 'Trois formes : exiger (le vainqueur prend son objectif), paix blanche (statu quo) ou capitulation. L’IA propose elle-même la paix quand elle est en difficulté.',
+        text: `Onglet Armée › « Négocier la paix » (chef de guerre seulement). Trois formes : victoire (vous réclamez des comtés et de l’or), paix blanche (statu quo, avec de l’or si vous voulez l’acheter) ou reddition (vous cédez ce qu’il réclame, marchandable). Une barre d’acceptation montre, en direct, si l’ennemi accepte : elle part de l’état de la guerre (score de son point de vue, lassitude après ${B.peace.exhaustionStart / 4} ans, capitale occupée, rapport de force), puis compte la valeur des comtés (${B.peace.countyBase} + ${B.peace.countyPerDev} par niveau de développement ; ×${B.peace.occupiedMult} s’ils sont occupés, ×${B.peace.objectiveMult} pour l’objectif, ×${B.peace.farMult} sinon, ×${B.peace.capitalMult} pour une capitale occupée) et l’or (${B.peace.goldPerPoint} or = 1 point). « Équilibrer l’or » trouve la somme juste. Quand l’IA vous propose la paix (exigences ou offre), vous pouvez accepter, refuser, ou modifier les conditions et contre-proposer. Elle réclame au plus ${Math.round(B.peace.maxGoldShare * 100)} % de votre trésor.`,
       },
     ],
   },

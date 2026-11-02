@@ -327,6 +327,18 @@ export interface NewsEntry {
   rulerId?: string;
 }
 
+/** Conditions d'une paix négociée : comtés cédés et or, selon le camp vainqueur. */
+export interface PeaceTerms {
+  warId: string;
+  /** Camp vainqueur ('attaquant' ou 'defenseur'), ou 'blanche' (aucun vainqueur). */
+  outcome: 'attaquant' | 'defenseur' | 'blanche';
+  /** Comtés cédés au chef du camp vainqueur (pris au royaume du vaincu). */
+  counties: string[];
+  /** Or versé par le vaincu au vainqueur ; en paix blanche, par `payerId`. */
+  gold: number;
+  payerId?: string;
+}
+
 /** Instance d'événement en attente de choix. */
 export interface EventInstance {
   uid: string;
@@ -335,6 +347,8 @@ export interface EventInstance {
   scope: Record<string, string>;
   /** Définition embarquée (propositions générées par le moteur). */
   inline?: import('./events/types').EventDef;
+  /** Proposition de paix de l'IA : conditions modifiables par le joueur (contre-proposition). */
+  peace?: { proposerId: string; terms: PeaceTerms };
 }
 
 export interface Notification {

@@ -32,6 +32,7 @@ import { queueEvent } from '../events/engine';
 import type { EventDef } from '../events/types';
 import { aiPlots } from '../intrigue';
 import { aiLandOffer } from '../diplomacy/trade';
+import { aiTerms, proposePeaceToPlayer } from '../peace';
 import { breakPacts, hasFamilyPact, pressableClaims } from '../crowns';
 import {
   availableLevies,
@@ -343,44 +344,17 @@ function manageWar(ctx: Ctx, r: Character, wars: War[]): void {
       continue;
     }
     if (my >= demand && enemy === state.playerId) {
-      proposeToPlayer(
-        ctx,
-        {
-          id: `sys_exige_${w.id}`,
-          titre: 'Exigences de l’ennemi',
-          texte: `${r.name} juge la guerre « ${w.name} » gagnée (score ${Math.round(my)})${enemyFallen ? ', votre capitale étant entre ses mains,' : ''} et exige votre reddition. Refuser, c’est continuer à se battre : à 100, la paix vous sera imposée.`,
-          choix: [
-            {
-              libelle: 'Accepter ses conditions',
-              effets: [
-                { paix: { warId: w.id, issue: w.attackerId === r.id ? 'attaquant' : 'defenseur' } },
-              ],
-            },
-            { libelle: 'Refuser et combattre', effets: [{ prestige: 5 }] },
-          ],
-        },
-        { ennemi: r.id },
-      );
+      proposePeaceToPlayer(ctx, w, r.id, aiTerms(state, w.id, r.id));
       continue;
     }
     if (my <= BALANCE.war.whitePeaceAi && age >= BALANCE.war.minWarSeasons) {
       if (enemy === state.playerId) {
-        proposeToPlayer(
-          ctx,
-          {
-            id: `sys_blanche_${w.id}`,
-            titre: 'Une offre de paix',
-            texte: `${r.name}, en mauvaise posture dans la guerre « ${w.name} », propose une paix blanche.`,
-            choix: [
-              {
-                libelle: 'Accepter la paix blanche',
-                effets: [{ paix: { warId: w.id, issue: 'blanche' } }],
-              },
-              { libelle: 'Refuser : poursuivre la guerre', effets: [] },
-            ],
-          },
-          { ennemi: r.id },
-        );
+        proposePeaceToPlayer(ctx, w, r.id, {
+          warId: w.id,
+          outcome: 'blanche',
+          counties: [],
+          gold: 0,
+        });
       } else if (scoreFor(state, w, enemy) < BALANCE.war.peaceThreshold && rng.chance(0.5)) {
         endWar(ctx, w.id, 'blanche');
       }

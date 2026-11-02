@@ -22,6 +22,7 @@ import { AchievementList, DynastyBook, EndingBanner } from './components/Book';
 import { Inspector } from './components/Inspector';
 import { TradeSheet } from './components/Diplomacy';
 import { RealmSheet } from './components/RealmSheet';
+import { PeaceNegotiation } from './components/Peace';
 import { SettingsButton, SettingsSheet } from './components/Settings';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
@@ -663,24 +664,37 @@ function EventModal({ game }: { game: GameState }) {
       <h2>{renderText(game, def.titre, inst.scope)}</h2>
       <p className="event-text">{renderText(game, eventText(def, inst.scope), inst.scope)}</p>
       <EventSubjects game={game} subjects={eventSubjects(game, def, inst.scope)} />
-      {def.choix.map((c, i) => {
-        const ok = checkAll(game, c.conditions, inst.scope);
-        const fx = effectLabels(game, c.effets, inst.scope);
-        return (
-          <button
-            key={i}
-            className="btn choice"
-            disabled={!ok}
-            onClick={() => dispatch({ type: 'chooseEvent', uid: inst.uid, choice: i })}
-          >
-            {renderText(game, c.libelle, inst.scope)}
-            <span className="effects">
-              {fx.length ? fx.join(' · ') : def.categorie === 'systeme' ? '' : 'Aucun effet connu'}
-              {!ok && ' — conditions non remplies'}
-            </span>
-          </button>
-        );
-      })}
+      {inst.peace && game.wars[inst.peace.terms.warId] && (
+        <PeaceNegotiation
+          game={game}
+          warId={inst.peace.terms.warId}
+          initial={inst.peace.terms}
+          incoming={{ uid: inst.uid }}
+        />
+      )}
+      {!(inst.peace && game.wars[inst.peace.terms.warId]) &&
+        def.choix.map((c, i) => {
+          const ok = checkAll(game, c.conditions, inst.scope);
+          const fx = effectLabels(game, c.effets, inst.scope);
+          return (
+            <button
+              key={i}
+              className="btn choice"
+              disabled={!ok}
+              onClick={() => dispatch({ type: 'chooseEvent', uid: inst.uid, choice: i })}
+            >
+              {renderText(game, c.libelle, inst.scope)}
+              <span className="effects">
+                {fx.length
+                  ? fx.join(' · ')
+                  : def.categorie === 'systeme'
+                    ? ''
+                    : 'Aucun effet connu'}
+                {!ok && ' — conditions non remplies'}
+              </span>
+            </button>
+          );
+        })}
     </Sheet>
   );
 }

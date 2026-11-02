@@ -24,12 +24,12 @@ import {
   canRaise,
   canRecruit,
   courtiersOf,
-  peaceAcceptance,
   scoreFor,
   warsOf,
 } from '../../engine/war';
 import { Bar, Segmented, Sheet, Tip, signed } from '../components/common';
 import { CallHelpSheet } from '../components/Diplomacy';
+import { PeaceSheet } from '../components/Peace';
 import { useStore } from '../store';
 
 export function ArmyScreen({ game }: { game: GameState }) {
@@ -59,6 +59,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
   const raise = canRaise(game, pl);
   const [declare, setDeclare] = useState(false);
   const [callHelp, setCallHelp] = useState<string | null>(null);
+  const [peaceWar, setPeaceWar] = useState<string | null>(null);
   const [confirmExec, setConfirmExec] = useState<string | null>(null);
   const commanders = [
     game.characters[pl],
@@ -269,32 +270,13 @@ export function ArmyScreen({ game }: { game: GameState }) {
                 />
               </div>
               {leader && (
-                <div className="row wrap" style={{ marginTop: 8 }}>
-                  {(['exiger', 'blanche', 'capituler'] as const).map((k) => {
-                    const acc = peaceAcceptance(game, w.id, pl, k);
-                    return (
-                      <button
-                        key={k}
-                        className={`btn small ${k === 'exiger' ? 'primary' : ''}`}
-                        disabled={!acc.accept}
-                        title={acc.reasons.join('\n')}
-                        onClick={() => dispatch({ type: 'peace', warId: w.id, kind: k })}
-                      >
-                        {k === 'exiger'
-                          ? 'Exiger la victoire'
-                          : k === 'blanche'
-                            ? 'Paix blanche'
-                            : 'Capituler'}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {leader && (
-                <p className="small muted">
-                  {peaceAcceptance(game, w.id, pl, 'exiger').reasons.join(' · ')} · paix blanche :{' '}
-                  {peaceAcceptance(game, w.id, pl, 'blanche').accept ? 'acceptée' : 'refusée'}
-                </p>
+                <button
+                  className="btn small primary"
+                  style={{ marginTop: 8, marginRight: 8 }}
+                  onClick={() => setPeaceWar(w.id)}
+                >
+                  Négocier la paix
+                </button>
               )}
               <button
                 className="btn small"
@@ -381,6 +363,7 @@ export function ArmyScreen({ game }: { game: GameState }) {
         </div>
       )}
       {declare && <DeclareWar game={game} onClose={() => setDeclare(false)} />}
+      {peaceWar && <PeaceSheet game={game} warId={peaceWar} onClose={() => setPeaceWar(null)} />}
       {callHelp && <CallHelpSheet game={game} warId={callHelp} onClose={() => setCallHelp(null)} />}
     </>
   );

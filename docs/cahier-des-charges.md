@@ -128,6 +128,8 @@ _Révision du 1er novembre 2026, à la demande du propriétaire : mariages entre
 
 _Révision du 1er novembre 2026, à la demande du propriétaire : fiche de royaume (souverain, héritier attendu, ligne de succession, prétendants) et influence dans les cours étrangères (chancelier, Grands courtisés, cadeaux, liens de famille), qui facilite les négociations et permet de faire acclamer un candidat à la succession._
 
+_Révision du 2 novembre 2026, à la demande du propriétaire : négociation de paix. Le chef de guerre choisit le camp vainqueur (victoire, paix blanche, reddition), les comtés cédés et l'or ; une barre d'acceptation reflète l'état de la guerre et la valeur des conditions. L'IA formule ses propositions de paix au joueur, qui peut les accepter, les refuser ou contre-proposer._
+
 ## 6. Événements narratifs
 
 Les événements sont des données (fichiers JSON), interprétées par un petit moteur d'effets ; ajouter un événement ne demande aucune ligne de code.
