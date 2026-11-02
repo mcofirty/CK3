@@ -3,7 +3,7 @@ import { BALANCE } from '../../data/balance';
 import { ageOf, allied, atWar, displayName } from '../../engine/characters';
 import { allianceAcceptance, tributeAcceptance } from '../../engine/diplomacy';
 import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
-import { capitalOf, independentRulers, realmCounties, realmName } from '../../engine/realm';
+import { capitalOf, domainCounties, greatCourts, realmName } from '../../engine/realm';
 import type { GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
 import {
@@ -20,18 +20,24 @@ import {
 import { PoachCard } from '../components/Entourage';
 import { AcceptanceView } from '../components/Diplomacy';
 import { PactsCard } from '../components/Crowns';
+import { EssosView, WallView } from '../components/WallEssos';
+import { wallStatus } from '../../engine/scenario/wall';
+import { Pip } from './Court';
 import { hasFamilyPact } from '../../engine/crowns';
 import { NewsList, WorldNews, newsAbout } from '../components/News';
 import { useStore } from '../store';
 import { FirstVisitTip } from '../components/FirstVisit';
 
 const WORLD_VIEWS = ['cours', 'complots', 'nouvelles'] as const;
-type WorldView = (typeof WORLD_VIEWS)[number];
+/** Mode Trône de fer : le Mur et Essos en plus. */
+const WESTEROS_VIEWS = ['cours', 'complots', 'nouvelles', 'mur', 'essos'] as const;
+type WorldView = (typeof WESTEROS_VIEWS)[number];
 
 export function WorldScreen({ game }: { game: GameState }) {
   const [view, setView] = useState<WorldView>('cours');
-  const dir = usePager(WORLD_VIEWS, view, setView);
-  useFocusView(WORLD_VIEWS, setView);
+  const views: readonly WorldView[] = game.scenario === 'westeros' ? WESTEROS_VIEWS : WORLD_VIEWS;
+  const dir = usePager(views, view, setView);
+  useFocusView(views, setView);
   return (
     <>
       <Segmented
@@ -40,6 +46,12 @@ export function WorldScreen({ game }: { game: GameState }) {
           { value: 'cours', label: 'Cours' },
           { value: 'complots', label: 'Complots' },
           { value: 'nouvelles', label: 'Nouvelles' },
+          ...(game.scenario === 'westeros'
+            ? [
+                { value: 'mur' as const, label: <Pip on={wallAlert(game)}>Le Mur</Pip> },
+                { value: 'essos' as const, label: 'Essos' },
+              ]
+            : []),
         ]}
         value={view}
         onChange={setView}
@@ -49,16 +61,23 @@ export function WorldScreen({ game }: { game: GameState }) {
         {view === 'cours' && <Diplomacy game={game} />}
         {view === 'complots' && <Plots game={game} />}
         {view === 'nouvelles' && <WorldNews game={game} />}
+        {view === 'mur' && <WallView game={game} />}
+        {view === 'essos' && <EssosView game={game} />}
       </div>
     </>
   );
+}
+
+/** Le Mur demande attention : il vacille ou il est tombé. */
+function wallAlert(game: GameState): boolean {
+  return !!game.wall && wallStatus(game) !== 'tient';
 }
 
 function Diplomacy({ game }: { game: GameState }) {
   const pl = game.playerId;
   const [open, setOpen] = useState<string | null>(null);
   const goTo = useStore((s) => s.goTo);
-  const rulers = independentRulers(game).filter((r) => r !== pl);
+  const rulers = greatCourts(game).filter((r) => r !== pl);
   return (
     <>
       <div className="card">
@@ -80,7 +99,7 @@ function Diplomacy({ game }: { game: GameState }) {
               onTap={() => setOpen(r)}
               extra={
                 <>
-                  {realmName(game, r)} ({realmCounties(game, r).length})
+                  {realmName(game, r)} ({domainCounties(game, r).length})
                   {rel && <b className={rel === 'en guerre' ? 'bad' : 'good'}> · {rel}</b>}{' '}
                   <Opinion state={game} from={r} to={pl} />
                 </>

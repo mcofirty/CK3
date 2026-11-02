@@ -30,6 +30,10 @@ export const SCREEN_TIPS: Record<string, string> = {
     'Les souverains voisins. Touchez-en un pour un cadeau, une alliance, un traité de terres, un pacte ou un tribut.',
   'monde/complots':
     'Un complot à la fois : choisissez son type et sa cible, puis ajoutez des agents. Votre maître-espion démasque ceux qu’on ourdit contre vous.',
+  'monde/mur':
+    'La Garde de Nuit tient le Mur contre les sauvageons et les Autres. Envoyez des hommes, des vivres, du verredragon : si le Mur tombe, les morts descendent sur le Nord.',
+  'monde/essos':
+    'Daenerys Targaryen et ses dragons, de l’autre côté du détroit. Aidez-la ou faites-la tuer : un jour, elle viendra réclamer le trône.',
   'monde/nouvelles':
     'Ce qui se passe chez les autres souverains, à filtrer : voisins, guerres, cours, terres.',
 };

@@ -603,6 +603,18 @@ const concepts: GlossarySection[] = [
         text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide, et une bulle « Premier passage » présente chaque écran la première fois (Paramètres › Revoir les aides des écrans).',
       },
       {
+        term: 'Mode Trône de fer',
+        text: 'Sur l’écran d’accueil, « Le Trône de fer » lance une partie à Westeros en l’an 298, au début de la saison 1 : Robert Baratheon règne, Jon Arryn vient de mourir. Choisissez l’une des vingt maisons (le roi et ses frères, les grandes maisons ou des bannerets). Les grandes maisons sont vassales du roi, leurs bannerets vassaux d’elles. Quelques événements d’ouverture reprennent le début de l’histoire, puis la partie est libre : un grand seigneur qui méprise le roi peut se soulever, surtout sous un roi nouveau ou enfant, et une fois libre il ceint la couronne de son ancien royaume (Roi du Nord…). Les frères de la Garde de Nuit, les chevaliers de la Garde royale et les mestres, liés par des vœux, n’héritent pas et ne se marient pas.',
+      },
+      {
+        term: 'Le Mur et la Longue Nuit',
+        text: 'Monde › Le Mur (mode Trône de fer). La Garde de Nuit tient le Mur avec les hommes et les vivres que lui envoient les seigneurs ; sa défense dépend des frères, des vivres et du verredragon. La menace des Autres monte de saison en saison, plus vite en hiver et au fil des ans ; les sauvageons fuient vers le sud et pillent le Nord quand le Mur est mal gardé. Envoyez des hommes, des vivres, du verredragon, un prisonnier ou un membre de votre cour qui prend le noir. Si la menace dépasse la défense quatre saisons d’affilée, le Mur tombe : les morts descendent sur le Nord comté après comté, et il faut les battre (le verredragon les affaiblit). Quand leur menace retombe, l’aube revient et la Garde se reforme.',
+      },
+      {
+        term: 'Essos et Daenerys',
+        text: 'Monde › Essos (mode Trône de fer). Daenerys avance au fil des saisons : la mort de Khal Drogo et la naissance des dragons, le désert rouge, Qarth, les Immaculés d’Astapor, Meereen. Vous pouvez lui envoyer des émissaires, des vivres ou des navires, ou engager des assassins. Si elle vit, elle finit par débarquer à Peyredragon et marche sur Port-Réal ; chaque seigneur choisit de plier le genou, de défendre le roi ou d’attendre. Qui tient Port-Réal tient le Trône de fer.',
+      },
+      {
         term: 'Bilan et personnages suivis',
         text: 'Royaume › Trésor trace l’or au début de chaque saison sur cinq ans (touchez la courbe pour lire une saison, ou affichez le tableau). Règne › Résumé ouvre chaque saison sur « Depuis la saison dernière » : or, prestige, piété et renommée gagnés ou perdus, comtés gagnés ou perdus, vassaux dont l’opinion a bougé, faits marquants. « Suivre », sur la fiche d’un personnage, l’épingle dans le Résumé (huit au plus) : mariage, naissance, titres, prison, santé, opinion ou mort y sont signalés.',
       },

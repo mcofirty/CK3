@@ -148,6 +148,10 @@ export interface Dynasty {
   renownSpent?: number;
   /** Couleur de la maison (hex), unique ; sinon tirée de la graine (anciennes parties). */
   color?: string;
+  /** Emblème dessiné (loup, lion…), sinon une pièce tirée de la graine. */
+  sigil?: string;
+  /** Couleur de l'emblème. */
+  metal?: string;
 }
 
 export interface BuildingSlot {
@@ -203,6 +207,8 @@ export interface County {
   seatOf?: string;
   /** Vitalité de la population (1 = normale) : pertes de guerre, épidémies, famines. */
   vitality?: number;
+  /** Submergé par l'armée des morts (mode Trône de fer). */
+  blighted?: boolean;
 }
 
 export interface Duchy {
@@ -211,6 +217,10 @@ export interface Duchy {
   kingdomId: string;
   counties: string[];
   holderId?: string;
+  /** Titre du titulaire (masculin, féminin), sinon « Duc de … ». */
+  label?: [string, string];
+  /** Nom du domaine de son titulaire, sinon « Duché de … ». */
+  realmLabel?: string;
 }
 
 export interface Kingdom {
@@ -218,6 +228,10 @@ export interface Kingdom {
   name: string;
   duchies: string[];
   holderId?: string;
+  /** Titre du titulaire (masculin, féminin), sinon « Roi de … ». */
+  label?: [string, string];
+  /** Nom du domaine de son titulaire, sinon « Royaume de … ». */
+  realmLabel?: string;
 }
 
 export interface Army {
@@ -461,8 +475,49 @@ export interface GameState {
   lastSnapshot?: SeasonSnapshot;
   /** Personnages suivis par le joueur (épinglés depuis leur fiche). */
   followed?: string[];
+  /** Scénario historique (sinon une partie aux Marches d'Aveline, carte tirée au sort). */
+  scenario?: 'westeros';
+  /** Maison choisie dans un scénario. */
+  scenarioHouse?: string;
+  /** Le Mur et la Garde de Nuit (mode Trône de fer). */
+  wall?: WallState;
+  /** Daenerys Targaryen en Essos (mode Trône de fer). */
+  essos?: EssosState;
   /** Or du joueur au début de chaque saison et revenu net, les plus récents à la fin. */
   treasuryHistory?: { turn: number; gold: number; net: number }[];
+}
+
+export interface WallState {
+  /** Frères de la Garde de Nuit. */
+  men: number;
+  /** Vivres, de 0 à 100. */
+  supply: number;
+  /** Menace des Autres (marcheurs blancs), de 0 à 100. */
+  threat: number;
+  /** Pression des sauvageons au pied du Mur, de 0 à 100. */
+  wildlings: number;
+  /** Réserves de verredragon : chacune affaiblit les morts. */
+  dragonglass: number;
+  /** Saisons d'affilée où la menace dépasse la défense. */
+  strain: number;
+  /** Tour de la chute du Mur (la Longue Nuit commence). */
+  fallenTurn?: number;
+  /** Lord Commandant. */
+  commanderId?: string;
+}
+
+export interface EssosState {
+  /** Étape du parcours de Daenerys (0 : mariée à Khal Drogo … 6 : débarquée à Westeros). */
+  stage: number;
+  /** Tour où l'étape a commencé. */
+  stageTurn: number;
+  alive: boolean;
+  /** Dragons vivants. */
+  dragons: number;
+  /** Hommes qui la suivent. */
+  army: number;
+  /** Tour de la dernière tentative d'assassinat. */
+  assassinTurn?: number;
 }
 
 export interface SeasonSnapshot {
@@ -558,4 +613,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 19;

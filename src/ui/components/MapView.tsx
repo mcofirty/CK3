@@ -42,6 +42,36 @@ export function realmColor(game: GameState, rulerId: string): string {
   return characterColor(game, rulerId);
 }
 
+/**
+ * Grand seigneur régional d'un comté (scénarios) : le plus haut suzerain, sous le souverain,
+ * qui tient une région ; sinon le souverain lui-même.
+ */
+export function regionLord(game: GameState, county: GameState['counties'][string]): string {
+  const chain: string[] = [];
+  let id: string | undefined = county.holderId;
+  for (let i = 0; i < 6 && id && !chain.includes(id); i++) {
+    chain.push(id);
+    id = game.characters[id]?.liegeId;
+  }
+  const top = chain[chain.length - 1];
+  const holdsRegion = (x: string) => Object.values(game.duchies).some((d) => d.holderId === x);
+  return [...chain].reverse().find((x) => x !== top && holdsRegion(x)) ?? top;
+}
+
+/** Le comté relève-t-il (à n'importe quel degré) de ce seigneur ? */
+export function inRealm(
+  game: GameState,
+  county: GameState['counties'][string],
+  id: string,
+): boolean {
+  let x: string | undefined = county.holderId;
+  for (let i = 0; i < 6 && x; i++) {
+    if (x === id) return true;
+    x = game.characters[x]?.liegeId;
+  }
+  return false;
+}
+
 /** Effectif visible d'une armée : exact près de vos troupes et forts, estimé au-delà. */
 export function visibleMen(game: GameState, armyId: string): { men: number; exact: boolean } {
   const a = game.armies[armyId];
@@ -146,12 +176,20 @@ export function MapView({
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const moved = useRef(0);
 
-  const colors = useMemo(() => realmColors(game), [game]);
+  // Couleur d'un comté : son souverain, ou dans un scénario son grand seigneur régional.
   const rulerOf = useMemo(() => {
     const m = new Map<string, string>();
-    for (const c of Object.values(game.counties)) m.set(c.id, countyRuler(game, c));
+    for (const c of Object.values(game.counties))
+      m.set(c.id, game.scenario ? regionLord(game, c) : countyRuler(game, c));
     return m;
   }, [game]);
+  const colors = useMemo(() => {
+    const res = realmColors(game);
+    for (const r of new Set(rulerOf.values())) if (!res.has(r)) res.set(r, characterColor(game, r));
+    return res;
+  }, [game, rulerOf]);
+  const countiesOf = (r: string) =>
+    Object.values(game.counties).filter((c) => rulerOf.get(c.id) === r);
 
   // --- Gestes : glisser, pincer, molette ---
   const scale = () => {
@@ -245,14 +283,16 @@ export function MapView({
   };
 
   // --- Données dérivées ---
-  const rulers = independentRulers(game);
+  const rulers = [...new Set(rulerOf.values())];
   const realmLabels = rulers.map((r) => {
-    const cs = realmCounties(game, r).map((c) => COUNTY.get(c.id)!);
+    const cs = countiesOf(r).map((c) => COUNTY.get(c.id)!);
     const x = cs.reduce((s, c) => s + c.x, 0) / Math.max(1, cs.length);
     const y = cs.reduce((s, c) => s + c.y, 0) / Math.max(1, cs.length);
     const name = realmName(game, r);
     const [kind, ...rest] = name.split(' de ');
-    return { r, x, y, kind, name: rest.join(' de ') || name, size: cs.length };
+    return rest.length
+      ? { r, x, y, kind, name: rest.join(' de '), size: cs.length }
+      : { r, x, y, kind: '', name, size: cs.length };
   });
   const capitals = new Set(rulers.map((r) => capitalOf(game, r)?.id).filter(Boolean) as string[]);
   const armiesByCounty = new Map<string, string[]>();
@@ -333,7 +373,7 @@ export function MapView({
           </pattern>
           {rulers.map((r) => (
             <clipPath id={`clip-${r}`} key={r}>
-              {realmCounties(game, r).map((c) => (
+              {countiesOf(r).map((c) => (
                 <polygon key={c.id} points={pts(COUNTY.get(c.id)!.polygon)} />
               ))}
             </clipPath>
@@ -400,7 +440,8 @@ export function MapView({
         {mode === 'peuple' &&
           MAP_DATA.counties.map((m) => {
             const c = game.counties[m.id];
-            const mineRealm = rulerOf.get(m.id) === game.playerId;
+            const mineRealm =
+              countyRuler(game, c) === game.playerId || inRealm(game, c, game.playerId);
             const v = contentmentOf(c);
             const hue = Math.round((v / 100) * 120);
             return (
@@ -430,6 +471,18 @@ export function MapView({
               />
             );
           })}
+        {MAP_DATA.counties
+          .filter((m) => game.counties[m.id]?.blighted)
+          .map((m) => (
+            <polygon
+              key={`mort-${m.id}`}
+              points={pts(m.polygon)}
+              fill="#0e1c2a"
+              opacity={0.55}
+              className="blighted"
+              pointerEvents="none"
+            />
+          ))}
         {rulers.map((r) => (
           <path
             key={r}
@@ -602,6 +655,36 @@ export function MapView({
           />
         ))}
 
+        {MAP_DATA.wall && (
+          <g pointerEvents="none">
+            <polyline
+              points={pts(MAP_DATA.wall)}
+              stroke={game.wall?.fallenTurn !== undefined ? '#6b7884' : '#eef4f8'}
+              strokeDasharray={game.wall?.fallenTurn !== undefined ? '40 26' : undefined}
+              strokeWidth={16}
+              strokeLinecap="round"
+              fill="none"
+              className="map-wall"
+            />
+            <polyline
+              points={pts(MAP_DATA.wall)}
+              stroke="#9fb4c4"
+              strokeWidth={3}
+              strokeDasharray="10 8"
+              fill="none"
+            />
+            <text
+              x={(MAP_DATA.wall[0][0] + MAP_DATA.wall[MAP_DATA.wall.length - 1][0]) / 2}
+              y={MAP_DATA.wall[0][1] - 16}
+              className="map-font"
+              fontSize={26}
+              textAnchor="middle"
+              fill="#2f3d48"
+            >
+              {game.wall?.fallenTurn !== undefined ? 'Le Mur (tombé)' : 'Le Mur'}
+            </text>
+          </g>
+        )}
         {/* Noms */}
         {decor.foreign.map((f, i) => (
           <text
@@ -684,7 +767,7 @@ export function MapView({
               strokeLinejoin="round"
             />
             <text x={0} y={2} className="map-font" fontSize={30} textAnchor="middle" fill="#3b2a1a">
-              Marches d’Aveline
+              {MAP_DATA.title ?? 'Marches d’Aveline'}
             </text>
           </g>
         )}
@@ -826,7 +909,7 @@ export function MapView({
                   {realmName(game, r)}
                   {r === game.playerId ? ' (vous)' : ''}
                 </span>
-                <span className="muted">{realmCounties(game, r).length}</span>
+                <span className="muted">{countiesOf(r).length}</span>
               </div>
             ))}
           <div className="legend-keys small muted">

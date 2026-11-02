@@ -714,6 +714,92 @@ export const BALANCE = {
     /** Une IA rompt l'alliance d'un souverain qu'elle déteste à ce point. */
     breakAllianceOpinion: -50,
   },
+  /** Mode Trône de fer : les grands seigneurs face au roi. */
+  westeros: {
+    /** Opinion du roi sous laquelle un grand seigneur peut se proclamer indépendant. */
+    revoltOpinion: -15,
+    /** Chance par saison, à opinion basse. */
+    revoltChance: 0.01,
+    /** Le risque est multiplié pendant les premières saisons d'un nouveau roi… */
+    newKingSeasons: 8,
+    newKingMult: 4,
+    /** … et quand le roi est un enfant. */
+    childKingMult: 2,
+    /** Un seigneur ambitieux se soulève plus volontiers. */
+    ambitiousMult: 1.5,
+  },
+  /** Le Mur et la Garde de Nuit (mode Trône de fer). */
+  wall: {
+    startMen: 900,
+    startSupply: 60,
+    startThreat: 10,
+    startWildlings: 20,
+    /** Désertions et morts, part des frères par saison. */
+    attrition: 0.015,
+    /** Recrues envoyées chaque saison par les autres seigneurs (au hasard entre les deux). */
+    aiRecruits: [4, 18] as [number, number],
+    /** Vivres consommés et reçus des autres seigneurs, par saison. */
+    supplyUse: 4,
+    aiSupply: 3,
+    /** Croissance de la menace des Autres par saison, et en hiver en plus. */
+    threatGrowth: 1,
+    threatWinter: 1,
+    /** Après tant de saisons, la Longue Nuit approche : la menace croît plus vite. */
+    threatSurgeTurn: 24,
+    threatSurgeMult: 1.6,
+    /** Les sauvageons fuient les Autres : croissance de base et part de la menace. */
+    wildlingGrowth: 0.6,
+    wildlingPerThreat: 0.025,
+    /** Défense : frères / 10 × (0,5 + vivres / 200), plus le verredragon. */
+    dragonglassDefense: 8,
+    /** Saisons d'affilée au-dessus de la défense avant la chute. */
+    strainToFall: 4,
+    /** Chance par saison d'un événement du Mur pour le joueur. */
+    eventChance: 0.3,
+    /** Actions du joueur. */
+    sendMen: 100,
+    sendMenOpinion: -2,
+    sendSupplyGold: 60,
+    sendSupply: 20,
+    prisonerMen: 15,
+    dragonglassGold: 100,
+    rebuildGold: 600,
+    rebuildMen: 300,
+    /** Longue Nuit : chance par saison que les morts avancent d'un comté. */
+    advanceBase: 0.35,
+    /** Le jour revient quand la menace retombe sous ce seuil. */
+    dawnThreat: 15,
+    /** À l'aube, la Garde se reforme dans les ruines : frères et vivres. */
+    dawnMen: 250,
+    dawnSupply: 25,
+    /** Chaque dragon de Daenerys à Westeros brûle des morts : menace en moins par saison. */
+    dragonBurn: 0.5,
+    /** Force des morts dans une bataille : base + menace / 100, moins le verredragon. */
+    deadForce: 0.7,
+    deadForcePerGlass: 0.12,
+  },
+  /** Daenerys en Essos (mode Trône de fer). */
+  essos: {
+    /** Saisons minimales passées à chaque étape avant la suivante, et chance par saison. */
+    stageSeasons: [4, 2, 3, 3, 3, 6] as number[],
+    stageChance: 0.45,
+    /** Saison minimale du débarquement, et chance par saison une fois prête. */
+    landingTurn: 24,
+    landingChance: 0.15,
+    /** Hommes qui la suivent à chaque étape. */
+    army: [2000, 300, 100, 300, 8300, 20000, 20000] as number[],
+    emissaryGold: 60,
+    emissaryOpinion: 25,
+    assassinGold: 150,
+    assassinChance: 0.2,
+    assassinCooldown: 8,
+    /** Armée du débarquement (compagnies de 100), multipliée par dragon vivant. */
+    landing: { infanterie: 2500, cavalerie: 2500, archers: 800 },
+    dragonArmyMult: 0.25,
+    /** Au débarquement, chaque grand vassal assez fidèle envoie ces troupes au roi. */
+    loyalOpinion: 0,
+    loyalTroops: { piquiers: 300, cavalerie: 150, archers: 150 },
+  },
   /** Bilan de saison (Règne › Résumé). */
   digest: {
     /** Écart d'opinion d'un vassal à partir duquel il est signalé. */

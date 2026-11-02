@@ -546,15 +546,203 @@ export function houseColor(d: Pick<Dynasty, 'seed' | 'color'>): string {
   return houseColorOf(d);
 }
 
+/** Emblèmes dessinés (mode Trône de fer), dans le repère 60 × 70 de l'écu. */
+const SIGILS: Record<string, (metal: string, field: string) => JSX.Element> = {
+  wolf: (m, f) => (
+    <g fill={m}>
+      <path d="M17 46 L21 32 L19 17 L27 25 L33 24 L39 16 L39 29 L46 37 L45 43 L37 45 L33 52 L26 51 Z" />
+      <circle cx="35" cy="33" r="1.8" fill={f} />
+    </g>
+  ),
+  lion: (m, f) => (
+    <g fill={m}>
+      <circle cx="28" cy="25" r="8" />
+      <path d="M22 54 L24 40 L19 31 L25 27 L33 28 L38 34 L41 46 L37 54 L34 46 L29 46 L27 54 Z" />
+      <path d="M38 40 C46 40 46 30 42 26" stroke={m} strokeWidth="2.5" fill="none" />
+      <circle cx="26" cy="24" r="1.5" fill={f} />
+    </g>
+  ),
+  stag: (m) => (
+    <g>
+      <path d="M26 33 L34 33 L33 46 L30 51 L27 46 Z" fill={m} />
+      <path
+        d="M27 33 C21 29 19 23 20 16 M23 27 L17 25 M33 33 C39 29 41 23 40 16 M37 27 L43 25 M21 21 L16 18 M39 21 L44 18"
+        stroke={m}
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </g>
+  ),
+  kraken: (m, f) => (
+    <g fill={m} stroke={m}>
+      <ellipse cx="30" cy="24" rx="8" ry="9" />
+      <path
+        d="M24 31 C18 38 22 46 16 52 M28 33 C26 42 28 48 25 54 M32 33 C34 42 32 48 35 54 M36 31 C42 38 38 46 44 52"
+        strokeWidth="3"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle cx="27" cy="23" r="1.6" fill={f} stroke="none" />
+      <circle cx="33" cy="23" r="1.6" fill={f} stroke="none" />
+    </g>
+  ),
+  falcon: (m) => (
+    <g fill={m}>
+      <path d="M39 15 a9 9 0 1 0 5 15 a7 7 0 1 1 -5 -15 z" />
+      <path d="M15 40 L29 31 L43 40 L35 39 L31 50 L27 39 Z" />
+    </g>
+  ),
+  trout: (m, f) => (
+    <g fill={m}>
+      <path d="M14 37 C22 27 35 27 42 37 C35 47 22 47 14 37 Z" />
+      <path d="M41 37 L50 30 L50 44 Z" />
+      <circle cx="21" cy="35" r="1.6" fill={f} />
+      <path d="M26 31 L24 26 L32 29 Z" />
+    </g>
+  ),
+  rose: (m, f) => (
+    <g fill={m}>
+      <circle cx="30" cy="22" r="5.5" />
+      <circle cx="24.5" cy="28" r="5.5" />
+      <circle cx="35.5" cy="28" r="5.5" />
+      <circle cx="26.5" cy="34" r="5.5" />
+      <circle cx="33.5" cy="34" r="5.5" />
+      <circle cx="30" cy="29" r="3" fill={f} />
+      <path d="M30 39 V53 M30 47 L24 43" stroke={m} strokeWidth="2.4" fill="none" />
+    </g>
+  ),
+  sun: (m, f) => (
+    <g>
+      <path d="M30 12 V58" stroke={m} strokeWidth="2.6" />
+      <path d="M30 10 L33 17 L27 17 Z" fill={m} />
+      <circle cx="30" cy="34" r="9" fill={m} />
+      <g stroke={m} strokeWidth="2.2" strokeLinecap="round">
+        <path d="M30 20 V22 M30 46 V48 M16 34 H18 M42 34 H44 M20 24 L21.5 25.5 M38.5 42.5 L40 44 M40 24 L38.5 25.5 M21.5 42.5 L20 44" />
+      </g>
+      <circle cx="30" cy="34" r="3" fill={f} />
+    </g>
+  ),
+  towers: (m, f) => (
+    <g fill={m}>
+      <path d="M14 52 V24 H16 V20 H19 V24 H21 V20 H24 V52 Z" />
+      <path d="M36 52 V24 H38 V20 H41 V24 H43 V20 H46 V52 Z" />
+      <path d="M24 40 H36 V44 C34 40 26 40 24 44 Z" />
+      <path d="M17 32 h4 v5 h-4 z M39 32 h4 v5 h-4 z" fill={f} />
+    </g>
+  ),
+  flayed: (m) => (
+    <g stroke={m} strokeWidth="3" strokeLinecap="round" fill="none">
+      <circle cx="30" cy="48" r="4.5" fill={m} />
+      <path d="M30 43 V26 M30 39 L18 46 M30 39 L42 46 M30 26 L21 16 M30 26 L39 16" />
+    </g>
+  ),
+  sunburst: (m) => (
+    <g stroke={m} strokeWidth="2.6" strokeLinecap="round" fill={m}>
+      <circle cx="30" cy="34" r="5" />
+      <path d="M30 16 V25 M30 43 V54 M12 34 H21 M39 34 H48 M17 21 L23 27 M37 41 L43 47 M43 21 L37 27 M23 41 L17 47" />
+    </g>
+  ),
+  chains: (m) => (
+    <g stroke={m} strokeWidth="3" fill="none">
+      <ellipse cx="22" cy="24" rx="5" ry="7" transform="rotate(-30 22 24)" />
+      <ellipse cx="30" cy="34" rx="5" ry="7" transform="rotate(-30 30 34)" />
+      <path d="M36 42 C40 44 41 48 38 52 M42 40 L46 37" strokeLinecap="round" />
+    </g>
+  ),
+  merman: (m) => (
+    <g stroke={m} strokeWidth="2.8" strokeLinecap="round" fill="none">
+      <path d="M30 16 V54 M21 18 V26 Q21 32 30 32 Q39 32 39 26 V18" />
+      <path d="M30 16 L28 21 M30 16 L32 21" />
+    </g>
+  ),
+  bear: (m, f) => (
+    <g fill={m}>
+      <path d="M17 50 L20 34 C18 27 23 20 30 20 C37 20 42 27 40 34 L43 50 L37 50 L34 41 L26 41 L23 50 Z" />
+      <circle cx="23" cy="20" r="3.5" />
+      <circle cx="37" cy="20" r="3.5" />
+      <circle cx="27" cy="27" r="1.4" fill={f} />
+      <circle cx="33" cy="27" r="1.4" fill={f} />
+    </g>
+  ),
+  hunter: (m) => (
+    <g stroke={m} strokeWidth="2.6" fill="none" strokeLinecap="round">
+      <path d="M22 14 Q42 34 22 56" />
+      <path d="M22 14 V56" strokeWidth="1.2" />
+      <path d="M14 35 H44 M40 31 L45 35 L40 39" />
+    </g>
+  ),
+  dogs: (m) => (
+    <g fill={m}>
+      {[
+        [21, 22],
+        [39, 22],
+        [30, 42],
+      ].map(([x, y]) => (
+        <path
+          key={`${x}-${y}`}
+          d={`M${x - 6} ${y + 4} L${x - 4} ${y - 5} L${x - 1} ${y - 2} L${x + 2} ${y - 6} L${x + 3} ${y - 1} L${x + 7} ${y + 2} L${x + 2} ${y + 6} Z`}
+        />
+      ))}
+    </g>
+  ),
+  runes: (m) => (
+    <g stroke={m} strokeWidth="2.4" strokeLinecap="round" fill="none">
+      <path d="M18 18 V32 L24 25 M30 18 L36 32 M36 18 L30 32 M42 18 V32 M42 25 H46" />
+      <path d="M18 40 L24 52 L30 40 M36 40 V52 L42 46 L36 40" />
+    </g>
+  ),
+  tower: (m, f) => (
+    <g>
+      <path d="M24 56 L26 26 H34 L36 56 Z" fill={m} />
+      <path d="M23 26 H37 V22 H23 Z" fill={m} />
+      <path d="M30 8 C26 14 26 18 30 21 C34 18 34 14 30 8 Z" fill="#e2502a" />
+      <path d="M28 34 h4 v6 h-4 z" fill={f} />
+    </g>
+  ),
+  dragon: (m) => (
+    <g fill={m}>
+      <path d="M30 30 L14 20 L20 34 L12 40 L26 40 L30 54 L34 40 L48 40 L40 34 L46 20 Z" />
+      <circle cx="30" cy="20" r="3.5" />
+      <circle cx="22" cy="17" r="3" />
+      <circle cx="38" cy="17" r="3" />
+    </g>
+  ),
+};
+
+/** Blason d'une maison : son emblème dessiné s'il en a un, sinon des pièces tirées de la graine. */
+export function HouseArms({
+  dyn,
+  size = 40,
+}: {
+  dyn: Pick<Dynasty, 'seed' | 'color' | 'sigil' | 'metal'>;
+  size?: number;
+}) {
+  return (
+    <CoatOfArms
+      seed={dyn.seed}
+      color={houseColor(dyn)}
+      size={size}
+      sigil={dyn.sigil}
+      metal={dyn.metal}
+    />
+  );
+}
+
 export function CoatOfArms({
   seed,
   color,
   size = 40,
+  sigil,
+  metal: sigilMetal,
 }: {
   seed: number;
   /** Couleur de la maison (sinon tirée de la graine). */
   color?: string;
   size?: number;
+  /** Emblème dessiné (remplace partitions et pièces). */
+  sigil?: string;
+  metal?: string;
 }) {
   const r = new Rng(seed);
   const drawnField = r.pick(FIELDS);
@@ -565,6 +753,24 @@ export function CoatOfArms({
   const div = r.int(0, 5);
   const charge = r.int(0, 4);
   const shield = 'M5 4 H55 V30 C55 50 40 60 30 66 C20 60 5 50 5 30 Z';
+  const draw = sigil ? SIGILS[sigil] : undefined;
+  if (draw) {
+    const m = sigilMetal ?? metal;
+    return (
+      <svg width={size} height={size * 1.15} viewBox="0 0 60 70" aria-hidden>
+        <defs>
+          <clipPath id={`s${seed}`}>
+            <path d={shield} />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#s${seed})`}>
+          <rect width="60" height="70" fill={field} />
+          {draw(m, field)}
+        </g>
+        <path d={shield} fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2" />
+      </svg>
+    );
+  }
   return (
     <svg width={size} height={size * 1.15} viewBox="0 0 60 70" aria-hidden>
       <defs>

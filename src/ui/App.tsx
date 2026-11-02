@@ -23,6 +23,7 @@ import { RealmSheet } from './components/RealmSheet';
 import { PeaceNegotiation } from './components/Peace';
 import { SettingsButton, SettingsSheet } from './components/Settings';
 import { SearchSheet } from './components/Search';
+import { WesterosCard } from './components/WesterosStart';
 import { ACHIEVEMENTS } from '../engine/endings';
 import { BattleScreen } from './screens/Battle';
 import { ArmyScreen } from './screens/Army';
@@ -36,6 +37,11 @@ import { TABS, useStore, type Tab } from './store';
 export function App() {
   const game = useStore((s) => s.game);
   const error = useStore((s) => s.error);
+  // Ambiance du mode Trône de fer : palette givrée, neige, fer et braise.
+  const scenario = game?.scenario;
+  useEffect(() => {
+    document.documentElement.classList.toggle('scenario-westeros', scenario === 'westeros');
+  }, [scenario]);
   return (
     <>
       {game ? <Game game={game} /> : <TitleScreen />}
@@ -99,6 +105,7 @@ function TitleScreen() {
           Continuer la dernière partie
         </button>
       )}
+      <WesterosCard slots={slots} />
       <div className="card">
         <h3>Emplacements</h3>
         {slots.map((s) => (
@@ -751,7 +758,14 @@ const TUTORIAL = [
 function Tutorial() {
   const [i, setI] = useState(0);
   const dispatch = useStore((s) => s.dispatch);
-  const c = TUTORIAL[i];
+  const westeros = useStore((s) => s.game?.scenario === 'westeros');
+  const c =
+    i === 0 && westeros
+      ? {
+          t: 'Votre maison',
+          x: 'Vous incarnez le chef d’une maison de Westeros, en l’an 298, au début de la saison 1. Les grandes maisons servent le roi Robert, les bannerets servent une grande maison : servez fidèlement, ou soulevez-vous. À votre mort, vous continuez avec votre héritier. La partie s’arrête si votre maison n’a plus d’héritier titré, ou au bout de 150 ans.',
+        }
+      : TUTORIAL[i];
   return (
     <Sheet swapKey={String(i)}>
       <p className="small muted">

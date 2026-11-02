@@ -75,6 +75,7 @@ export function marriageBlock(state: GameState, a: Character, b: Character): str
   if (a.dynastyId && a.dynastyId === b.dynastyId) return 'Même dynastie';
   if (a.imprisonedBy || b.imprisonedBy) return 'Prisonnier';
   if (a.visitor || b.visitor) return 'De passage';
+  if (a.traits.includes('voeux') || b.traits.includes('voeux')) return 'Lié par des vœux';
   return undefined;
 }
 

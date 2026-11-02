@@ -1,7 +1,8 @@
 /** Store Zustand : unique pont entre l'interface et le moteur. L'interface n'écrit jamais l'état. */
 import { create } from 'zustand';
 import { applyAction, type Action } from '../engine/actions';
-import type { GameState } from '../engine/state';
+import type { Difficulty, GameState } from '../engine/state';
+import { newWesterosGame } from '../engine/scenario/westeros';
 import { warsOf } from '../engine/war';
 import { newGame, type NewGameOptions } from '../engine/world';
 import { importJson, lastSlot, loadGame, saveGame, type Slot } from '../save/storage';
@@ -62,6 +63,8 @@ interface Store {
   inspectBack: () => void;
   inspectClose: () => void;
   start: (slot: Slot, opts: NewGameOptions) => Promise<void>;
+  /** Nouvelle partie du mode Trône de fer, avec la maison choisie. */
+  startWesteros: (slot: Slot, houseId: string, difficulty: Difficulty) => Promise<void>;
   load: (slot: Slot) => Promise<void>;
   importText: (slot: Slot, text: string) => Promise<void>;
   quit: () => void;
@@ -214,6 +217,11 @@ export const useStore = create<Store>((set, get) => ({
   inspectClose: () => set({ inspectStack: [], selectedCounty: undefined }),
   start: async (slot, opts) => {
     const game = newGame(opts);
+    set({ game, slot, tab: 'regne', tabDir: 'none', selectedCounty: undefined });
+    await saveGame(slot, game);
+  },
+  startWesteros: async (slot, houseId, difficulty) => {
+    const game = newWesterosGame({ houseId, difficulty });
     set({ game, slot, tab: 'regne', tabDir: 'none', selectedCounty: undefined });
     await saveGame(slot, game);
   },

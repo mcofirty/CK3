@@ -29,7 +29,7 @@ import {
   CardTitle,
   CharLine,
   ChoiceGrid,
-  CoatOfArms,
+  HouseArms,
   Portrait,
   Sheet,
   Skills,
@@ -45,7 +45,6 @@ import { useStore } from '../store';
 import { FirstVisitTip } from '../components/FirstVisit';
 import { GOVERNMENTS, SUCCESSION_LAWS } from '../../data/governments';
 import { governmentOf } from '../../engine/government';
-import { houseColorOf } from '../../engine/heraldry';
 import { DECISIONS } from '../../data/decisions';
 import { decisionCheck } from '../../engine/decisions';
 import { MarriageSheet, marriageableKin } from '../components/Marriage';
@@ -109,7 +108,7 @@ export function CharacterCard({ game, c }: { game: GameState; c: Character }) {
             {c.imprisonedBy && <span className="bad"> · prisonnier</span>}
           </div>
         </div>
-        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={40} />}
+        {dyn && <HouseArms dyn={dyn} size={40} />}
       </div>
       <div style={{ marginTop: 10 }}>
         <Skills c={c} />

@@ -12,13 +12,12 @@ import {
   successionLine,
   supportOf,
 } from '../../engine/influence';
-import { capitalOf, isIndependent, realmCounties, realmName } from '../../engine/realm';
+import { capitalOf, domainCounties, hasCourt, realmName } from '../../engine/realm';
 import type { Character, GameState } from '../../engine/state';
 import { militaryStrength } from '../../engine/war';
 import { useStore } from '../store';
 import { fmtPop } from './Capital';
-import { Bar, CoatOfArms, CountyLink, Portrait, Sheet, signed } from './common';
-import { houseColorOf } from '../../engine/heraldry';
+import { Bar, HouseArms, CountyLink, Portrait, Sheet, signed } from './common';
 import { GOVERNMENTS, SUCCESSION_LAWS } from '../../data/governments';
 import { governmentOf } from '../../engine/government';
 
@@ -86,11 +85,11 @@ export function RealmSheet({ game }: { game: GameState }) {
   const inspect = useStore((s) => s.inspect);
   if (!id) return null;
   const r = game.characters[id];
-  if (!r?.alive || !isIndependent(game, id)) return null;
+  if (!r?.alive || !hasCourt(game, id)) return null;
   const pl = game.playerId;
   const mine = id === pl;
   const dyn = r.dynastyId ? game.dynasties[r.dynastyId] : undefined;
-  const counties = realmCounties(game, id);
+  const counties = domainCounties(game, id);
   const pop = counties.reduce((s, c) => s + populationOf(c), 0);
   const cap = capitalOf(game, id);
   const claimants = claimsOnHouse(game, id);
@@ -104,7 +103,7 @@ export function RealmSheet({ game }: { game: GameState }) {
   return (
     <Sheet onClose={() => close(null)}>
       <div className="row">
-        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={44} />}
+        {dyn && <HouseArms dyn={dyn} size={44} />}
         <div className="grow">
           <h2 style={{ margin: 0 }}>{realmName(game, id)}</h2>
           <div className="small muted">
