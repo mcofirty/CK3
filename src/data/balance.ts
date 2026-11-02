@@ -714,6 +714,11 @@ export const BALANCE = {
     /** Une IA rompt l'alliance d'un souverain qu'elle déteste à ce point. */
     breakAllianceOpinion: -50,
   },
+  /** Bilan de saison (Règne › Résumé). */
+  digest: {
+    /** Écart d'opinion d'un vassal à partir duquel il est signalé. */
+    opinionStep: 5,
+  },
 } as const;
 
 export type Balance = typeof BALANCE;

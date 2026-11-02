@@ -11,6 +11,7 @@ import { seasonCourt } from './court';
 import { seasonLocalEconomy } from './economy';
 import { seasonEntourage } from './entourage';
 import { seasonAbroad } from './abroad';
+import { takeSnapshot } from './digest';
 import { seasonPretenders, seasonUnions } from './crowns';
 import { seasonInfluence } from './influence';
 import { checkAchievements, computeEnding } from './endings';
@@ -33,6 +34,7 @@ export function endSeason(ctx: Ctx): void {
   const { state } = ctx;
   if (state.gameOver || state.phase !== 'saison') return;
   if (state.pendingEvents.length) return;
+  state.lastSnapshot = takeSnapshot(state);
   state.pendingBattles = moveAndDetect(ctx);
   if (startNextBattle(ctx)) return;
   continueSeason(ctx);

@@ -2936,3 +2936,23 @@ button.plain {
     font-size: 16px;
   }
 }
+
+/* Bilan « Depuis la saison dernière » */
+.digest-res {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.digest-res .chip {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.digest-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+}

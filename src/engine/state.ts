@@ -457,6 +457,21 @@ export interface GameState {
   candidates?: Candidate[];
   /** Politique de trésorerie du joueur : le trésorier évite le rouge, ou non. */
   treasury?: 'prudent' | 'manuel';
+  /** Instantané pris à la dernière fin de saison (bilan « Depuis la saison dernière »). */
+  lastSnapshot?: SeasonSnapshot;
+}
+
+export interface SeasonSnapshot {
+  turn: number;
+  rulerId: string;
+  gold: number;
+  prestige: number;
+  piety: number;
+  renown: number;
+  /** Comtés du royaume du joueur. */
+  counties: string[];
+  /** Opinion de chaque vassal envers le joueur. */
+  opinions: Record<string, number>;
 }
 
 export interface Candidate {
@@ -526,4 +541,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;

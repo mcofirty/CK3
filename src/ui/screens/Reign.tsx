@@ -9,8 +9,10 @@ import { totalMen } from '../../engine/units';
 import { armyOf, scoreFor, warsOf } from '../../engine/war';
 import { attention, type AttentionItem } from '../attention';
 import { AchievementList, DynastyBook } from '../components/Book';
+import { seasonDigest } from '../../engine/digest';
 import {
   CardTitle,
+  CountyLink,
   Portrait,
   Segmented,
   signed,
@@ -115,6 +117,8 @@ function Summary({ game }: { game: GameState }) {
         </button>
       </div>
 
+      <SinceLastSeason game={game} />
+
       <div className="card" id="focus-afaire">
         <CardTitle extra={items.length ? String(items.length) : undefined}>
           À faire cette saison
@@ -145,7 +149,7 @@ function Summary({ game }: { game: GameState }) {
               <>
                 <b className={score >= 0 ? 'good' : 'bad'}>{signed(score)}</b>
                 <span>
-                  {wars.length > 1 ? `${wars.length} guerres · ` : ''}
+                  score de guerre · {wars.length > 1 ? `${wars.length} guerres, dont ` : ''}
                   {war.name}
                 </span>
               </>
@@ -211,6 +215,80 @@ function Summary({ game }: { game: GameState }) {
         </div>
       )}
     </>
+  );
+}
+
+/** Ce qui a changé pendant la dernière fin de saison. */
+function SinceLastSeason({ game }: { game: GameState }) {
+  const inspect = useStore((s) => s.inspect);
+  const d = seasonDigest(game);
+  if (!d) return null;
+  const round = (n: number) => Math.round(n * 10) / 10;
+  const res = [
+    { label: 'or', v: round(d.gold) },
+    { label: 'prestige', v: round(d.prestige) },
+    { label: 'piété', v: round(d.piety) },
+    { label: 'renommée', v: round(d.renown) },
+  ].filter((x) => x.v !== 0);
+  const nothing =
+    !res.length && !d.gained.length && !d.lost.length && !d.opinions.length && !d.facts.length;
+  return (
+    <div className="card">
+      <CardTitle>Depuis la saison dernière</CardTitle>
+      {d.newRuler && (
+        <p className="small" style={{ margin: '0 0 6px' }}>
+          Un nouveau souverain règne : les ressources repartent de son trésor.
+        </p>
+      )}
+      {nothing && <p className="muted small">Une saison sans histoire.</p>}
+      {res.length > 0 && (
+        <div className="digest-res">
+          {res.map((x) => (
+            <span key={x.label} className={`chip ${x.v >= 0 ? 'good' : 'bad'}`}>
+              {signed(x.v)} {x.label}
+            </span>
+          ))}
+        </div>
+      )}
+      {(d.gained.length > 0 || d.lost.length > 0) && (
+        <p className="small" style={{ margin: '6px 0' }}>
+          {d.gained.length > 0 && (
+            <>
+              <b className="good">Comtés gagnés :</b>{' '}
+              {d.gained.map((id) => (
+                <CountyLink key={id} state={game} id={id} />
+              ))}{' '}
+            </>
+          )}
+          {d.lost.length > 0 && (
+            <>
+              <b className="bad">Comtés perdus :</b>{' '}
+              {d.lost.map((id) =>
+                game.counties[id] ? <CountyLink key={id} state={game} id={id} /> : null,
+              )}
+            </>
+          )}
+        </p>
+      )}
+      {d.opinions.slice(0, 4).map((o) => (
+        <button
+          key={o.id}
+          className="digest-line plain"
+          onClick={() => inspect({ kind: 'perso', id: o.id })}
+        >
+          <span className="grow">{game.characters[o.id]?.name}</span>
+          <span className="small muted">
+            opinion {signed(Math.round(o.before))} →{' '}
+            <b className={o.after >= o.before ? 'good' : 'bad'}>{signed(Math.round(o.after))}</b>
+          </span>
+        </button>
+      ))}
+      {d.facts.slice(-6).map((e, i) => (
+        <p key={i} className="small" style={{ margin: '4px 0' }}>
+          <span className="muted">{KIND_ICON[e.kind]}</span> {e.text}
+        </p>
+      ))}
+    </div>
   );
 }
 
