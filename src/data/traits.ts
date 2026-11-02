@@ -415,6 +415,13 @@ export const TRAITS: Record<string, TraitDef> = {
     skills: { guerre: 1 },
     vassalOpinion: 2,
   },
+  voeux: {
+    id: 'voeux',
+    name: 'Lié par des vœux',
+    category: 'acquis',
+    description:
+      'Frère de la Garde de Nuit, chevalier de la Garde royale ou mestre : il a renoncé aux terres, aux titres et au mariage. Il n’hérite pas.',
+  },
 };
 
 export const PERSONALITY_TRAITS = Object.values(TRAITS)

@@ -3,6 +3,7 @@ import { distantFactor } from '../crowns';
 import { govDef } from '../government';
 import { BALANCE } from '../../data/balance';
 import { NAMES } from '../../data/names';
+import { WESTEROS_NAMES } from '../../data/westeros/houses';
 import { LEGACIES, PERKS, type PerkKey } from '../../data/perks';
 import { HEREDITARY_TRAITS, PERSONALITY_TRAITS, TRAITS } from '../../data/traits';
 import { clamp, newId, type Ctx } from '../context';
@@ -136,7 +137,10 @@ export function createCharacter(ctx: Ctx, opts: NewCharacterOpts): Character {
   ) as Skills;
   const c: Character = {
     id,
-    name: firstName(rng, female),
+    name:
+      state.scenario === 'westeros'
+        ? rng.pick(female ? WESTEROS_NAMES.female : WESTEROS_NAMES.male)
+        : firstName(rng, female),
     female,
     dynastyId: opts.dynastyId,
     birthTurn: state.turn - opts.age * 4 - rng.int(0, 3),

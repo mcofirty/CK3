@@ -714,6 +714,20 @@ export const BALANCE = {
     /** Une IA rompt l'alliance d'un souverain qu'elle déteste à ce point. */
     breakAllianceOpinion: -50,
   },
+  /** Mode Trône de fer : les grands seigneurs face au roi. */
+  westeros: {
+    /** Opinion du roi sous laquelle un grand seigneur peut se proclamer indépendant. */
+    revoltOpinion: -15,
+    /** Chance par saison, à opinion basse. */
+    revoltChance: 0.01,
+    /** Le risque est multiplié pendant les premières saisons d'un nouveau roi… */
+    newKingSeasons: 8,
+    newKingMult: 4,
+    /** … et quand le roi est un enfant. */
+    childKingMult: 2,
+    /** Un seigneur ambitieux se soulève plus volontiers. */
+    ambitiousMult: 1.5,
+  },
   /** Bilan de saison (Règne › Résumé). */
   digest: {
     /** Écart d'opinion d'un vassal à partir duquel il est signalé. */

@@ -91,4 +91,6 @@ Chaque choix affiche automatiquement ses effets connus avant validation.
 
 **Effets** : `contentement` (comté du rôle `comte`, sinon tout le domaine), `impots` (fixe le taux du comté du rôle `comte`).
 
+**Westeros (v6)** : effet `influence` (`{ "cible": "rival", "valeur": 40 }`) — influence du souverain à la cour d'un souverain indépendant (voir Royaume › Lois et la fiche de royaume).
+
 **Arrivées à la cour (v5)** : `nouveau_courtisan` accepte `competence` (`{ competence, valeur }`), `femme`, `trait` et `pupille` (enfant confié à la cour). Effet interne `pupille` (avenir d'un pupille adulte).

@@ -1,4 +1,5 @@
 /** Moteur d'événements narratifs et langage d'effets (section 6). */
+import { gainInfluence } from '../influence';
 import { cession } from '../diplomacy/trade';
 import { setUnionPrivileges, settlePretender } from '../crowns';
 import { BALANCE } from '../../data/balance';
@@ -498,6 +499,8 @@ export function effectLabels(
     if (e.renommee) out.push(`${sign(e.renommee)} renommée`);
     if (e.opinion) out.push(`Opinion de ${name(e.opinion.cible)} : ${sign(e.opinion.valeur)}`);
     if (e.opinion_vassaux) out.push(`Opinion des vassaux : ${sign(e.opinion_vassaux)}`);
+    if (e.influence)
+      out.push(`Influence à la cour de ${name(e.influence.cible)} : ${sign(e.influence.valeur)}`);
     if (e.trait_ajout) {
       const t =
         typeof e.trait_ajout === 'string'
@@ -671,6 +674,10 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     if (e.opinion) {
       const c = who(e.opinion.cible);
       if (c) addOpinion(state, c.id, p.id, e.opinion.raison ?? 'Événement', e.opinion.valeur, 24);
+    }
+    if (e.influence) {
+      const c = who(e.influence.cible);
+      if (c) gainInfluence(state, c.id, e.influence.valeur);
     }
     if (e.opinion_vassaux)
       for (const v of vassalsOf(state, p.id))

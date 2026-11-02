@@ -30,6 +30,17 @@ export interface MapData {
   realms: string[][];
   rivers: { a: string; b: string; path: [number, number][] }[];
   sea: [number, number][][];
+  /** Cartouche de la carte (sinon le nom de la région du jeu). */
+  title?: string;
+  /** Terres lointaines dessinées à la main (sinon tirées au hasard autour de la carte). */
+  foreign?: {
+    name: string;
+    kind: 'royaume' | 'inexplore';
+    poly: [number, number][];
+    label: [number, number];
+  }[];
+  /** Un mur (ligne brisée) à dessiner sur la carte. */
+  wall?: [number, number][];
 }
 
 type P = [number, number];
@@ -43,7 +54,8 @@ const REALMS = REALM_SIZES.length;
 const DUCHY_SIZES = [5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3];
 const DUCHIES = DUCHY_SIZES.length;
 
-function clip(poly: P[], a: number, b: number, c: number): P[] {
+/** Coupe un polygone par le demi-plan a·x + b·y ≤ c (Sutherland–Hodgman). */
+export function clip(poly: P[], a: number, b: number, c: number): P[] {
   const out: P[] = [];
   for (let i = 0; i < poly.length; i++) {
     const p = poly[i];
@@ -405,6 +417,7 @@ function hashStr(s: string): number {
  * éloignées de la côte jouable, regroupées en 2 ou 3 masses par secteurs angulaires.
  */
 export function foreignLands(map: MapData, RngCtor: new (s: number) => Rng): ForeignLand[] {
+  if (map.foreign) return map.foreign.map((f) => drawnLand(map, f));
   const rng = new RngCtor(hashStr(map.counties.map((c) => c.name).join('|')));
   const W0 = map.width;
   const H0 = map.height;
@@ -514,4 +527,31 @@ export function foreignLands(map: MapData, RngCtor: new (s: number) => Rng): For
       label: [Math.round(best.c[0]), Math.round(best.c[1])],
     };
   });
+}
+
+/** Terre lointaine dessinée à la main ; ses bords sur le cadre se prolongent au-delà. */
+function drawnLand(map: MapData, f: NonNullable<MapData['foreign']>[number]): ForeignLand {
+  const W0 = map.width;
+  const H0 = map.height;
+  const FAR = 900;
+  const onEdge = (p: [number, number]) =>
+    p[0] <= 1 || p[0] >= W0 - 1 || p[1] <= 1 || p[1] >= H0 - 1;
+  const ext = (p: [number, number]): [number, number] => [
+    p[0] <= 1 ? p[0] - FAR : p[0] >= W0 - 1 ? p[0] + FAR : p[0],
+    p[1] <= 1 ? p[1] - FAR : p[1] >= H0 - 1 ? p[1] + FAR : p[1],
+  ];
+  const coast: ForeignLand['coast'] = [];
+  for (let k = 0; k < f.poly.length; k++) {
+    const p = f.poly[k];
+    const q = f.poly[(k + 1) % f.poly.length];
+    if (!(onEdge(p) && onEdge(q))) coast.push([ext(p), ext(q)]);
+  }
+  return {
+    name: f.name,
+    kind: f.kind,
+    cells: [f.poly.map(ext)],
+    source: [f.poly],
+    coast,
+    label: f.label,
+  };
 }

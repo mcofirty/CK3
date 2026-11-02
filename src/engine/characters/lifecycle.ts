@@ -1,4 +1,5 @@
 /** Cycle de vie : santé, naissances, éducation, décès, succession. */
+import { WESTEROS_NAMES } from '../../data/westeros/houses';
 import { BALANCE } from '../../data/balance';
 import { HEREDITARY_TRAITS, TRAITS, educationTrait } from '../../data/traits';
 import { chronicle, notify, recordRuler, seasonOf, worldNews, type Ctx } from '../context';
@@ -258,7 +259,12 @@ export function heirsOf(state: GameState, c: Character): Character[] {
   const res: Character[] = [];
   // Loi agnatique : les femmes sont exclues de la succession.
   const add = (x: Character) =>
-    x.alive && x.id !== c.id && !(c.agnatic && x.female) && !res.includes(x) && res.push(x);
+    x.alive &&
+    x.id !== c.id &&
+    !(c.agnatic && x.female) &&
+    !x.traits.includes('voeux') &&
+    !res.includes(x) &&
+    res.push(x);
   livingChildren(state, c).forEach(add);
   for (const k of c.childrenIds.map((id) => state.characters[id]).filter(Boolean))
     if (!k.alive) livingChildren(state, k).forEach(add);
@@ -514,7 +520,9 @@ export function newMinorDynasty(ctx: Ctx, founder: Character): string {
   const { state, rng } = ctx;
   const used = new Set(Object.values(state.dynasties).map((d) => d.name));
   const id = `y${++state.nextId}`;
-  const name = dynastyName(rng, used);
+  const fresh =
+    state.scenario === 'westeros' ? WESTEROS_NAMES.houses.filter((h) => !used.has(h)) : [];
+  const name = fresh.length ? rng.pick(fresh) : dynastyName(rng, used);
   const seed = rng.seed();
   const color = newHouseColor(state, new Rng(seed));
   state.dynasties[id] = { id, name, renown: 0, seed, founderId: founder.id, color };

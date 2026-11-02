@@ -131,6 +131,8 @@ export const MIGRATIONS: Record<number, (s: AnySave) => AnySave> = {
   15: (s) => ({ ...s, followed: [], version: 16 }),
   // Version 16 → 17 : historique du trésor (courbe), vide jusqu'à la prochaine saison.
   16: (s) => ({ ...s, treasuryHistory: [], version: 17 }),
+  // Version 17 → 18 : scénarios (Westeros), libellés de titres, emblèmes de maison.
+  17: (s) => ({ ...s, version: 18 }),
 };
 
 function upgradeBattle(b: AnySave): AnySave {

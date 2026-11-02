@@ -193,22 +193,37 @@ export function titleOf(state: GameState, id: string): string {
   if (!c) return '';
   const f = c.female;
   const k = Object.values(state.kingdoms).find((x) => x.holderId === id);
-  if (k) return `${f ? 'Reine' : 'Roi'} de ${k.name}`;
+  if (k) return k.label ? k.label[f ? 1 : 0] : `${f ? 'Reine' : 'Roi'} de ${k.name}`;
   const d = Object.values(state.duchies).find((x) => x.holderId === id);
-  if (d) return `${f ? 'Duchesse' : 'Duc'} de ${d.name}`;
-  const cty = Object.values(state.counties).find((x) => x.holderId === id);
-  if (cty) return `${f ? 'Comtesse' : 'Comte'} de ${cty.name}`;
+  if (d) return d.label ? d.label[f ? 1 : 0] : `${f ? 'Duchesse' : 'Duc'} de ${d.name}`;
+  const own = Object.values(state.counties).filter((x) => x.holderId === id);
+  const cty = state.scenario ? (own.find((x) => x.seatOf === id) ?? own[0]) : own[0];
+  if (cty)
+    return state.scenario
+      ? `${f ? 'Dame' : 'Seigneur'} ${ofPlace(cty.name)}`
+      : `${f ? 'Comtesse' : 'Comte'} de ${cty.name}`;
   return '';
+}
+
+/** « de Winterfell », « des Jumeaux », « du Tor », « de la Treille », « de l'Île-aux-Ours ». */
+export function ofPlace(name: string): string {
+  if (/^Les /.test(name)) return `des ${name.slice(4)}`;
+  if (/^Le /.test(name)) return `du ${name.slice(3)}`;
+  if (/^La /.test(name)) return `de la ${name.slice(3)}`;
+  if (/^L[’']/.test(name)) return `de l’${name.slice(2)}`;
+  if (/^[AEIOUYÂÉÈÎÔŒ]/i.test(name)) return `d’${name}`;
+  return `de ${name}`;
 }
 
 /** Nom du royaume (domaine) d'un souverain. */
 export function realmName(state: GameState, rulerId: string): string {
   const k = Object.values(state.kingdoms).find((x) => x.holderId === rulerId);
-  if (k) return `Royaume de ${k.name}`;
+  if (k) return k.realmLabel ?? `Royaume de ${k.name}`;
   const d = Object.values(state.duchies).find((x) => x.holderId === rulerId);
-  if (d) return `Duché de ${d.name}`;
+  if (d) return d.realmLabel ?? `Duché de ${d.name}`;
   const cty = capitalOf(state, rulerId);
-  return cty ? `Comté de ${cty.name}` : '—';
+  if (!cty) return '—';
+  return state.scenario ? `Seigneurie ${ofPlace(cty.name)}` : `Comté de ${cty.name}`;
 }
 
 // --- Bâtiments ---

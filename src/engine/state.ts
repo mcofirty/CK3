@@ -148,6 +148,10 @@ export interface Dynasty {
   renownSpent?: number;
   /** Couleur de la maison (hex), unique ; sinon tirée de la graine (anciennes parties). */
   color?: string;
+  /** Emblème dessiné (loup, lion…), sinon une pièce tirée de la graine. */
+  sigil?: string;
+  /** Couleur de l'emblème. */
+  metal?: string;
 }
 
 export interface BuildingSlot {
@@ -211,6 +215,10 @@ export interface Duchy {
   kingdomId: string;
   counties: string[];
   holderId?: string;
+  /** Titre du titulaire (masculin, féminin), sinon « Duc de … ». */
+  label?: [string, string];
+  /** Nom du domaine de son titulaire, sinon « Duché de … ». */
+  realmLabel?: string;
 }
 
 export interface Kingdom {
@@ -218,6 +226,10 @@ export interface Kingdom {
   name: string;
   duchies: string[];
   holderId?: string;
+  /** Titre du titulaire (masculin, féminin), sinon « Roi de … ». */
+  label?: [string, string];
+  /** Nom du domaine de son titulaire, sinon « Royaume de … ». */
+  realmLabel?: string;
 }
 
 export interface Army {
@@ -461,6 +473,10 @@ export interface GameState {
   lastSnapshot?: SeasonSnapshot;
   /** Personnages suivis par le joueur (épinglés depuis leur fiche). */
   followed?: string[];
+  /** Scénario historique (sinon une partie aux Marches d'Aveline, carte tirée au sort). */
+  scenario?: 'westeros';
+  /** Maison choisie dans un scénario. */
+  scenarioHouse?: string;
   /** Or du joueur au début de chaque saison et revenu net, les plus récents à la fin. */
   treasuryHistory?: { turn: number; gold: number; net: number }[];
 }
@@ -558,4 +574,4 @@ export interface LineageScore {
 export type EndingId =
   'empire' | 'couronne' | 'puissance' | 'legende' | 'survie' | 'extinction' | 'ruine';
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;

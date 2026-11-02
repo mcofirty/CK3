@@ -137,6 +137,8 @@ export interface Effect {
   opinion?: { cible: OpinionTarget; valeur: number; raison?: string };
   /** Opinion de tous les vassaux envers le souverain. */
   opinion_vassaux?: number;
+  /** Influence du souverain à la cour du rôle désigné (un souverain indépendant). */
+  influence?: { cible: OpinionTarget; valeur: number };
   trait_ajout?: string | { cible: Role; trait: string };
   trait_retrait?: string | { cible: Role; trait: string };
   sante?: number | { cible: Role; valeur: number };

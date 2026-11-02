@@ -111,12 +111,7 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   state.startYear = rng.int(1040, 1095);
   const origin: Origin = ORIGINS.find((o) => o.id === opts.originId) ?? rng.pick(ORIGINS);
   state.origin = { id: origin.id, titre: origin.titre, texte: origin.texte };
-  // Biais d'événements propre à la partie : certains reviennent souvent, d'autres jamais.
-  state.eventBias = {};
-  for (const e of ALL_EVENTS) {
-    if (e.declencheur.type !== 'aleatoire') continue;
-    state.eventBias[e.id] = rng.chance(0.12) ? 0 : Math.round(rng.range(0.4, 1.8) * 100) / 100;
-  }
+  rollEventBias(state, rng);
   // Le joueur reçoit un domaine de taille moyenne ; les autres vont du petit au grand.
   const fair = MAP_DATA.realms
     .map((r, i) => (r.length >= 5 && r.length <= 7 ? i : -1))
@@ -371,6 +366,15 @@ export function newGame(opts: NewGameOptions = {}): GameState {
   return state;
 }
 
+/** Biais d'événements propre à la partie : certains reviennent souvent, d'autres jamais. */
+export function rollEventBias(state: GameState, rng: Rng): void {
+  state.eventBias = {};
+  for (const e of ALL_EVENTS) {
+    if (e.declencheur.type !== 'aleatoire') continue;
+    state.eventBias[e.id] = rng.chance(0.12) ? 0 : Math.round(rng.range(0.4, 1.8) * 100) / 100;
+  }
+}
+
 /** Effets de l'origine qui touchent le reste du monde. */
 function applyOriginWorld(ctx: Ctx, origin: Origin, border: County[]): void {
   const { state, rng } = ctx;
@@ -507,7 +511,7 @@ function dist(a: County, b: County, map: MapData): number {
 }
 
 /** Retire des compagnies (les plus chères d'abord) jusqu'à un revenu net suffisant. */
-function trimStanding(state: GameState, id: string, floor: number): void {
+export function trimStanding(state: GameState, id: string, floor: number): void {
   const st = state.standing[id];
   if (!st) return;
   let guard = 0;
