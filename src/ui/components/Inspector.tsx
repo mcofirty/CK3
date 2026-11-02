@@ -30,6 +30,7 @@ import {
   countyRuler,
   economyOf,
   fortLevel,
+  hasCourt,
   hasRoad,
   incomeMultiplier,
   realmCounties,
@@ -42,12 +43,11 @@ import { canStartPlot, PLOT_INFO, plotOdds } from '../../engine/intrigue';
 import { armyUpkeep, totalMen } from '../../engine/units';
 import { armyOf, findPath, militaryStrength, truceWith } from '../../engine/war';
 import { useStore } from '../store';
-import { houseColorOf } from '../../engine/heraldry';
 import {
   Bar,
   CharLine,
   CharLink,
-  CoatOfArms,
+  HouseArms,
   CountyLink,
   Portrait,
   Segmented,
@@ -206,10 +206,10 @@ function CharacterDetail({
             </button>
           )}
         </div>
-        {dyn && <CoatOfArms seed={dyn.seed} color={houseColorOf(dyn)} size={44} />}
+        {dyn && <HouseArms dyn={dyn} size={44} />}
       </div>
 
-      {c.alive && independent && (
+      {c.alive && (independent || hasCourt(game, id)) && (
         <button
           className="btn block ghost"
           style={{ marginTop: 10 }}

@@ -53,6 +53,40 @@ export function bordersPlayer(state: GameState, rulerId: string): boolean {
   );
 }
 
+/** A-t-il une cour où l'on pèse (influence, succession) : souverain, ou grand seigneur d'un scénario ? */
+export function hasCourt(state: GameState, id: string): boolean {
+  if (isIndependent(state, id)) return true;
+  return (
+    !!state.scenario &&
+    !!state.characters[id]?.alive &&
+    Object.values(state.duchies).some((d) => d.holderId === id)
+  );
+}
+
+/**
+ * Cours avec qui traiter : les souverains indépendants, et dans un scénario les grands
+ * seigneurs qui tiennent une région (vassaux du roi, mais maîtres chez eux).
+ */
+export function greatCourts(state: GameState): string[] {
+  const set = new Set(independentRulers(state));
+  if (state.scenario)
+    for (const d of Object.values(state.duchies))
+      if (d.holderId && state.characters[d.holderId]?.alive) set.add(d.holderId);
+  return [...set];
+}
+
+/** Comtés qui relèvent d'un seigneur, à n'importe quel degré (lui, ses vassaux, leurs vassaux). */
+export function domainCounties(state: GameState, lordId: string): County[] {
+  return Object.values(state.counties).filter((c) => {
+    let id: string | undefined = c.holderId;
+    for (let i = 0; i < 6 && id; i++) {
+      if (id === lordId) return true;
+      id = state.characters[id]?.liegeId;
+    }
+    return false;
+  });
+}
+
 export function vassalsOf(state: GameState, rulerId: string): string[] {
   const set = new Set<string>();
   for (const c of Object.values(state.counties)) {

@@ -603,6 +603,10 @@ const concepts: GlossarySection[] = [
         text: 'Règne (résumé et liste « À faire », journal, livre de la dynastie), Cour (souverain et ses actions, maison, conseil, courtisans et prisonniers), Royaume (carte, domaine et vassaux, trésor, lois et succession), Armée (troupes, guerres) et Monde (cours voisines, complots, nouvelles). Une pastille signale ce qui attend : points de talent, poste vacant, guerre en cours. Le ⓘ d’une carte affiche son aide, et une bulle « Premier passage » présente chaque écran la première fois (Paramètres › Revoir les aides des écrans).',
       },
       {
+        term: 'Mode Trône de fer',
+        text: 'Sur l’écran d’accueil, « Le Trône de fer » lance une partie à Westeros en l’an 298, au début de la saison 1 : Robert Baratheon règne, Jon Arryn vient de mourir. Choisissez l’une des vingt maisons (le roi et ses frères, les grandes maisons ou des bannerets). Les grandes maisons sont vassales du roi, leurs bannerets vassaux d’elles. Quelques événements d’ouverture reprennent le début de l’histoire, puis la partie est libre : un grand seigneur qui méprise le roi peut se soulever, surtout sous un roi nouveau ou enfant, et une fois libre il ceint la couronne de son ancien royaume (Roi du Nord…). Les frères de la Garde de Nuit, les chevaliers de la Garde royale et les mestres, liés par des vœux, n’héritent pas et ne se marient pas.',
+      },
+      {
         term: 'Bilan et personnages suivis',
         text: 'Royaume › Trésor trace l’or au début de chaque saison sur cinq ans (touchez la courbe pour lire une saison, ou affichez le tableau). Règne › Résumé ouvre chaque saison sur « Depuis la saison dernière » : or, prestige, piété et renommée gagnés ou perdus, comtés gagnés ou perdus, vassaux dont l’opinion a bougé, faits marquants. « Suivre », sur la fiche d’un personnage, l’épingle dans le Résumé (huit au plus) : mariage, naissance, titres, prison, santé, opinion ou mort y sont signalés.',
       },

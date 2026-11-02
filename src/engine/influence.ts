@@ -16,7 +16,7 @@ import { heirsOf } from './characters/lifecycle';
 import { clamp, notify, worldNews } from './context';
 import type { Factor } from './diplomacy';
 import { familyTie } from './crowns';
-import { isIndependent, independentRulers } from './realm';
+import { greatCourts, hasCourt } from './realm';
 import type { Character, GameState } from './state';
 
 const I = BALANCE.influence;
@@ -28,7 +28,7 @@ export const supportOf = (state: GameState, rulerId: string): string | undefined
   state.influence?.[rulerId]?.supportId;
 
 export function gainInfluence(state: GameState, rulerId: string, amount: number): void {
-  if (rulerId === state.playerId || !isIndependent(state, rulerId)) return;
+  if (rulerId === state.playerId || !hasCourt(state, rulerId)) return;
   const e = ((state.influence ??= {})[rulerId] ??= { points: 0 });
   e.points = clamp(e.points + amount, 0, I.max);
 }
@@ -89,8 +89,7 @@ export function setSupport(state: GameState, rulerId: string, candidateId?: stri
 /** Courtiser les Grands d'une cour : or contre influence. */
 export function courtGrandees(state: GameState, fromId: string, rulerId: string): boolean {
   const me = state.characters[fromId];
-  if (!me || me.gold < I.courtGold || !isIndependent(state, rulerId) || rulerId === fromId)
-    return false;
+  if (!me || me.gold < I.courtGold || !hasCourt(state, rulerId) || rulerId === fromId) return false;
   if (atWar(state, fromId, rulerId)) return false;
   me.gold -= I.courtGold;
   state.characters[rulerId].gold += I.courtGold / 2;
@@ -107,12 +106,12 @@ export function influenceFactor(state: GameState, rulerId: string): Factor[] {
 /** Saison : l'influence s'érode ; les liens de famille l'entretiennent. */
 export function seasonInfluence(state: GameState): void {
   const pl = state.playerId;
-  for (const r of independentRulers(state)) {
+  for (const r of greatCourts(state)) {
     if (r === pl) continue;
     if (familyTie(state, pl, r)) gainInfluence(state, r, I.familyTie);
   }
   for (const [id, e] of Object.entries(state.influence ?? {})) {
-    if (!isIndependent(state, id) || id === pl) {
+    if (!hasCourt(state, id) || id === pl) {
       delete state.influence![id];
       continue;
     }
@@ -156,7 +155,7 @@ export function afterSuccession(
     worldNews(state, text, 'succession', heir.id);
     e.points -= I.acclaimCost;
   }
-  if (heir.id !== pl && isIndependent(state, heir.id)) {
+  if (heir.id !== pl && hasCourt(state, heir.id)) {
     (state.influence ??= {})[heir.id] = { points: Math.max(0, e.points) };
   }
 }

@@ -3,7 +3,7 @@ import { BALANCE } from '../../data/balance';
 import { ageOf, allied, atWar, displayName } from '../../engine/characters';
 import { allianceAcceptance, tributeAcceptance } from '../../engine/diplomacy';
 import { canStartPlot, PLOT_INFO, plotOdds, plotTargets } from '../../engine/intrigue';
-import { capitalOf, independentRulers, realmCounties, realmName } from '../../engine/realm';
+import { capitalOf, domainCounties, greatCourts, realmName } from '../../engine/realm';
 import type { GameState, PlotType } from '../../engine/state';
 import { truceWith } from '../../engine/war';
 import {
@@ -58,7 +58,7 @@ function Diplomacy({ game }: { game: GameState }) {
   const pl = game.playerId;
   const [open, setOpen] = useState<string | null>(null);
   const goTo = useStore((s) => s.goTo);
-  const rulers = independentRulers(game).filter((r) => r !== pl);
+  const rulers = greatCourts(game).filter((r) => r !== pl);
   return (
     <>
       <div className="card">
@@ -80,7 +80,7 @@ function Diplomacy({ game }: { game: GameState }) {
               onTap={() => setOpen(r)}
               extra={
                 <>
-                  {realmName(game, r)} ({realmCounties(game, r).length})
+                  {realmName(game, r)} ({domainCounties(game, r).length})
                   {rel && <b className={rel === 'en guerre' ? 'bad' : 'good'}> · {rel}</b>}{' '}
                   <Opinion state={game} from={r} to={pl} />
                 </>

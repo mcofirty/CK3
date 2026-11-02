@@ -421,6 +421,10 @@ Règles d'ergonomie :
 - Thème clair et sombre suivant le réglage du téléphone.
 - Portraits stylisés et blasons générés en SVG à partir d'une graine propre à chaque personnage et dynastie.
 
+### Mode Trône de fer
+
+Depuis l'écran d'accueil, une partie à Westeros au début de la saison 1 (an 298 après la Conquête) : carte des Sept Couronnes (86 comtés), Robert Baratheon roi, grandes maisons vassales et leurs bannerets, familles et âges de la série. Le joueur choisit sa maison parmi vingt (le roi et ses frères, les grandes maisons, des bannerets). Des événements d'ouverture reprennent la situation de départ, puis l'histoire est libre. Ambiance propre : palette givrée, neige, emblèmes des maisons.
+
 ## 12. Architecture du code et données
 
 Le moteur de jeu est du TypeScript pur, sans dépendance à l'interface, et tout le contenu (traits, unités, événements, carte) vit dans des fichiers de données.
