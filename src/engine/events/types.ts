@@ -285,6 +285,11 @@ export interface EventDef {
     | 'economie'
     | 'arrivees';
   declencheur: Trigger;
+  /**
+   * Ton de l'événement, pour rester cohérent avec les relations : « amical » exclut les personnes en
+   * guerre contre nous, en faction ou hostiles ; « hostile » ne vise pas un allié.
+   */
+  ton?: 'amical' | 'hostile';
   conditions?: Condition[];
   poids?: number;
   delai_retour?: number;

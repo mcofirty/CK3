@@ -16,6 +16,12 @@ export function makeFriends(a: Character, b: Character): void {
   b.rivals = b.rivals.filter((x) => x !== a.id);
 }
 
+/** Rompt une amitié (sans en faire une rivalité). */
+export function endFriends(a: Character, b: Character): void {
+  a.friends = a.friends.filter((x) => x !== b.id);
+  b.friends = b.friends.filter((x) => x !== a.id);
+}
+
 export function makeRivals(a: Character, b: Character): void {
   if (a.id === b.id) return;
   if (!a.rivals.includes(b.id)) a.rivals.push(b.id);

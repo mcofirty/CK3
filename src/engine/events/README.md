@@ -23,6 +23,10 @@ Chaque fichier `src/data/events/*.json` contient un tableau d'événements ; le 
 }
 ```
 
+## Ton et cohérence avec les relations
+
+`"ton": "amical"` : l'événement n'est jamais tiré avec un personnage (vassal, ami, amant, courtisan, conjoint, proche, rival) en guerre contre le joueur, en faction, ou qui le déteste (opinion ≤ −25) ; l'événement `reconciliation` (rôle `ennemi`) n'exige que l'absence de guerre. `"ton": "hostile"` : un rival, un ennemi ou un comté rival ne peut pas appartenir à un allié du joueur. Un événement déjà en attente dont la situation a changé est retiré. À renseigner pour tout nouvel événement qui met en scène une personne.
+
 ## Déclencheurs
 
 `aleatoire` (tiré en début de saison, 3 maximum), `complot_decouvert` (rôle `complotiste` fourni), `suite` (seulement enchaîné par un choix).

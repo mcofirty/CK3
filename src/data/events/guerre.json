@@ -64,6 +64,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "amical",
     "poids": 7,
     "delai_retour": 24,
     "choix": [
@@ -185,6 +186,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "hostile",
     "conditions": [
       {
         "rival_opinion_max": -10,
@@ -244,6 +246,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "hostile",
     "poids": 7,
     "delai_retour": 20,
     "choix": [

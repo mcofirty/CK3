@@ -14,6 +14,7 @@ import {
   addTrait,
   ageOf,
   allied,
+  atWar,
   char,
   displayName,
   hasTrait,
@@ -50,7 +51,7 @@ import { startPlot } from '../intrigue';
 import { capitalOf, countyRuler, independentRulers, realmCounties, vassalsOf } from '../realm';
 import { SKILL_LABELS, type GameState } from '../state';
 import { armyOf, courtiersOf, declareWar, endWar, joinWar, warBetween } from '../war';
-import type { Condition, Effect, EventDef, Role } from './types';
+import { ROLES, type Condition, type Effect, type EventDef, type Role } from './types';
 
 export const EVENTS: Record<string, EventDef> = Object.fromEntries(
   ALL_EVENTS.map((e) => [e.id, e]),
@@ -116,10 +117,53 @@ const FREE_ROLES: readonly Role[] = [
  * Candidats d'un rôle. Un personnage emprisonné ne peut pas banqueter, comploter
  * ni courtiser : il n'est retenu que pour le rôle « prisonnier ».
  */
-function candidates(ctx: Ctx, role: Role): string[] {
-  const list = roleCandidates(ctx, role);
-  if (!FREE_ROLES.includes(role)) return list;
-  return list.filter((id) => !ctx.state.characters[id]?.imprisonedBy);
+function candidates(ctx: Ctx, role: Role, ton?: EventDef['ton']): string[] {
+  let list = roleCandidates(ctx, role);
+  if (FREE_ROLES.includes(role))
+    list = list.filter((id) => !ctx.state.characters[id]?.imprisonedBy);
+  return ton ? list.filter((id) => coherent(ctx.state, role, id, ton)) : list;
+}
+
+/** Rôles dont l'attitude envers le souverain compte pour le ton d'un événement. */
+const BOND_ROLES: readonly Role[] = [
+  'conjoint',
+  'vassal',
+  'rival',
+  'courtisan',
+  'ami',
+  'ennemi',
+  'amant',
+  'proche',
+];
+
+/**
+ * Cohérence avec les relations : un événement « amical » ne met en scène ni quelqu'un avec qui
+ * l'on est en guerre, ni un comploteur de faction, ni un personnage qui nous déteste ; un événement
+ * « hostile » (accusation, soupçon, revendication) ne vise pas un allié.
+ */
+export function coherent(
+  state: GameState,
+  role: Role,
+  id: string,
+  ton: NonNullable<EventDef['ton']>,
+): boolean {
+  const pl = state.playerId;
+  if (ton === 'hostile') {
+    const target = role === 'comte_rival' ? countyRulerOf(state, id) : id;
+    if (!['rival', 'ennemi', 'comte_rival'].includes(role) || !target) return true;
+    return !allied(state, pl, target);
+  }
+  if (!BOND_ROLES.includes(role)) return true;
+  const c = state.characters[id];
+  if (!c || id === pl) return true;
+  if (atWar(state, id, pl) || c.inFaction) return false;
+  // Un rival personnel peut tendre la main ; les autres doivent nous tolérer.
+  return role === 'ennemi' || opinion(state, id, pl) > -25;
+}
+
+function countyRulerOf(state: GameState, countyId: string): string | undefined {
+  const c = state.counties[countyId];
+  return c ? countyRuler(state, c) : undefined;
 }
 
 /**
@@ -129,6 +173,14 @@ function candidates(ctx: Ctx, role: Role): string[] {
 export function dropStaleEvents(state: GameState): void {
   state.pendingEvents = state.pendingEvents.filter((e) => {
     if (e.inline || e.eventId.startsWith('sys_')) return true;
+    const ton = EVENTS[e.eventId]?.ton;
+    if (
+      ton &&
+      Object.entries(e.scope).some(
+        ([r, id]) => ROLES.includes(r as Role) && !coherent(state, r as Role, id, ton),
+      )
+    )
+      return false;
     return !FREE_ROLES.some((r) => {
       const id = e.scope[r];
       return id !== undefined && !!state.characters[id]?.imprisonedBy;
@@ -189,7 +241,7 @@ function roleCandidates(ctx: Ctx, role: Role): string[] {
 /** Tous les rôles de l'événement ont-ils au moins un candidat ? */
 export function rolesAvailable(state: GameState, def: EventDef): boolean {
   const ctx = { state } as Ctx;
-  return rolesOf(def).every((r) => candidates(ctx, r).length > 0);
+  return rolesOf(def).every((r) => candidates(ctx, r, def.ton).length > 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -413,13 +465,17 @@ export function buildScope(
   preset: Record<string, string> = {},
 ): Record<string, string> | null {
   const scope: Record<string, string> = { souverain: ctx.state.playerId, ...preset };
+  if (def.ton)
+    for (const [r, id] of Object.entries(preset))
+      if (id && ROLES.includes(r as Role) && !coherent(ctx.state, r as Role, id, def.ton))
+        return null;
   const roles = rolesOf(def).filter((r) => !scope[r]);
   // Tirage de candidats ; plusieurs essais pour satisfaire les conditions.
   for (let attempt = 0; attempt < 6; attempt++) {
     const s = { ...scope };
     let ok = true;
     for (const r of roles) {
-      const list = candidates(ctx, r);
+      const list = candidates(ctx, r, def.ton);
       if (!list.length) {
         ok = false;
         break;

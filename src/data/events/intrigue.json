@@ -119,6 +119,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "hostile",
     "poids": 5,
     "delai_retour": 30,
     "choix": [
@@ -186,6 +187,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "hostile",
     "poids": 7,
     "delai_retour": 24,
     "choix": [
