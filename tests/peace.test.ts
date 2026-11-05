@@ -30,6 +30,16 @@ function setup(seed: number) {
 }
 
 describe('Négociation de paix', () => {
+  it('on peut réclamer aussi une capitale libre, au prix fort', () => {
+    const { s, w } = setup(201);
+    const all = peaceCandidates(s, w.id, 'attaquant');
+    const caps = all.filter((c) => c.capital);
+    expect(caps.length).toBeGreaterThan(0);
+    const dear = caps[0];
+    const plain = all.find((c) => !c.capital && c.status === dear.status);
+    if (plain) expect(dear.value).toBeGreaterThan(plain.value);
+  });
+
   it('plus on gagne, plus on peut demander ; la barre suit le score de guerre', () => {
     const { s, w, rival } = setup(201);
     const cands = peaceCandidates(s, w.id, 'attaquant');

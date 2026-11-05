@@ -75,7 +75,10 @@ export function countyPeaceValue(
   return Math.round(base * capital * status);
 }
 
-/** Comtés que le vainqueur peut réclamer : royaume du vaincu, capitale seulement si occupée. */
+/**
+ * Comtés que le vainqueur peut réclamer : tout le royaume du vaincu. Une capitale libre coûte très
+ * cher en points d'acceptation (`capitalMult`, `farMult`) : on peut la demander, rarement l'obtenir.
+ */
 export function peaceCandidates(
   state: GameState,
   warId: string,
@@ -91,7 +94,6 @@ export function peaceCandidates(
     const capital = !!c.seatOf && c.seatOf === c.holderId;
     const occupied =
       c.occupation?.warId === w.id && warSide(state, w.id, c.occupation.byRulerId) === winnerSide;
-    if (capital && !occupied) continue;
     out.push({
       id: c.id,
       value: countyPeaceValue(state, w, c, outcome),
