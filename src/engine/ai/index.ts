@@ -540,6 +540,8 @@ function aiVassals(ctx: Ctx): void {
     const vassals = vassalsOf(state, liege);
     for (const v of vassals) {
       const c = state.characters[v];
+      // Le joueur vassal choisit seul de se soulever : l'IA ne l'enrôle pas dans une faction.
+      if (v === state.playerId) continue;
       const op = opinion(state, v, liege);
       if (op < BALANCE.opinion.factionThreshold && !atWar(state, v, liege)) {
         if (!c.inFaction) {

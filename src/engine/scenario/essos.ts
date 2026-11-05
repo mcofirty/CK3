@@ -13,6 +13,7 @@ import type { Effect, EventDef } from '../events/types';
 import type { Character, GameState } from '../state';
 import { emptyUnits } from '../units';
 import { declareWar, joinWar, transferCounty } from '../war';
+import { westerosExhausted } from './story';
 
 const E = BALANCE.essos;
 
@@ -101,7 +102,10 @@ export function seasonEssos(ctx: Ctx): void {
   const waited = state.turn - es.stageTurn;
   const ready =
     es.stage === 5
-      ? state.turn >= E.landingTurn && waited >= E.stageSeasons[5] && rng.chance(E.landingChance)
+      ? state.turn >= E.landingTurn &&
+        waited >= E.stageSeasons[5] &&
+        (westerosExhausted(state) || state.turn >= E.landingLatest) &&
+        rng.chance(E.landingChance)
       : waited >= E.stageSeasons[es.stage] && rng.chance(E.stageChance);
   if (!ready) return;
   es.stage += 1;
@@ -455,6 +459,7 @@ export function essosAction(ctx: Ctx, a: EssosAction): boolean {
   if (a.kind === 'emissaire') {
     p.gold -= E.emissaryGold;
     addOpinion(state, dany.id, p.id, 'Un ami de la maison Targaryen', E.emissaryOpinion, 0);
+    es.stageTurn -= E.emissaryHaste;
     notify(state, `Votre émissaire a rejoint Daenerys à ${ESSOS_STAGES[es.stage].place}.`);
     return true;
   }
@@ -465,7 +470,8 @@ export function essosAction(ctx: Ctx, a: EssosAction): boolean {
     notify(state, 'L’assassin a réussi : Daenerys Targaryen est morte.');
   } else {
     addOpinion(state, dany.id, p.id, 'A voulu sa mort', -40, 0);
-    notify(state, 'L’assassin a échoué. Daenerys sait qui l’envoyait.');
+    es.stageTurn += E.assassinDelay;
+    notify(state, 'L’assassin a échoué. Daenerys sait qui l’envoyait ; elle redouble de prudence.');
   }
   return true;
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { BALANCE } from '../../data/balance';
 import { ageOf, isAdult } from '../../engine/characters';
 import { ESSOS_STAGES, daenerys, essosCheck, type EssosAction } from '../../engine/scenario/essos';
+import { storyStatus, westerosExhausted } from '../../engine/scenario/story';
 import {
   blightedCounties,
   wallCheck,
@@ -261,7 +262,7 @@ export function EssosView({ game }: { game: GameState }) {
   return (
     <>
       <div className="card essos-card">
-        <CardTitle help="Les nouvelles d’Essos arrivent avec les marchands. Daenerys avance de saison en saison ; si elle vit, elle finira par traverser le détroit pour réclamer le trône de son père.">
+        <CardTitle help="Les nouvelles d’Essos arrivent avec les marchands. Daenerys avance de saison en saison ; si elle vit, elle finira par traverser le détroit pour réclamer le trône de son père. Elle ne viendra pas avant l’an 10, et attendra que la guerre ait épuisé Westeros.">
           De l’autre côté du détroit
         </CardTitle>
         {dany && (
@@ -284,6 +285,14 @@ export function EssosView({ game }: { game: GameState }) {
             </span>
             {es.alive && <Opinion state={game} from={dany.id} to={game.playerId} />}
           </button>
+        )}
+        {es.alive && es.stage < 6 && (
+          <p className="small muted" style={{ marginTop: 8 }}>
+            {storyStatus(game).join(' ')}{' '}
+            {westerosExhausted(game)
+              ? 'Rien ne la retient plus en Essos, sinon le temps.'
+              : 'Elle attend que les loups, les lions et les cerfs s’épuisent.'}
+          </p>
         )}
         {es.alive && es.stage >= 6 && (
           <button
@@ -318,7 +327,8 @@ export function EssosView({ game }: { game: GameState }) {
             <div className="grow">
               <b>Envoyer un émissaire</b>
               <div className="small muted">
-                {E.emissaryGold} or · son opinion de vous +{E.emissaryOpinion}
+                {E.emissaryGold} or · son opinion de vous +{E.emissaryOpinion} · elle avance plus
+                vite
                 {!em.ok && em.reason && <span className="bad"> · {em.reason}</span>}
               </div>
             </div>
@@ -335,7 +345,7 @@ export function EssosView({ game }: { game: GameState }) {
               <b>Engager un assassin</b>
               <div className="small muted">
                 {E.assassinGold} or · réussite {Math.round(E.assassinChance * 100)} % · un échec se
-                sait
+                sait et la rend prudente (retardée de {E.assassinDelay} saisons)
                 {!as.ok && as.reason && <span className="bad"> · {as.reason}</span>}
               </div>
             </div>

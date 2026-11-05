@@ -727,6 +727,54 @@ export const BALANCE = {
     childKingMult: 2,
     /** Un seigneur ambitieux se soulève plus volontiers. */
     ambitiousMult: 1.5,
+    /** Poids des événements propres à Westeros, et des événements génériques, dans ce mode. */
+    eventWeight: 2.5,
+    genericEventWeight: 0.7,
+  },
+  /** Le récit de Westeros (mode Trône de fer) : la chute de Robert et la Guerre des Cinq Rois. */
+  story: {
+    /** Tyrion arrêté par Catelyn : à partir de cette saison, chance par saison. */
+    tyrionFrom: 2,
+    tyrionChance: 0.5,
+    /** La chasse de Robert : à partir de cette saison, chance de base croissante par saison. */
+    huntFrom: 3,
+    huntBase: 0.08,
+    huntStep: 0.1,
+    /** Robert joueur : une partie de chasse proposée toutes les N saisons ; chance d'y survivre. */
+    huntEvery: 3,
+    huntSurvive: 0.6,
+    /** Ned Main du Roi, à la mort de Robert : chance d'être décapité (sinon il s'enfuit). */
+    nedExecution: 0.7,
+    /** Ned resté à Winterfell : chance qu'il refuse de plier le genou devant Joffrey. */
+    northRiseWithoutNed: 0.5,
+    /** Joueur Ned qui dénonce Joffrey : chance de s'en sortir (modifiée par la ruse). */
+    nedEscape: 0.5,
+    /** Saisons après la mort de Robert avant que les prétendants se déclarent ; chance par saison. */
+    claimDelay: 1,
+    stannisChance: 0.8,
+    renlyChance: 0.7,
+    /** La lettre de Stannis : opinion des vassaux du roi envers lui. */
+    bastardOpinion: -15,
+    /** Les Fer-nés : saisons après le début de la guerre, chance par saison. */
+    greyjoyDelay: 3,
+    greyjoyChance: 0.35,
+    /** L'ombre de Renly : saisons de guerre avant, chance par saison ; joueur Renly : chance d'y échapper. */
+    shadowDelay: 3,
+    shadowChance: 0.25,
+    shadowSurvive: 0.5,
+    /** Noces pourpres : saisons après le mariage, chance par saison ; joueur : chance de survivre. */
+    purpleDelay: 2,
+    purpleChance: 0.35,
+    purpleSurvive: 0.4,
+    /** Noces rouges : saisons de guerre du Nord avant, chance par saison ; joueur : chance d'y survivre. */
+    redDelay: 6,
+    redChance: 0.25,
+    redSurvive: 0.3,
+    /** Or offert par Tywin à Walder Frey. */
+    redGold: 300,
+    /** Épuisement : une guerre du récit qui dure tant de saisons s'achève selon son score. */
+    warExhaustion: 16,
+    exhaustionScore: 20,
   },
   /** Le Mur et la Garde de Nuit (mode Trône de fer). */
   wall: {
@@ -781,11 +829,16 @@ export const BALANCE = {
   /** Daenerys en Essos (mode Trône de fer). */
   essos: {
     /** Saisons minimales passées à chaque étape avant la suivante, et chance par saison. */
-    stageSeasons: [4, 2, 3, 3, 3, 6] as number[],
-    stageChance: 0.45,
-    /** Saison minimale du débarquement, et chance par saison une fois prête. */
-    landingTurn: 24,
-    landingChance: 0.15,
+    stageSeasons: [6, 4, 6, 6, 6, 6] as number[],
+    stageChance: 0.35,
+    /** Saison minimale du débarquement (an 10), et chance par saison une fois prête. Elle attend
+     * que la Guerre des Cinq Rois ait épuisé Westeros, sauf après `landingLatest` (an 14). */
+    landingTurn: 40,
+    landingLatest: 56,
+    landingChance: 0.25,
+    /** Un émissaire avance son parcours d'une saison ; un assassin manqué la retarde. */
+    emissaryHaste: 1,
+    assassinDelay: 2,
     /** Hommes qui la suivent à chaque étape. */
     army: [2000, 300, 100, 300, 8300, 20000, 20000] as number[],
     emissaryGold: 60,

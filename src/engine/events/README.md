@@ -91,6 +91,6 @@ Chaque choix affiche automatiquement ses effets connus avant validation.
 
 **Effets** : `contentement` (comté du rôle `comte`, sinon tout le domaine), `impots` (fixe le taux du comté du rôle `comte`).
 
-**Westeros (v6)** : effets `mur` (`{ "hommes", "vivres", "menace", "sauvageons", "verredragon", "submerger", "liberer" }`, les deux derniers sur le comté du rôle `comte`), `essos` (`{ "armee", "mort" }`), `prendre_le_noir` (rôle), et `influence` (`{ "cible": "rival", "valeur": 40 }`) — influence du souverain à la cour d'un souverain indépendant (voir Royaume › Lois et la fiche de royaume).
+**Westeros (v6)** : champ `"scenario": "westeros"` (événement tiré seulement dans ce mode, poids renforcé ; voir `westeros.json`), conditions `maison` (`["stark", …]`, maison du souverain) et `region` (`["nord", …]`, région de sa capitale), effet `recit` (un fait du récit, voir `STORY_EFFECTS` dans `scenario/story.ts`), effets `mur` (`{ "hommes", "vivres", "menace", "sauvageons", "verredragon", "submerger", "liberer" }`, les deux derniers sur le comté du rôle `comte`), `essos` (`{ "armee", "mort" }`), `prendre_le_noir` (rôle), et `influence` (`{ "cible": "rival", "valeur": 40 }`) — influence du souverain à la cour d'un souverain indépendant (voir Royaume › Lois et la fiche de royaume).
 
 **Arrivées à la cour (v5)** : `nouveau_courtisan` accepte `competence` (`{ competence, valeur }`), `femme`, `trait` et `pupille` (enfant confié à la cour). Effet interne `pupille` (avenir d'un pupille adulte).

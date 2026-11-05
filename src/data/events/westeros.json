@@ -1,0 +1,1328 @@
+[
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_raid_fer_ne",
+    "titre": "Des voiles noires",
+    "categorie": "guerre",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "Des boutres fer-nés ont jeté l’ancre dans une crique près de {comte.nom}. Ils pillent, brûlent et emmènent des femmes comme épouses de sel.",
+    "conditions": [
+      {
+        "cotier": true,
+        "pas_trait": "voeux"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Les repousser à la mer",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Pillards fer-nés",
+              "force": 0.4,
+              "composition": {
+                "infanterie": 0.7,
+                "archers": 0.3
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 40
+                },
+                {
+                  "contentement": 5
+                }
+              ],
+              "defaite": [
+                {
+                  "developpement": -1
+                },
+                {
+                  "prestige": -30
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Leur payer le prix du fer pour qu’ils partent",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "prestige": -20
+          }
+        ]
+      },
+      {
+        "libelle": "Laisser les paysans se défendre",
+        "effets": [
+          {
+            "contentement": -10
+          },
+          {
+            "developpement": -1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_prix_du_fer",
+    "titre": "Le prix du fer",
+    "categorie": "guerre",
+    "poids": 10,
+    "delai_retour": 10,
+    "texte": "Vos capitaines s’ennuient. « Ce qui est mort ne saurait mourir », grondent-ils : un raid sur les côtes du continent remplirait les cales et les cœurs.",
+    "conditions": [
+      {
+        "maison": ["greyjoy"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Lancer les boutres",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.65,
+              "competence": "guerre",
+              "succes": [
+                {
+                  "or": 120
+                },
+                {
+                  "prestige": 40
+                },
+                {
+                  "opinion_vassaux": 5
+                }
+              ],
+              "echec": [
+                {
+                  "prestige": -30
+                },
+                {
+                  "levees": -200
+                }
+              ],
+              "texte_succes": "Les cales débordent d’or et d’otages.",
+              "texte_echec": "Une flotte de la Treille vous attendait."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le Dieu Noyé attendra",
+        "effets": [
+          {
+            "opinion_vassaux": -8
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_tournoi_port_real",
+    "titre": "Un tournoi à Port-Réal",
+    "categorie": "cour",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "La Couronne donne un tournoi : quarante mille dragons au vainqueur de la joute, et la Montagne inscrit sur les listes.",
+    "choix": [
+      {
+        "libelle": "Entrer en lice",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.4,
+              "competence": "guerre",
+              "succes": [
+                {
+                  "or": 150
+                },
+                {
+                  "prestige": 80
+                }
+              ],
+              "echec": [
+                {
+                  "sante": -15
+                },
+                {
+                  "prestige": -20
+                }
+              ],
+              "texte_succes": "Votre lance brise celle de la Montagne.",
+              "texte_echec": "On vous emporte du champ sur un bouclier."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Y envoyer un champion",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "prestige": 25
+          }
+        ]
+      },
+      {
+        "libelle": "Rester chez soi",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_littlefinger_pret",
+    "titre": "L’argent de Littlefinger",
+    "categorie": "economie",
+    "poids": 7,
+    "delai_retour": 16,
+    "texte": "Petyr Baelish, le Grand Argentier, vous propose un prêt « entre amis ». Ses yeux gris-vert ne sourient pas avec sa bouche.",
+    "conditions": [
+      {
+        "or_max": 150
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Accepter deux cents dragons",
+        "effets": [
+          {
+            "or": 200
+          },
+          {
+            "drapeau": "dette_baelish"
+          },
+          {
+            "suite_differee": {
+              "id": "w_littlefinger_rembourse",
+              "saisons": 6
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "On ne doit rien à cet homme",
+        "effets": [
+          {
+            "xp": {
+              "competence": "ruse",
+              "valeur": 15
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "w_littlefinger_rembourse",
+    "scenario": "westeros",
+    "titre": "Littlefinger se souvient",
+    "categorie": "economie",
+    "declencheur": {
+      "type": "suite"
+    },
+    "texte": "Un messager de Baelish rappelle votre dette. Il ne réclame pas d’or : seulement un service, une lettre, un nom.",
+    "choix": [
+      {
+        "libelle": "Rembourser en or",
+        "conditions": [
+          {
+            "or_min": 250
+          }
+        ],
+        "effets": [
+          {
+            "or": -250
+          },
+          {
+            "retirer_drapeau": "dette_baelish"
+          }
+        ]
+      },
+      {
+        "libelle": "Lui rendre ce service",
+        "effets": [
+          {
+            "stress": {
+              "juste": 20,
+              "*": 8
+            }
+          },
+          {
+            "prestige": -30
+          },
+          {
+            "retirer_drapeau": "dette_baelish"
+          }
+        ]
+      },
+      {
+        "libelle": "Refuser de payer",
+        "effets": [
+          {
+            "prestige": -40
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_oisillons",
+    "titre": "Les oisillons de Varys",
+    "categorie": "intrigue",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "Un enfant des rues vous glisse un billet : l’Araignée sait ce qui se trame dans votre propre cour, et elle partage, pour un prix.",
+    "choix": [
+      {
+        "libelle": "Payer l’Araignée",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "xp": {
+              "competence": "ruse",
+              "valeur": 40
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Faire suivre l’enfant",
+        "effets": [
+          {
+            "hasard": {
+              "chance": 0.4,
+              "competence": "ruse",
+              "succes": [
+                {
+                  "xp": {
+                    "competence": "ruse",
+                    "valeur": 25
+                  }
+                },
+                {
+                  "prestige": 15
+                }
+              ],
+              "echec": [
+                {
+                  "stress": 10
+                }
+              ],
+              "texte_succes": "Vous connaissez maintenant un de ses nids.",
+              "texte_echec": "L’enfant a disparu dans les égouts."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Brûler le billet",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_septon",
+    "titre": "Un septon prêche",
+    "categorie": "religion",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "Un septon errant prêche sur la place de {comte.nom} : les Sept punissent un royaume où le roi boit, la reine ment et les seigneurs se battent pour un siège.",
+    "choix": [
+      {
+        "libelle": "Faire une offrande au septuaire",
+        "conditions": [
+          {
+            "or_min": 40
+          }
+        ],
+        "effets": [
+          {
+            "or": -40
+          },
+          {
+            "piete": 60
+          },
+          {
+            "contentement": 5
+          }
+        ]
+      },
+      {
+        "libelle": "Le chasser de la ville",
+        "effets": [
+          {
+            "piete": -30
+          },
+          {
+            "stress": {
+              "cruel": -5,
+              "*": 5
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le laisser parler",
+        "effets": [
+          {
+            "contentement": -3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_recruteur_garde",
+    "titre": "Un frère en noir",
+    "categorie": "vassaux",
+    "poids": 9,
+    "delai_retour": 10,
+    "texte": "Yoren, un frère juré de la Garde de Nuit, passe par vos terres avec une charrette de voleurs et d’orphelins. Il demande vos prisonniers et quelques vivres pour le Mur.",
+    "conditions": [
+      {
+        "region": ["nord", "conflans", "val", "couronne"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Lui donner hommes et vivres",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "mur": {
+              "hommes": 25,
+              "vivres": 5
+            }
+          },
+          {
+            "piete": 20
+          }
+        ]
+      },
+      {
+        "libelle": "Lui donner des prisonniers",
+        "effets": [
+          {
+            "mur": {
+              "hommes": 12
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le Mur n’est pas notre affaire",
+        "effets": [
+          {
+            "prestige": -10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_deserteur",
+    "titre": "Un déserteur de la Garde",
+    "categorie": "vassaux",
+    "poids": 7,
+    "delai_retour": 12,
+    "texte": "Vos gardes ont pris un homme en noir qui fuyait vers le sud. Il jure avoir vu les morts marcher, des yeux bleus comme des étoiles de glace.",
+    "conditions": [
+      {
+        "region": ["nord"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Le décapiter vous-même, selon la loi",
+        "effets": [
+          {
+            "prestige": 20
+          },
+          {
+            "stress": {
+              "juste": -10,
+              "genereux": 10,
+              "*": 3
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "L’écouter, et renvoyer un corbeau au Mur",
+        "effets": [
+          {
+            "mur": {
+              "menace": -2
+            }
+          },
+          {
+            "xp": {
+              "competence": "savoir",
+              "valeur": 20
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Le laisser filer",
+        "effets": [
+          {
+            "prestige": -15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["automne", "hiver"]
+    },
+    "id": "w_sauvageons",
+    "titre": "Des sauvageons au sud du Mur",
+    "categorie": "guerre",
+    "poids": 9,
+    "delai_retour": 10,
+    "texte": "Une bande de sauvageons a franchi le Mur et pille les villages autour de {comte.nom}. Ils fuient quelque chose, disent les survivants.",
+    "conditions": [
+      {
+        "region": ["nord"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Les traquer",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Pillards sauvageons",
+              "force": 0.35,
+              "composition": {
+                "levees": 0.6,
+                "archers": 0.4
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 30
+                }
+              ],
+              "defaite": [
+                {
+                  "contentement": -10
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Leur offrir des terres contre leur fer",
+        "effets": [
+          {
+            "levees": 150
+          },
+          {
+            "opinion_vassaux": -8
+          },
+          {
+            "mur": {
+              "sauvageons": -5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_pretresse_rouge",
+    "titre": "Une prêtresse rouge",
+    "categorie": "religion",
+    "poids": 6,
+    "delai_retour": 20,
+    "texte": "Une femme vêtue de rouge, au rubis à la gorge, demande audience. Elle a vu votre visage dans les flammes de R’hllor, et une couronne au-dessus.",
+    "conditions": [
+      {
+        "drapeau": "recit_robert"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "L’écouter",
+        "effets": [
+          {
+            "piete": -40
+          },
+          {
+            "prestige": 40
+          },
+          {
+            "xp": {
+              "competence": "ruse",
+              "valeur": 20
+            }
+          },
+          {
+            "stress": -10
+          }
+        ]
+      },
+      {
+        "libelle": "La renvoyer à Asshaï",
+        "effets": [
+          {
+            "piete": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_banque_de_fer",
+    "titre": "La Banque de Fer",
+    "categorie": "economie",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "Un émissaire de Braavos, en noir, attend dans votre salle. « La Banque de Fer aura son dû », rappelle-t-il, et il cite des noms de rois qui ne l’ont pas cru.",
+    "conditions": [
+      {
+        "dette": true
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Payer un acompte",
+        "conditions": [
+          {
+            "or_min": 80
+          }
+        ],
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "prestige": 10
+          }
+        ]
+      },
+      {
+        "libelle": "Le renvoyer les mains vides",
+        "effets": [
+          {
+            "prestige": -30
+          },
+          {
+            "hasard": {
+              "chance": 0.5,
+              "succes": [],
+              "echec": [
+                {
+                  "contentement": -10
+                },
+                {
+                  "or": -40
+                }
+              ],
+              "texte_echec": "La Banque finance vos ennemis."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_peage_jumeaux",
+    "titre": "Le péage des Jumeaux",
+    "categorie": "vassaux",
+    "poids": 7,
+    "delai_retour": 12,
+    "texte": "Lord Walder Frey exige un droit de passage sur le Trident pour vos marchands — ou un mariage avec une de ses innombrables petites-filles.",
+    "conditions": [
+      {
+        "region": ["conflans", "nord"]
+      },
+      {
+        "pas_trait": "voeux"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Payer le péage",
+        "effets": [
+          {
+            "or": -50
+          }
+        ]
+      },
+      {
+        "libelle": "Promettre un mariage",
+        "effets": [
+          {
+            "drapeau": "promesse_frey"
+          },
+          {
+            "prestige": -10
+          },
+          {
+            "opinion_vassaux": 3
+          }
+        ]
+      },
+      {
+        "libelle": "Passer de force",
+        "effets": [
+          {
+            "prestige": 20
+          },
+          {
+            "opinion_vassaux": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_aspics",
+    "titre": "Les Aspics des sables",
+    "categorie": "intrigue",
+    "poids": 9,
+    "delai_retour": 12,
+    "texte": "Les filles bâtardes d’Oberyn réclament vengeance pour Elia : un Lannister, n’importe lequel, empoisonné au vin de Dorne.",
+    "conditions": [
+      {
+        "maison": ["martell"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Les laisser faire",
+        "effets": [
+          {
+            "prestige": 30
+          },
+          {
+            "piete": -30
+          },
+          {
+            "opinion_vassaux": 10
+          },
+          {
+            "stress": {
+              "juste": 15,
+              "*": 0
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Patience : Dorne attendra son heure",
+        "effets": [
+          {
+            "xp": {
+              "competence": "diplomatie",
+              "valeur": 30
+            }
+          },
+          {
+            "opinion_vassaux": -10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["ete", "automne"]
+    },
+    "id": "w_moisson_bief",
+    "titre": "Une moisson dorée",
+    "categorie": "economie",
+    "poids": 9,
+    "delai_retour": 8,
+    "texte": "Les greniers du Bief débordent : les marchands de Villevieille et de Port-Réal se disputent votre blé.",
+    "conditions": [
+      {
+        "region": ["bief"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Vendre au plus offrant",
+        "effets": [
+          {
+            "or": 120
+          }
+        ]
+      },
+      {
+        "libelle": "Constituer des réserves pour l’hiver qui vient",
+        "effets": [
+          {
+            "contentement": 10
+          },
+          {
+            "ravitaillement": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_clans_montagne",
+    "titre": "Les clans des montagnes de la Lune",
+    "categorie": "guerre",
+    "poids": 9,
+    "delai_retour": 10,
+    "texte": "Les Freux et les Oreilles-Noires sont descendus des montagnes de la Lune : la route du Val n’est plus sûre.",
+    "conditions": [
+      {
+        "region": ["val"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Monter une expédition",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Clans des montagnes",
+              "force": 0.45,
+              "composition": {
+                "infanterie": 0.6,
+                "archers": 0.4
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 40
+                },
+                {
+                  "contentement": 5
+                }
+              ],
+              "defaite": [
+                {
+                  "prestige": -30
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Escorter les caravanes",
+        "effets": [
+          {
+            "or": -40
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_mines_castral_roc",
+    "titre": "Les mines de Castral Roc",
+    "categorie": "economie",
+    "poids": 8,
+    "delai_retour": 12,
+    "texte": "Vos mineurs annoncent qu’un filon d’or s’épuise sous Castral Roc. Un Lannister paie toujours ses dettes — encore faut-il de l’or pour cela.",
+    "conditions": [
+      {
+        "maison": ["lannister"]
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Creuser plus profond",
+        "effets": [
+          {
+            "or": -60
+          },
+          {
+            "hasard": {
+              "chance": 0.6,
+              "competence": "gestion",
+              "succes": [
+                {
+                  "or": 220
+                }
+              ],
+              "echec": [
+                {
+                  "contentement": -5
+                }
+              ],
+              "texte_succes": "Un nouveau filon : la roche brille.",
+              "texte_echec": "Le puits s’est effondré."
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Garder le secret",
+        "effets": [
+          {
+            "xp": {
+              "competence": "ruse",
+              "valeur": 20
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_brigands_conflans",
+    "titre": "La Fraternité sans bannière",
+    "categorie": "guerre",
+    "poids": 9,
+    "delai_retour": 10,
+    "texte": "La guerre a vidé le Conflans de ses seigneurs. Des hors-la-loi en manteaux en loques, menés par un chevalier qui ne meurt pas, protègent les paysans — et prennent ce qu’ils veulent aux nobles.",
+    "conditions": [
+      {
+        "region": ["conflans"]
+      },
+      {
+        "drapeau": "recit_cinq_rois"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Les pourchasser",
+        "effets": [
+          {
+            "bataille": {
+              "ennemi": "Fraternité sans bannière",
+              "force": 0.35,
+              "composition": {
+                "cavalerie": 0.4,
+                "archers": 0.6
+              },
+              "attaque": true,
+              "victoire": [
+                {
+                  "prestige": 30
+                }
+              ],
+              "defaite": [
+                {
+                  "contentement": -10
+                },
+                {
+                  "prestige": -20
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Les laisser protéger les villages",
+        "effets": [
+          {
+            "contentement": 10
+          },
+          {
+            "prestige": -20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_epee_louee",
+    "titre": "Une épée à louer",
+    "categorie": "cour",
+    "poids": 7,
+    "delai_retour": 16,
+    "texte": "Un reître au sourire insolent se présente à votre cour. Il ne jure fidélité à personne, mais il se bat mieux que vos chevaliers et le dit volontiers.",
+    "conditions": [
+      {
+        "en_guerre": true
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "L’engager",
+        "conditions": [
+          {
+            "or_min": 50
+          }
+        ],
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "nouveau_courtisan": {
+              "age_min": 25,
+              "age_max": 40,
+              "guerre": 15,
+              "trait": "soldat"
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "On ne paie pas un traître en puissance",
+        "effets": []
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_feu_gregeois",
+    "titre": "Les pyromants",
+    "categorie": "guerre",
+    "poids": 6,
+    "delai_retour": 16,
+    "texte": "La guilde des alchimistes vous propose des milliers de pots de feu grégeois. Il brûle sur l’eau, et parfois les mains de ceux qui le manient.",
+    "conditions": [
+      {
+        "en_guerre": true
+      },
+      {
+        "or_min": 100
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "En acheter pour la défense",
+        "effets": [
+          {
+            "or": -100
+          },
+          {
+            "levees": 300
+          },
+          {
+            "prestige": 20
+          }
+        ]
+      },
+      {
+        "libelle": "C’est le feu du Roi fou",
+        "effets": [
+          {
+            "piete": 15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire",
+      "saisons": ["hiver"]
+    },
+    "id": "w_hiver_vient",
+    "titre": "L’hiver vient",
+    "categorie": "saisons",
+    "poids": 10,
+    "delai_retour": 8,
+    "texte": "Les mestres annoncent un hiver long. Les corbeaux blancs de la Citadelle volent déjà ; les petites gens mangent leurs semences.",
+    "choix": [
+      {
+        "libelle": "Ouvrir les greniers",
+        "effets": [
+          {
+            "or": -50
+          },
+          {
+            "contentement": 10
+          },
+          {
+            "opinion_vassaux": 3
+          }
+        ]
+      },
+      {
+        "libelle": "Garder les réserves pour l’armée",
+        "effets": [
+          {
+            "ravitaillement": 25
+          },
+          {
+            "contentement": -8
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_mestre_citadelle",
+    "titre": "Un mestre de la Citadelle",
+    "categorie": "cour",
+    "poids": 7,
+    "delai_retour": 12,
+    "texte": "Un jeune mestre, chaîne encore neuve au cou, arrive de Villevieille. Il dit que les dragons ne sont pas tous morts, et qu’on enseigne la magie en secret derrière les portes de la Citadelle.",
+    "choix": [
+      {
+        "libelle": "Le prendre à votre service",
+        "effets": [
+          {
+            "or": -30
+          },
+          {
+            "xp": {
+              "competence": "savoir",
+              "valeur": 40
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Les dragons sont morts",
+        "effets": [
+          {
+            "xp": {
+              "competence": "gestion",
+              "valeur": 10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_chanson_satirique",
+    "titre": "Une chanson insolente",
+    "categorie": "cour",
+    "poids": 6,
+    "delai_retour": 16,
+    "texte": "Un chanteur fait rire toutes les tavernes avec une chanson sur le roi, le sanglier et le vin. Votre nom y figure, à la rime.",
+    "conditions": [
+      {
+        "drapeau": "recit_robert"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Lui faire couper la langue",
+        "effets": [
+          {
+            "prestige": 15
+          },
+          {
+            "contentement": -5
+          },
+          {
+            "stress": {
+              "cruel": -5,
+              "genereux": 10,
+              "*": 5
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "En rire avec les autres",
+        "effets": [
+          {
+            "prestige": -10
+          },
+          {
+            "contentement": 5
+          },
+          {
+            "stress": -5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_otage_vassal",
+    "titre": "Un otage pour la paix",
+    "categorie": "vassaux",
+    "poids": 7,
+    "delai_retour": 16,
+    "texte": "{vassal.nom} vous offre son fils comme pupille, pour prouver sa loyauté en ces temps où chacun choisit son roi.",
+    "conditions": [
+      {
+        "drapeau": "recit_cinq_rois"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Accepter le garçon",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 15,
+              "raison": "Son fils est en sûreté"
+            }
+          },
+          {
+            "nouveau_courtisan": {
+              "age_min": 8,
+              "age_max": 12,
+              "pupille": true
+            }
+          }
+        ]
+      },
+      {
+        "libelle": "Sa parole suffit",
+        "effets": [
+          {
+            "opinion": {
+              "cible": "vassal",
+              "valeur": 10,
+              "raison": "Confiance accordée"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "westeros",
+    "declencheur": {
+      "type": "aleatoire"
+    },
+    "id": "w_nouvelle_dragons",
+    "titre": "Des rumeurs de dragons",
+    "categorie": "etranger",
+    "poids": 8,
+    "delai_retour": 24,
+    "texte": "Des marins de retour de Qarth jurent qu’une reine aux cheveux d’argent parcourt Essos avec trois dragons. Vos seigneurs rient — pas tous.",
+    "conditions": [
+      {
+        "drapeau": "recit_paix"
+      }
+    ],
+    "choix": [
+      {
+        "libelle": "Fortifier les côtes",
+        "effets": [
+          {
+            "or": -80
+          },
+          {
+            "levees": 300
+          }
+        ]
+      },
+      {
+        "libelle": "Des contes de marins",
+        "effets": [
+          {
+            "prestige": 5
+          }
+        ]
+      }
+    ]
+  }
+]

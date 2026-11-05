@@ -371,6 +371,8 @@ export function rollEventBias(state: GameState, rng: Rng): void {
   state.eventBias = {};
   for (const e of ALL_EVENTS) {
     if (e.declencheur.type !== 'aleatoire') continue;
+    // Les événements d'un autre scénario ne tirent rien : les graines des parties restent stables.
+    if (e.scenario && e.scenario !== state.scenario) continue;
     state.eventBias[e.id] = rng.chance(0.12) ? 0 : Math.round(rng.range(0.4, 1.8) * 100) / 100;
   }
 }

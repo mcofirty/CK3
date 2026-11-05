@@ -1,3 +1,4 @@
+import { BALANCE } from '../src/data/balance';
 import { describe, expect, it } from 'vitest';
 import { applyAction } from '../src/engine/actions';
 import { newWesterosGame, westerosCharacter } from '../src/engine/scenario/westeros';
@@ -87,7 +88,12 @@ describe('Essos', () => {
     s.essos!.stage = 5;
     s.essos!.dragons = 3;
     s.essos!.stageTurn = 0;
+    // Pas avant l'an 10…
     s.turn = 30;
+    seasonEssos({ state: s, rng: fixedRng(0) });
+    expect(s.essos!.stage).toBe(5);
+    // … puis, Westeros n'ayant pas connu la guerre, elle débarque.
+    s.turn = BALANCE.essos.landingTurn;
     seasonEssos({ state: s, rng: fixedRng(0) });
     expect(s.essos!.stage).toBe(6);
     expect(s.counties.peyredragon.holderId).toBe(dany.id);

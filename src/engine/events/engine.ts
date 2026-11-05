@@ -1,6 +1,7 @@
 /** Moteur d'événements narratifs et langage d'effets (section 6). */
 import { applyWallEffect, takeTheBlack, wallEffectLabels } from '../scenario/wall';
 import { applyEssosEffect, essosEffectLabels } from '../scenario/essos';
+import { applyStoryEffect, STORY_EFFECTS } from '../scenario/story';
 import { gainInfluence } from '../influence';
 import { cession } from '../diplomacy/trade';
 import { setUnionPrivileges, settlePretender } from '../crowns';
@@ -46,7 +47,7 @@ import { startEventBattle } from '../war/eventBattle';
 import { chronicle, clamp, newId, notify, seasonOf, yearOf, type Ctx } from '../context';
 import { celebrateMarriage, makeAlliance } from '../diplomacy';
 import { startPlot } from '../intrigue';
-import { countyRuler, independentRulers, realmCounties, vassalsOf } from '../realm';
+import { capitalOf, countyRuler, independentRulers, realmCounties, vassalsOf } from '../realm';
 import { SKILL_LABELS, type GameState } from '../state';
 import { armyOf, courtiersOf, declareWar, endWar, joinWar, warBetween } from '../war';
 import type { Condition, Effect, EventDef, Role } from './types';
@@ -374,6 +375,14 @@ export function checkCondition(
       case 'dette':
         if ((state.loans ?? []).some((l) => l.ownerId === p.id) !== v) return false;
         break;
+      case 'maison':
+        if (!(v as string[]).some((h) => p.dynastyId === `y_${h}`)) return false;
+        break;
+      case 'region': {
+        const cap = capitalOf(state, p.id);
+        if (!cap || !(v as string[]).some((r) => cap.duchyId === `d_${r}`)) return false;
+        break;
+      }
       case 'cotier':
         if (
           Object.values(state.counties).some(
@@ -505,6 +514,7 @@ export function effectLabels(
       out.push(`Influence à la cour de ${name(e.influence.cible)} : ${sign(e.influence.valeur)}`);
     if (e.mur) out.push(...wallEffectLabels(e.mur, scope.comte ? name('comte') : undefined));
     if (e.essos) out.push(...essosEffectLabels(e.essos));
+    if (e.recit && STORY_EFFECTS[e.recit]) out.push(STORY_EFFECTS[e.recit]);
     if (e.prendre_le_noir) out.push(`${name(e.prendre_le_noir)} prend le noir et part pour le Mur`);
     if (e.trait_ajout) {
       const t =
@@ -686,6 +696,7 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
     }
     if (e.mur) applyWallEffect(state, e.mur, scope.comte);
     if (e.essos) applyEssosEffect(ctx, e.essos);
+    if (e.recit) applyStoryEffect(ctx, e.recit);
     if (e.prendre_le_noir) {
       const c = who(e.prendre_le_noir);
       if (c) {
@@ -944,6 +955,7 @@ export function applyEffects(ctx: Ctx, effects: Effect[], scope: Record<string, 
 // ---------------------------------------------------------------------------
 
 function eligible(state: GameState, def: EventDef): boolean {
+  if (def.scenario && def.scenario !== state.scenario) return false;
   if (def.unique === 'partie' && state.eventOnce[def.id]) return false;
   if (def.unique === 'personnage' && state.eventOnce[`${def.id}:${state.playerId}`]) return false;
   const last = state.eventCooldowns[def.id];
@@ -953,6 +965,8 @@ function eligible(state: GameState, def: EventDef): boolean {
 
 function weightOf(state: GameState, def: EventDef): number {
   let w = (def.poids ?? 10) * (state.eventBias?.[def.id] ?? 1);
+  if (state.scenario === 'westeros')
+    w *= def.scenario ? BALANCE.westeros.eventWeight : BALANCE.westeros.genericEventWeight;
   const p = player(state);
   for (const t of p.traits) w *= TRAITS[t]?.eventWeights?.[def.categorie ?? ''] ?? 1;
   return w;

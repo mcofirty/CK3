@@ -16,6 +16,7 @@
     "simulate": "vite-node scripts/simulate-battles.ts --",
     "generate-map": "vite-node scripts/generate-map.ts --",
     "simulate-campaign": "vite-node scripts/simulate-campaign.ts --",
+    "simulate-westeros": "vite-node scripts/simulate-westeros.ts",
     "simulate-economy": "vite-node scripts/simulate-economy.ts --"
   },
   "dependencies": {

@@ -111,6 +111,10 @@ export interface Condition {
   pas_edit?: string;
   /** Le souverain a des dettes. */
   dette?: boolean;
+  /** Westeros : la maison du souverain (clé sans « y_ », ex. « stark »). */
+  maison?: string[];
+  /** Westeros : la région (duché, sans « d_ ») de la capitale du souverain. */
+  region?: string[];
 }
 
 export type OpinionTarget = Exclude<Role, 'souverain'>;
@@ -149,6 +153,8 @@ export interface Effect {
   };
   /** Daenerys en Essos (mode Trône de fer). */
   essos?: { armee?: number; mort?: boolean };
+  /** Un fait du récit de Westeros (voir `STORY_EFFECTS` dans `scenario/story.ts`). */
+  recit?: string;
   /** Le personnage du rôle prend le noir (vœux, départ pour le Mur). */
   prendre_le_noir?: Role;
   /** Influence du souverain à la cour du rôle désigné (un souverain indépendant). */
@@ -260,6 +266,8 @@ export interface EventDef {
   titre: string;
   /** Un texte, ou plusieurs variantes dont une est tirée au sort. */
   texte: string | string[];
+  /** Réservé à un scénario (« westeros ») : tiré seulement dans ce mode, et plus souvent. */
+  scenario?: 'westeros';
   categorie?:
     | 'cour'
     | 'famille'
