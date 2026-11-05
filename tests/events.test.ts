@@ -187,3 +187,57 @@ describe('Protagonistes emprisonnés', () => {
     expect(scope?.vassal).toBe(vs[0]);
   });
 });
+
+describe('Cohérence avec les relations', () => {
+  const setup = async () => {
+    const { vassalsOf, independentRulers } = await import('../src/engine/realm');
+    const { addOpinion } = await import('../src/engine/characters');
+    const s = newGame({ seed: 3 });
+    const ctx: Ctx = { state: s, rng: new Rng(5) };
+    return { s, ctx, vassalsOf, independentRulers, addOpinion };
+  };
+
+  it('un vassal en faction ou qui vous déteste ne vient pas prêter serment', async () => {
+    const { s, ctx, vassalsOf, addOpinion } = await setup();
+    const def = { ...EVENTS.vassal_fidele, conditions: [] };
+    expect(def.ton).toBe('amical');
+    const vs = vassalsOf(s, s.playerId);
+    expect(vs.length).toBeGreaterThan(0);
+    expect(buildScope(ctx, def)?.vassal).toBeDefined();
+    for (const v of vs) s.characters[v].inFaction = true;
+    expect(buildScope(ctx, def)).toBeNull();
+    for (const v of vs) s.characters[v].inFaction = false;
+    expect(buildScope(ctx, def)).not.toBeNull();
+    for (const v of vs) addOpinion(s, v, s.playerId, 'Offense', -80, 40);
+    expect(buildScope(ctx, def)).toBeNull();
+  });
+
+  it('un ami avec qui l’on est en guerre ne propose plus de chasse', async () => {
+    const { s, ctx, independentRulers } = await setup();
+    const foe = independentRulers(s).find((r) => r !== s.playerId)!;
+    s.characters[s.playerId].friends = [foe];
+    const def = { ...EVENTS.rel_ami_chasse, conditions: [] };
+    expect(buildScope(ctx, def)?.ami).toBe(foe);
+    s.wars.w1 = {
+      id: 'w1',
+      name: 'Guerre',
+      attackerId: s.playerId,
+      defenderId: foe,
+      attackerAllies: [],
+      defenderAllies: [],
+    } as never;
+    expect(buildScope(ctx, def)).toBeNull();
+  });
+
+  it('un événement hostile ne vise pas un allié', async () => {
+    const { s, ctx, independentRulers } = await setup();
+    const rivals = independentRulers(s).filter((r) => r !== s.playerId);
+    const def = { ...EVENTS.intrigue_gouteur, conditions: [] };
+    expect(def.ton).toBe('hostile');
+    s.alliances = rivals.map((r) => (s.playerId < r ? `${s.playerId}|${r}` : `${r}|${s.playerId}`));
+    for (const r of rivals) expect(buildScope(ctx, def, { rival: r })).toBeNull();
+    expect(buildScope(ctx, def)).toBeNull();
+    s.alliances = [];
+    expect(buildScope(ctx, def)).not.toBeNull();
+  });
+});

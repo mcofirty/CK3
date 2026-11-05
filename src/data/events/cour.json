@@ -151,6 +151,7 @@
       "type": "aleatoire",
       "saisons": ["automne", "hiver"]
     },
+    "ton": "amical",
     "poids": 7,
     "delai_retour": 16,
     "choix": [
@@ -239,6 +240,7 @@
       "type": "aleatoire",
       "saisons": ["automne"]
     },
+    "ton": "amical",
     "poids": 8,
     "delai_retour": 12,
     "choix": [

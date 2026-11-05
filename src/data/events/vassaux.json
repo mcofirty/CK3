@@ -115,6 +115,7 @@
       "type": "aleatoire",
       "saisons": ["printemps", "ete"]
     },
+    "ton": "amical",
     "poids": 9,
     "delai_retour": 12,
     "choix": [
@@ -157,6 +158,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "amical",
     "poids": 9,
     "delai_retour": 12,
     "choix": [
@@ -219,6 +221,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "amical",
     "conditions": [
       {
         "opinion_vassal_min": 30
@@ -373,6 +376,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "amical",
     "poids": 8,
     "delai_retour": 20,
     "choix": [

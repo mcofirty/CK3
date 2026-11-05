@@ -6,6 +6,7 @@
     "declencheur": {
       "type": "aleatoire"
     },
+    "ton": "amical",
     "poids": 6,
     "delai_retour": 20,
     "choix": [
@@ -257,6 +258,7 @@
       "type": "aleatoire",
       "saisons": ["printemps", "ete"]
     },
+    "ton": "amical",
     "conditions": [
       {
         "a_conjoint": true,

@@ -93,6 +93,7 @@
     "titre": "Un festin mémorable",
     "texte": "Les broches tournent depuis l’aube, le vin coule à flots. Vassaux et courtisans prennent place autour de la grande table.",
     "declencheur": { "type": "decision" },
+    "ton": "amical",
     "poids": 0,
     "choix": [
       {
@@ -179,6 +180,7 @@
     "titre": "L’assemblée des grands",
     "texte": "Vos vassaux ont fait le voyage. Chacun apporte ses doléances, et certains ont la mine sombre. {vassal.nom} prend la parole le premier.",
     "declencheur": { "type": "decision" },
+    "ton": "amical",
     "poids": 0,
     "choix": [
       {
