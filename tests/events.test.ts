@@ -229,6 +229,24 @@ describe('Cohérence avec les relations', () => {
     expect(buildScope(ctx, def)).toBeNull();
   });
 
+  it('la guerre rompt l’amitié entre deux camps, y compris par un allié qui rejoint', async () => {
+    const { declareWar, joinWar } = await import('../src/engine/war');
+    const { s, ctx, independentRulers } = await setup();
+    const [foe, third] = independentRulers(s).filter((r) => r !== s.playerId);
+    const p = s.characters[s.playerId];
+    const link = (id: string) => {
+      p.friends.push(id);
+      s.characters[id].friends.push(s.playerId);
+    };
+    link(foe);
+    const w = declareWar(ctx, s.playerId, foe, 'conquete', undefined, true)!;
+    expect(p.friends).not.toContain(foe);
+    expect(s.characters[foe].friends).not.toContain(s.playerId);
+    link(third);
+    joinWar(s, w.id, third, 'defender');
+    expect(p.friends).not.toContain(third);
+  });
+
   it('un événement hostile ne vise pas un allié', async () => {
     const { s, ctx, independentRulers } = await setup();
     const rivals = independentRulers(s).filter((r) => r !== s.playerId);

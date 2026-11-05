@@ -25,6 +25,7 @@ import { gainXp, record } from '../progression';
 import { seasonMercenaries, tryNegotiate } from './campaignExtras';
 import { killCharacter } from '../characters/lifecycle';
 import { chronicle, clamp, newId, notify, seasonOf, worldNews, type Ctx } from '../context';
+import { endFriends } from '../relations';
 import {
   availableLevies,
   bordersPlayer,
@@ -924,6 +925,7 @@ export function declareWar(
     captured: [],
   };
   state.wars[war.id] = war;
+  breakFriendshipsAtWar(state, war);
   const d = state.characters[defenderId];
   const involvesPlayer = attackerId === state.playerId || defenderId === state.playerId;
   if (involvesPlayer)
@@ -957,6 +959,26 @@ export function declareWar(
   return war;
 }
 
+/**
+ * Des amis qui se retrouvent dans des camps opposés ne le restent pas : l'amitié se rompt
+ * (le joueur en est prévenu).
+ */
+export function breakFriendshipsAtWar(state: GameState, w: War): void {
+  const att = [w.attackerId, ...w.attackerAllies];
+  const def = [w.defenderId, ...w.defenderAllies];
+  for (const x of att)
+    for (const y of def) {
+      const a = state.characters[x];
+      const b = state.characters[y];
+      if (!a || !b || !a.friends.includes(y)) continue;
+      endFriends(a, b);
+      if (x === state.playerId || y === state.playerId) {
+        const other = x === state.playerId ? b : a;
+        notify(state, `La guerre met fin à votre amitié avec ${displayName(state, other)}.`);
+      }
+    }
+}
+
 /** Ajoute un allié à un camp. */
 export function joinWar(
   state: GameState,
@@ -968,6 +990,7 @@ export function joinWar(
   if (!w || warSide(state, warId, allyId)) return;
   if (side === 'attacker') w.attackerAllies.push(allyId);
   else w.defenderAllies.push(allyId);
+  breakFriendshipsAtWar(state, w);
 }
 
 // ---------------------------------------------------------------------------
